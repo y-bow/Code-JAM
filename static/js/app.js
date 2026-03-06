@@ -206,27 +206,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const startMeetingBtn = document.getElementById('startMeetingBtn');
         if (startMeetingBtn) {
             startMeetingBtn.addEventListener('click', () => {
-                const generateRoomId = () => {
-                    const chars = 'abcdefghijklmnopqrstuvwxyz';
-                    const part = () => Array.from({ length: 4 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
-                    return `${part()}-${part()}-${part()}`;
-                };
+                // Use Google Meet's "Instant Meeting" URL
+                const url = "https://meet.google.com/new";
 
-                const roomId = generateRoomId();
-                const url = `https://meet.google.com/${roomId}`;
-                const activeThread = document.querySelector('.thread-item.active').dataset.threadId;
+                // Try to post to chat if we're on the messages page
+                const activeThreadItem = document.querySelector('.thread-item.active');
+                if (activeThreadItem) {
+                    const activeThread = activeThreadItem.dataset.threadId;
+                    const now = new Date();
+                    const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - Sent';
 
-                // Create a "Meeting Invite" message type
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' - Sent';
+                    chats[activeThread].messages.push({
+                        type: 'sent',
+                        text: `Hey, let's hop on a call! 🚀<br><br>I'm starting a Google Meet right now. I'll share the final link once it's live, or you can join via the Classroom join button!`,
+                        time: timeStr
+                    });
 
-                chats[activeThread].messages.push({
-                    type: 'sent',
-                    text: `Hey, let's hop on a call! 🚀<br><br><a href="${url}" target="_blank" style="display: inline-block; background: white; color: var(--primary-color); padding: 0.5rem 1rem; border-radius: 8px; font-weight: 600; margin-top: 0.5rem; text-decoration: none;">Join Meeting: ${roomId}</a>`,
-                    time: timeStr
-                });
+                    renderMessages(activeThread);
+                }
 
-                renderMessages(activeThread);
                 window.open(url, '_blank');
             });
         }
