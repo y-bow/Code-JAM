@@ -46,16 +46,30 @@
 
             <nav class="sidebar-nav">
                 {% block sidebar_links %}
-                <!-- Dynamic Navigation Links Go Here based on Role -->
-                <a href="{{ url_for('index') }}" class="nav-item active">
+                <a href="{{ url_for('index') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'index' or 'dashboard' in request.endpoint }}">
                     <span class="material-symbols-rounded">space_dashboard</span>
                     Dashboard
                 </a>
-                <a href="#" class="nav-item">
-                    <span class="material-symbols-rounded">calendar_month</span>
-                    Timetable
+
+                {% if g.current_user.role_level >= 4 %}
+                <a href="{{ url_for('dashboard.manage_timetable') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}">
+                    <span class="material-symbols-rounded">calendar_today</span>
+                    Manage Schedule
                 </a>
-                <a href="#" class="nav-item">
+                {% endif %}
+
+                {% if g.current_user.role_level >= 5 %}
+                <a href="{{ url_for('dashboard.dean_ratings') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_ratings' }}">
+                    <span class="material-symbols-rounded">star_half</span>
+                    Teacher Ratings
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('messages.index') }}"
+                    class="nav-item {{ 'active' if 'messages' in request.endpoint }}">
                     <span class="material-symbols-rounded">forum</span>
                     Messages
                 </a>
@@ -111,7 +125,7 @@
                                 <div class="notification-section">
                                     <label>Recent Messages</label>
                                     {% for msg in g.unread_messages %}
-                                    <a href="{{ url_for('dashboard.messages') }}" class="dropdown-item message-item">
+                                    <a href="{{ url_for('messages.index') }}" class="dropdown-item message-item">
                                         <div class="item-avatar">{{ msg.sender.name[0] | upper }}</div>
                                         <div class="item-content">
                                             <p class="item-title">{{ msg.sender.name }}</p>

@@ -4,28 +4,37 @@
 {% block page_title %}Hello, {{ session.name }}{% endblock %}
 
 {% block sidebar_links %}
-<a href="{{ url_for('dashboard.student_dashboard') }}" class="nav-item active">
+<a href="{{ url_for('dashboard.student_dashboard') }}"
+    class="nav-item {{ 'active' if request.endpoint == 'dashboard.student_dashboard' }}">
     <span class="material-symbols-rounded">space_dashboard</span>
     Global Hub
 </a>
-<a href="{{ url_for('dashboard.timetable') }}" class="nav-item">
+<a href="{{ url_for('dashboard.timetable') }}"
+    class="nav-item {{ 'active' if request.endpoint == 'dashboard.timetable' }}">
     <span class="material-symbols-rounded">calendar_today</span>
     Timetable
 </a>
-<a href="{{ url_for('dashboard.tasks') }}" class="nav-item">
+{% if g.current_user.role_level >= 4 %}
+<a href="{{ url_for('dashboard.manage_timetable') }}"
+    class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}">
+    <span class="material-symbols-rounded">calendar_month</span>
+    Manage Schedule
+</a>
+{% endif %}
+<a href="{{ url_for('dashboard.tasks') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.tasks' }}">
     <span class="material-symbols-rounded">task_alt</span>
     Tasks
 </a>
-<a href="{{ url_for('dashboard.grades') }}" class="nav-item">
+<a href="{{ url_for('dashboard.grades') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.grades' }}">
     <span class="material-symbols-rounded">bar_chart</span>
     Grades Overview
 </a>
-<a href="{{ url_for('dashboard.announcements') }}" class="nav-item">
+<a href="{{ url_for('dashboard.announcements') }}"
+    class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}">
     <span class="material-symbols-rounded">campaign</span>
     Announcements
-    <span class="badge">2</span>
 </a>
-<a href="{{ url_for('dashboard.messages') }}" class="nav-item">
+<a href="{{ url_for('messages.index') }}" class="nav-item {{ 'active' if request.endpoint == 'messages.index' }}">
     <span class="material-symbols-rounded">forum</span>
     Messages
 </a>

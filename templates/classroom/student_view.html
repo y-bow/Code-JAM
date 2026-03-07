@@ -1,187 +1,308 @@
 {% extends "base.html" %}
 
-{% block title %}Hive | Classroom - CS101{% endblock %}
-{% block page_title %}CS101: Introduction to Programming{% endblock %}
+{% block title %}Hive | Classroom - {{ course.code }}{% endblock %}
+{% block page_title %}{{ course.code }}: {{ course.name }}{% endblock %}
 
 {% block sidebar_links %}
 <a href="{{ url_for('dashboard.student_dashboard') }}" class="nav-item">
     <span class="material-symbols-rounded">arrow_back</span>
     Back to Hub
 </a>
-<a href="#" class="nav-item active">
+<a href="#" class="nav-item active tab-link" onclick="openTab(event, 'Home')">
     <span class="material-symbols-rounded">class</span>
     Class Home
 </a>
-<a href="#" class="nav-item">
+<a href="#" class="nav-item tab-link" onclick="openTab(event, 'Assignments')">
     <span class="material-symbols-rounded">assignment</span>
     Assignments
 </a>
-<a href="#" class="nav-item">
+<a href="#" class="nav-item tab-link" onclick="openTab(event, 'Performance')">
     <span class="material-symbols-rounded">fact_check</span>
-    Grades & Attendance
-</a>
-<a href="#" class="nav-item">
-    <span class="material-symbols-rounded">folder</span>
-    Resources
+    My Progress
 </a>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-grid" style="grid-template-columns: 1fr 300px;">
+<div class="dashboard-grid">
     <!-- Main Content Area -->
-    <div class="main-column" style="display: flex; flex-direction: column; gap: 2rem;">
-
+    <div class="main-column" id="Home">
         <!-- Action Banner (Meeting Link) -->
+        {% if course.meet_link %}
         <div class="glass-panel gradient-border"
-            style="padding: 1.5rem; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(20, 184, 166, 0.1));">
+            style="padding: 1.5rem; border-radius: var(--radius-lg); display: flex; align-items: center; justify-content: space-between; background: linear-gradient(to right, rgba(99, 102, 241, 0.1), rgba(20, 184, 166, 0.1)); margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; gap: 1rem;">
                 <div
                     style="background: var(--danger-color); width: 12px; height: 12px; border-radius: 50%; box-shadow: 0 0 10px var(--danger-color); animation: pulse 2s infinite;">
                 </div>
                 <div>
                     <h3 style="margin: 0; font-size: 1.2rem;">Live Class in Session</h3>
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">Join the lecture now via Google
-                        Meet</span>
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Professor has started a meeting.</span>
                 </div>
             </div>
-            <a href="#"
-                style="background: var(--primary-color); color: white; padding: 0.75rem 1.5rem; border-radius: var(--radius-full); font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: transform var(--transition-fast);">
+            <a href="{{ course.meet_link }}" target="_blank" class="primary-btn">
                 <span class="material-symbols-rounded">videocam</span>
-                Join Live Class
+                Join Live Now
             </a>
         </div>
-
-        <!-- Assignments & Submissions -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="display: flex; align-items: center; gap: 0.5rem;">
-                    <span class="material-symbols-rounded" style="color: var(--warning-color);">assignment</span>
-                    Active Assignments
-                </h3>
-            </div>
-
-            <div style="display: flex; flex-direction: column; gap: 1rem;">
-                <!-- Assignment Card -->
-                <div
-                    style="padding: 1.5rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); background: var(--bg-main);">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
-                        <div>
-                            <h4 style="margin: 0 0 0.25rem 0; font-size: 1.1rem;">Assignment 1: Python Basics</h4>
-                            <span style="font-size: 0.85rem; color: var(--text-muted);">Points: 100 • Multiple file
-                                upload allowed</span>
-                        </div>
-                        <span
-                            style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600;">Due:
-                            Tomorrow 11:59PM</span>
-                    </div>
-                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">Submit your .py files
-                        for the first 5 exercises. Ensure your code is well commented.</p>
-
-                    <div
-                        style="border: 2px dashed var(--border-color); padding: 1.5rem; text-align: center; border-radius: var(--radius-sm); cursor: pointer; transition: background var(--transition-fast);">
-                        <span class="material-symbols-rounded"
-                            style="font-size: 2rem; color: var(--primary-light);">cloud_upload</span>
-                        <p style="margin: 0.5rem 0 0 0; font-weight: 500;">Click to browse or drag files here</p>
-                    </div>
-                    <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-                        <button
-                            style="background: var(--primary-color); color: white; padding: 0.6rem 1.5rem; border: none; border-radius: var(--radius-md); font-weight: 600; cursor: pointer;">Submit
-                            Work</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+        {% endif %}
 
         <!-- Class Announcements -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
+            <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
                 <span class="material-symbols-rounded" style="color: var(--secondary-color);">campaign</span>
                 Class Announcements
             </h3>
-            <div
-                style="padding: 1rem; border-left: 4px solid var(--primary-color); background: var(--bg-main); border-radius: var(--radius-sm);">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-weight: 600;">Midterm format changed</span>
-                    <span style="font-size: 0.8rem; color: var(--text-muted);">Posted 2 days ago</span>
-                </div>
-                <p style="font-size: 0.9rem; margin: 0; color: var(--text-muted);">The midterm will now be open-book,
-                    but you cannot use external internet resources. You are allowed one cheat sheet.</p>
-            </div>
-        </div>
 
+            {% if announcements %}
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for ann in announcements %}
+                <div class="announcement-card glass-panel {{ 'urgent' if ann.urgent }}">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span style="font-weight: 600;">{{ ann.title }}</span>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">{{ ann.created_at.strftime('%b %d')
+                            }}</span>
+                    </div>
+                    <p style="font-size: 0.9rem; margin: 0; color: var(--text-muted);">{{ ann.body }}</p>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="text-align: center; color: var(--text-muted);">No announcements yet.</p>
+            {% endif %}
+        </div>
     </div>
 
-    <!-- Right Sidebar Info -->
-    <div class="side-column" style="display: flex; flex-direction: column; gap: 2rem;">
-
-        <!-- Class Info Card -->
+    <!-- Assignments TAB -->
+    <div class="main-column" id="Assignments" style="display: none;">
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <div style="text-align: center; margin-bottom: 1.5rem;">
-                <div
-                    style="width: 60px; height: 60px; background: var(--primary-light); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin: 0 auto 0.5rem auto;">
-                    JS
+            <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
+                <span class="material-symbols-rounded" style="color: var(--warning-color);">assignment</span>
+                Assignments
+            </h3>
+
+            {% if assignments %}
+            <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+                {% for ass in assignments %}
+                <div class="assignment-item glass-panel">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                        <div>
+                            <h4 style="margin: 0 0 0.25rem 0;">{{ ass.title }}</h4>
+                            <span style="font-size: 0.8rem; color: var(--text-muted);">Max Points: {{ ass.max_points
+                                }}</span>
+                        </div>
+                        <span class="due-pill">Due: {{ ass.due_date.strftime('%b %d, %H:%M') }}</span>
+                    </div>
+                    <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">{{ ass.description }}
+                    </p>
+
+                    <div class="upload-area">
+                        <span class="material-symbols-rounded">cloud_upload</span>
+                        <p>Upload your solution</p>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
+                        <button class="primary-btn">Submit Work</button>
+                    </div>
                 </div>
-                <h4 style="margin: 0;">Prof. John Smith</h4>
-                <a href="#" style="font-size: 0.85rem; color: var(--primary-color);"><span
-                        class="material-symbols-rounded" style="font-size: 1rem; vertical-align: middle;">mail</span>
-                    Message</a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p style="text-align: center; color: var(--text-muted);">No assignments posted yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Performance TAB -->
+    <div class="main-column" id="Performance" style="display: none;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+            <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem;">
+                <span class="material-symbols-rounded" style="color: var(--success-color);">analytics</span>
+                My Progress
+            </h3>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
+                <div class="stat-box">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Current Grade</span>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);">{{ avg_grade }}%
+                    </div>
+                    <div class="progress-bar">
+                        <div style="width: {{ avg_grade }}%; background: var(--success-color);"></div>
+                    </div>
+                </div>
+
+                {% set att_pct = (attendance|selectattr('status', 'equalto', 'present')|list|length / (attendance|length
+                or 1) * 100)|round(1) %}
+                <div class="stat-box">
+                    <span style="color: var(--text-muted); font-size: 0.9rem;">Attendance</span>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--warning-color);">{{ att_pct }}%</div>
+                    <div class="progress-bar">
+                        <div style="width: {{ att_pct }}%; background: var(--warning-color);"></div>
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.5rem; display: block;">{{
+                        attendance|length }} Classes Recorded</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="side-column">
+        <!-- Instructor Info -->
+        <div class="glass-panel"
+            style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem; text-align: center;">
+            <div class="avatar" style="width: 60px; height: 60px; margin: 0 auto 1rem auto; font-size: 1.5rem;">
+                {{ course.teacher.name[:2].upper() }}
+            </div>
+            <h4 style="margin: 0;">{{ course.teacher.name }}</h4>
+            <span style="font-size: 0.85rem; color: var(--text-muted);">Course Instructor</span>
+
+            <div
+                style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: left; font-size: 0.9rem;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                    <span style="color: var(--text-muted);">Office Hours</span>
+                    <span>{{ course.teacher.teacher_profile.office_hours or 'N/A' }}</span>
+                </div>
+                <a href="{{ url_for('messages.index') }}" class="primary-btn"
+                    style="display: block; text-decoration: none; width: 100%; margin-top: 1rem; background: rgba(255,255,255,0.05); color: var(--text-main); border: 1px solid var(--border-color); text-align: center;">
+                    <span class="material-symbols-rounded">mail</span> Message Teacher
+                </a>
             </div>
 
             <div
-                style="display: flex; flex-direction: column; gap: 1rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">Office Hours</span>
-                    <span style="font-weight: 500; font-size: 0.9rem;">Mon/Wed 10-12PM</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="color: var(--text-muted); font-size: 0.9rem;">Room</span>
-                    <span style="font-weight: 500; font-size: 0.9rem;">Building B, 301</span>
-                </div>
+                style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem; text-align: left;">
+                <h5
+                    style="margin: 0 0 0.75rem 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted);">
+                    Rate your Instructor</h5>
+                <form action="{{ url_for('classroom.submit_rating', course_id=course.id) }}" method="POST">
+                    <div class="rating-stars"
+                        style="color: var(--warning-color); font-size: 1.25rem; display: flex; gap: 0.25rem; margin-bottom: 0.75rem; cursor: pointer;">
+                        <span class="material-symbols-rounded star-input" data-value="1">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="2">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="3">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="4">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="5">star_outline</span>
+                    </div>
+                    <input type="hidden" name="rating" id="rating-value" required>
+                    <textarea name="review" class="glass-input" placeholder="Optional review..."
+                        style="font-size: 0.8rem; margin-bottom: 0.5rem; min-height: 60px;"></textarea>
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
+                        <input type="checkbox" name="anonymous" id="anon" checked>
+                        <label for="anon" style="font-size: 0.75rem; color: var(--text-muted);">Submit
+                            Anonymously</label>
+                    </div>
+                    <button type="submit" class="primary-btn" style="width: 100%; font-size: 0.85rem;">Submit
+                        Rating</button>
+                </form>
             </div>
         </div>
-
-        <!-- Grade & Attendance Stats -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem;">My Performance</h3>
-
-            <div style="margin-bottom: 1.5rem;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.9rem; font-weight: 500;">Current Grade</span>
-                    <span style="font-weight: bold; color: var(--success-color);">88%</span>
-                </div>
-                <div
-                    style="width: 100%; height: 8px; background: var(--border-color); border-radius: var(--radius-full); overflow: hidden;">
-                    <div
-                        style="width: 88%; height: 100%; background: var(--success-color); border-radius: var(--radius-full);">
-                    </div>
-                </div>
-                <div
-                    style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted);">
-                    <span>Class Avg: 76%</span>
-                </div>
-            </div>
-
-            <div>
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                    <span style="font-size: 0.9rem; font-weight: 500;">Attendance</span>
-                    <span style="font-weight: bold; color: var(--warning-color);">85%</span>
-                </div>
-                <div
-                    style="width: 100%; height: 8px; background: var(--border-color); border-radius: var(--radius-full); overflow: hidden;">
-                    <div
-                        style="width: 85%; height: 100%; background: var(--warning-color); border-radius: var(--radius-full);">
-                    </div>
-                </div>
-                <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 0.5rem;">Present:
-                    17 | Missed: 3</span>
-            </div>
-        </div>
-
     </div>
 </div>
 
+<script>
+    function openTab(evt, tabName) {
+        var i, tabContent, tabLinks;
+        tabContent = document.getElementsByClassName("main-column");
+        for (i = 0; i < tabContent.length; i++) {
+            tabContent[i].style.display = "none";
+        }
+        tabLinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tabLinks.length; i++) {
+            tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "flex";
+        evt.currentTarget.className += " active";
+    }
+
+    // Star Rating Interaction
+    document.querySelectorAll('.star-input').forEach(star => {
+        star.addEventListener('mouseover', function () {
+            const val = this.dataset.value;
+            highlightStars(val);
+        });
+
+        star.addEventListener('mouseout', function () {
+            const currentVal = document.getElementById('rating-value').value;
+            highlightStars(currentVal || 0);
+        });
+
+        star.addEventListener('click', function () {
+            const val = this.dataset.value;
+            document.getElementById('rating-value').value = val;
+            highlightStars(val);
+        });
+    });
+
+    function highlightStars(count) {
+        document.querySelectorAll('.star-input').forEach(s => {
+            if (s.dataset.value <= count) {
+                s.innerText = 'star';
+                s.style.color = 'var(--warning-color)';
+            } else {
+                s.innerText = 'star_outline';
+                s.style.color = 'var(--warning-color)';
+            }
+        });
+    }
+</script>
+
 <style>
+    .announcement-card {
+        padding: 1rem;
+        border-left: 3px solid var(--primary-color);
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .announcement-card.urgent {
+        border-left-color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .assignment-item {
+        padding: 1.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .due-pill {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+
+    .upload-area {
+        border: 2px dashed var(--border-color);
+        padding: 1.5rem;
+        text-align: center;
+        border-radius: var(--radius-sm);
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .upload-area:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .upload-area .material-symbols-rounded {
+        font-size: 2rem;
+        color: var(--primary-color);
+    }
+
+    .progress-bar {
+        width: 100%;
+        height: 8px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 4px;
+        overflow: hidden;
+        margin: 0.5rem 0;
+    }
+
+    .progress-bar div {
+        height: 100%;
+        border-radius: 4px;
+    }
+
     @keyframes pulse {
         0% {
             box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);

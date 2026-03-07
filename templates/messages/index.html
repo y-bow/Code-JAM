@@ -1,0 +1,302 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Messages{% endblock %}
+{% block page_title %}Messages & Friends{% endblock %}
+
+{% block content %}
+<div class="dashboard-grid"
+    style="grid-template-columns: 350px 1fr; height: calc(100vh - 160px); align-items: stretch;">
+
+    <!-- Sidebar: Conversations & Friends -->
+    <div class="glass-panel"
+        style="border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden;">
+        <div style="padding: 1.25rem; border-bottom: 1px solid var(--border-color);">
+            <div class="tab-nav" style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                <button class="tab-btn active" onclick="switchSideTab(this, 'chats')">Chats</button>
+                <button class="tab-btn" onclick="switchSideTab(this, 'friends')">Friends</button>
+            </div>
+            <input type="text" class="glass-input" placeholder="Search..." style="font-size: 0.85rem;">
+        </div>
+
+        <div id="side-chats" class="side-tab-content active" style="flex: 1; overflow-y: auto;">
+            {% if partners %}
+            {% for p in partners %}
+            <div class="chat-item" onclick="loadChat({{ p.id }}, '{{ p.name }}')">
+                <div class="avatar">{{ p.name[:1].upper() }}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.95rem;">{{ p.name }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">{{ p.role|capitalize }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div style="padding: 2rem; text-align: center; color: var(--text-muted); font-size: 0.9rem;">
+                No active chats.
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="side-friends" class="side-tab-content"
+            style="display: none; flex: 1; overflow-y: auto; padding: 1rem;">
+            {% if pending_requests %}
+            <h5
+                style="margin: 0 0 0.75rem 0; color: var(--warning-color); font-size: 0.75rem; text-transform: uppercase;">
+                Pending Requests</h5>
+            {% for req in pending_requests %}
+            <div class="friend-req-item">
+                <span style="font-size: 0.85rem; font-weight: 500;">{{ req.sender.name }}</span>
+                <div style="display: flex; gap: 0.5rem;">
+                    <form action="{{ url_for('messages.respond_request', request_id=req.id, action='accept') }}"
+                        method="POST">
+                        <button class="icon-btn" style="color: var(--success-color);"><span
+                                class="material-symbols-rounded">check</span></button>
+                    </form>
+                    <form action="{{ url_for('messages.respond_request', request_id=req.id, action='decline') }}"
+                        method="POST">
+                        <button class="icon-btn" style="color: var(--danger-color);"><span
+                                class="material-symbols-rounded">close</span></button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+            <hr style="border: 0; border-top: 1px solid var(--border-color); margin: 1rem 0;">
+            {% endif %}
+
+            <h5 style="margin: 0 0 0.75rem 0; color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase;">
+                Your Friends</h5>
+            {% for f in friends %}
+            <div class="chat-item" onclick="loadChat({{ f.id }}, '{{ f.name }}')">
+                <div class="avatar" style="background: var(--secondary-color);">{{ f.name[:1].upper() }}</div>
+                <div style="flex: 1;">
+                    <div style="font-weight: 600; font-size: 0.95rem;">{{ f.name }}</div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Main Chat Window -->
+    <div class="glass-panel" id="chat-window"
+        style="border-radius: var(--radius-lg); display: flex; flex-direction: column; overflow: hidden; background: rgba(255,255,255,0.01);">
+        <div id="chat-placeholder"
+            style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text-muted);">
+            <span class="material-symbols-rounded" style="font-size: 4rem; opacity: 0.2;">forum</span>
+            <p>Select a conversation to start chatting</p>
+        </div>
+
+        <div id="chat-active" style="display: none; flex: 1; flex-direction: column;">
+            <div
+                style="padding: 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 1rem;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div class="avatar" id="active-chat-avatar"></div>
+                    <h3 id="active-chat-name" style="margin: 0;"></h3>
+                </div>
+                <div class="dropdown">
+                    <button class="icon-btn"><span class="material-symbols-rounded">more_vert</span></button>
+                    <div class="dropdown-content glass-panel"
+                        style="background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);">
+                        <form id="block-form" method="POST" onsubmit="return confirm('Block this user?')">
+                            <button type="submit"
+                                style="color: var(--danger-color); border: none; background: none; width: 100%; text-align: left; padding: 0.75rem 1rem; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; gap: 0.5rem;">
+                                <span class="material-symbols-rounded" style="font-size: 1.2rem;">block</span> Block
+                                User
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="message-container"
+                style="flex: 1; overflow-y: auto; padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem;">
+                <!-- Messages load here -->
+            </div>
+
+            <div style="padding: 1.25rem; border-top: 1px solid var(--border-color); background: rgba(0,0,0,0.1);">
+                <form id="send-form" style="display: flex; gap: 1rem;">
+                    <input type="hidden" id="recipient-id">
+                    <input type="text" id="message-input" class="glass-input" placeholder="Type a message..." required
+                        autocomplete="off">
+                    <button type="submit" class="primary-btn" style="padding: 0 1.5rem;">
+                        <span class="material-symbols-rounded">send</span>
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRecipientId = null;
+    const currentUserId = {{ g.current_user.id }};
+
+    function switchSideTab(btn, tab) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.side-tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('side-' + tab).style.display = 'block';
+    }
+
+    async function loadChat(userId, userName) {
+        currentRecipientId = userId;
+        document.getElementById('chat-placeholder').style.display = 'none';
+        document.getElementById('chat-active').style.display = 'flex';
+        document.getElementById('active-chat-name').innerText = userName;
+        document.getElementById('active-chat-avatar').innerText = userName[0].toUpperCase();
+        document.getElementById('recipient-id').value = userId;
+        document.getElementById('block-form').action = `/messages/block/${userId}`;
+
+        await refreshMessages();
+        const container = document.getElementById('message-container');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function refreshMessages() {
+        if (!currentRecipientId) return;
+        const response = await fetch(`/messages/history/${currentRecipientId}`);
+        const messages = await response.json();
+
+        const container = document.getElementById('message-container');
+        container.innerHTML = messages.map(m => `
+            <div class="msg ${m.sender_id == currentUserId ? 'sent' : 'received'}">
+                <div class="msg-bubble">${m.body}</div>
+                <div class="msg-time">${m.timestamp}</div>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('send-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const body = input.value;
+        if (!body) return;
+
+        const formData = new FormData();
+        formData.append('recipient_id', currentRecipientId);
+        formData.append('body', body);
+
+        const response = await fetch('/messages/send', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.ok) {
+            input.value = '';
+            await refreshMessages();
+            const container = document.getElementById('message-container');
+            container.scrollTop = container.scrollHeight;
+        } else {
+            const err = await response.json();
+            alert(err.error || 'Failed to send message');
+        }
+    };
+
+    // Auto-refresh every 5 seconds
+    setInterval(refreshMessages, 5000);
+</script>
+
+<style>
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--text-muted);
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem 0;
+        border-bottom: 2px solid transparent;
+    }
+
+    .tab-btn.active {
+        color: var(--primary-color);
+        border-bottom-color: var(--primary-color);
+    }
+
+    .chat-item {
+        padding: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-radius: var(--radius-md);
+        margin: 0.25rem 0.5rem;
+    }
+
+    .chat-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .friend-req-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        background: rgba(255, 255, 255, 0.02);
+        border-radius: var(--radius-sm);
+        margin-bottom: 0.5rem;
+    }
+
+    .msg {
+        display: flex;
+        flex-direction: column;
+        max-width: 70%;
+    }
+
+    .msg.sent {
+        align-self: flex-end;
+        align-items: flex-end;
+    }
+
+    .msg.received {
+        align-self: flex-start;
+        align-items: flex-start;
+    }
+
+    .msg-bubble {
+        padding: 0.75rem 1.25rem;
+        border-radius: 1.25rem;
+        font-size: 0.95rem;
+        line-height: 1.4;
+    }
+
+    .msg.sent .msg-bubble {
+        background: var(--primary-color);
+        color: white;
+        border-bottom-right-radius: 0.25rem;
+    }
+
+    .msg.received .msg-bubble {
+        background: rgba(255, 255, 255, 0.1);
+        border-bottom-left-radius: 0.25rem;
+    }
+
+    .msg-time {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        margin-top: 0.25rem;
+    }
+
+    .dropdown {
+        position: relative;
+        display: inline-block;
+    }
+
+    .dropdown-content {
+        display: none;
+        position: absolute;
+        right: 0;
+        min-width: 160px;
+        z-index: 100;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+    }
+
+    .dropdown:hover .dropdown-content {
+        display: block;
+    }
+
+    .dropdown-content button:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+</style>
+{% endblock %}

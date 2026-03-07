@@ -27,10 +27,12 @@ def create_app():
     from .routes.auth import auth_bp
     from .routes.dashboard import dashboard_bp
     from .routes.classroom import classroom_bp
+    from .routes.messages import messages_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(classroom_bp)
+    app.register_blueprint(messages_bp)
 
     @app.route('/')
     def index():

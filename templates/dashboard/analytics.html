@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Dean - School Analytics{% endblock %}
+{% block page_title %}School Analytics Overview{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('dashboard.school_analytics') }}" class="nav-item active">
+    <span class="material-symbols-rounded">analytics</span>
+    Analytics
+</a>
+<a href="{{ url_for('dashboard.dean_ratings') }}" class="nav-item">
+    <span class="material-symbols-rounded">star_half</span>
+    Teacher Ratings
+</a>
+<a href="{{ url_for('messages.index') }}" class="nav-item">
+    <span class="material-symbols-rounded">forum</span>
+    Messages
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid"
+    style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="glass-panel stat-card" style="padding: 2rem; border-left: 4px solid var(--primary-color);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin: 0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total
+                    Students</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem;">{{ total_students }}</div>
+            </div>
+            <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--primary-color);">groups</span>
+        </div>
+    </div>
+
+    <div class="glass-panel stat-card" style="padding: 2rem; border-left: 4px solid var(--secondary-color);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin: 0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total
+                    Teachers</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem;">{{ total_teachers }}</div>
+            </div>
+            <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--secondary-color);">school</span>
+        </div>
+    </div>
+
+    <div class="glass-panel stat-card" style="padding: 2rem; border-left: 4px solid var(--success-color);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin: 0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total
+                    Courses</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem;">{{ total_courses }}</div>
+            </div>
+            <span class="material-symbols-rounded" style="font-size: 2rem; color: var(--success-color);">book</span>
+        </div>
+    </div>
+
+    <div class="glass-panel stat-card" style="padding: 2rem; border-left: 4px solid var(--warning-color);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+            <div>
+                <h4 style="margin: 0; font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase;">Total
+                    Sections</h4>
+                <div style="font-size: 2.5rem; font-weight: 700; margin-top: 0.5rem;">{{ total_sections }}</div>
+            </div>
+            <span class="material-symbols-rounded"
+                style="font-size: 2rem; color: var(--warning-color);">account_tree</span>
+        </div>
+    </div>
+</div>
+
+<div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg);">
+    <h3>Quick Insights</h3>
+    <p style="color: var(--text-muted);">This administrative dashboard provides a high-level overview of Hive LMS
+        performance and population across your school.</p>
+
+    <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+        <a href="{{ url_for('dashboard.dean_ratings') }}" class="primary-btn"
+            style="text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded">star_half</span>
+            View Faculty Performance
+        </a>
+    </div>
+</div>
+{% endblock %}

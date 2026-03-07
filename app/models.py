@@ -66,7 +66,7 @@ class Section(db.Model):
 
     # Relationships
     courses = db.relationship('Course', backref='section', lazy='dynamic',
-                              cascade='all, delete-orphan')
+                               cascade='all, delete-orphan')
 
     def __repr__(self):
         return f'<Section {self.code} @ School {self.school_id}>'
@@ -147,6 +147,7 @@ class Course(db.Model):
     teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
     max_students = db.Column(db.Integer, default=50)
+    meet_link = db.Column(db.String(500))  # NEW: Google Meet Link
 
     teacher = db.relationship('User', backref=db.backref('taught_courses', lazy='dynamic'))
     enrollments = db.relationship('Enrollment', backref='course', lazy='dynamic',
@@ -372,6 +373,19 @@ class CustomTask(db.Model):
     user = db.relationship('User', backref=db.backref('custom_tasks', lazy='dynamic'))
 
 
+class TeacherTodo(db.Model):
+    """Teacher-only personal to-do list."""
+    __tablename__ = 'teacher_todos'
+
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    teacher = db.relationship('User', backref=db.backref('teacher_todos', lazy='dynamic'))
+
+
 # =============================================================================
 # TIMETABLE
 # =============================================================================
@@ -405,3 +419,68 @@ class TimetableEntry(db.Model):
             'room': self.room,
             'color': self.color,
         }
+
+
+
+# =============================================================================
+# ROLE EXTENSIONS & SOCIAL
+# =============================================================================
+
+class TeacherRating(db.Model):
+    """Student ratings for teachers per course."""
+    __tablename__ = 'teacher_ratings'
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)  # 1-5
+    review = db.Column(db.Text)
+    is_anonymous = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    __table_args__ = (
+        db.UniqueConstraint('student_id', 'course_id', name='uq_student_course_rating'),
+    )
+
+
+class FriendRequest(db.Model):
+    """Instagram-style follow requests."""
+    __tablename__ = 'friend_requests'
+
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, declined
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id])
+    recipient = db.relationship('User', foreign_keys=[recipient_id])
+
+
+class Friendship(db.Model):
+    """Accepted friendships."""
+    __tablename__ = 'friendships'
+
+    user1_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    user2_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Block(db.Model):
+    """User blocking system."""
+    __tablename__ = 'blocks'
+
+    blocker_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    blocked_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+
+
+class ClassRep(db.Model):
+    """Association for Class Representatives."""
+    __tablename__ = 'class_reps'
+
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), primary_key=True)
+
+    student = db.relationship('User', backref=db.backref('rep_profile', uselist=False))
+    section = db.relationship('Section', backref=db.backref('reps', lazy='dynamic'))

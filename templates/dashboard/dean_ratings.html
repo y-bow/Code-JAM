@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Dean - Teacher Ratings{% endblock %}
+{% block page_title %}Faculty Performance Overview{% endblock %}
+
+{% block sidebar_links %}
+<a href="{{ url_for('dashboard.school_analytics') }}" class="nav-item">
+    <span class="material-symbols-rounded">arrow_back</span>
+    Back to Analytics
+</a>
+<a href="{{ url_for('dashboard.dean_ratings') }}" class="nav-item active">
+    <span class="material-symbols-rounded">star_half</span>
+    Teacher Ratings
+</a>
+{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg);">
+    <div style="margin-bottom: 2rem;">
+        <h3 style="margin: 0 0 0.5rem 0;">Faculty Performance</h3>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Aggregated student feedback and ratings across all
+            departments.</p>
+    </div>
+
+    <div class="ratings-table-container">
+        <table class="ratings-table">
+            <thead>
+                <tr>
+                    <th>Instructor</th>
+                    <th>Average Rating</th>
+                    <th>Total Ratings</th>
+                    <th>Recent Reviews</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for stat in teacher_stats %}
+                <tr>
+                    <td>
+                        <div style="font-weight: 600;">{{ stat.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">{{ stat.id }}</div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-weight: 700; color: var(--warning-color);">{{ stat.avg_rating }}</span>
+                            <div style="display: flex; color: var(--warning-color);">
+                                {% for i in range((stat.avg_rating)|int) %}
+                                <span class="material-symbols-rounded" style="font-size: 1rem;">star</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ stat.total_ratings }}</td>
+                    <td>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            {% for review in stat.recent_reviews %}
+                            <div class="mini-review" title="{{ review.review or 'No comment' }}">
+                                <span>{{ review.rating }}★</span>
+                                <p
+                                    style="margin: 0; font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                                    "{{ (review.review or 'No comment')[:50] }}..."
+                                </p>
+                            </div>
+                            {% endfor %}
+                            {% if not stat.recent_reviews %}
+                            <span style="color: var(--text-muted); font-size: 0.8rem;">No reviews yet.</span>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .ratings-table-container {
+        overflow-x: auto;
+    }
+
+    .ratings-table {
+        width: 100%;
+        border-collapse: collapse;
+        text-align: left;
+    }
+
+    .ratings-table th {
+        padding: 1rem;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .ratings-table td {
+        padding: 1.25rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+        vertical-align: top;
+    }
+
+    .mini-review {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 255, 255, 0.02);
+        padding: 0.25rem 0.5rem;
+        border-radius: var(--radius-sm);
+    }
+
+    .mini-review span {
+        font-weight: 600;
+        color: var(--warning-color);
+        font-size: 0.75rem;
+    }
+</style>
+{% endblock %}

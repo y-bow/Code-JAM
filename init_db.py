@@ -2,9 +2,10 @@ from app import create_app
 from app.models import (
     db, User, Student, Teacher, School, Section,
     Course, Enrollment, Announcement, TimetableEntry,
-    bcrypt
+    TeacherTodo, TeacherRating, FriendRequest, Friendship,
+    ClassRep, bcrypt
 )
-from datetime import datetime
+from datetime import datetime, timedelta
 
 app = create_app()
 
@@ -84,17 +85,22 @@ def seed_db():
         for user, section in student_sections:
             db.session.add(Student(user_id=user.id, section_id=section.id,
                                    enrollment_year=2025, major='Computer Science'))
+        
+        # Add a Class Rep for Section 3
+        db.session.add(ClassRep(student_id=vaibhav.id, section_id=sec3.id))
+        vaibhav.role = 'class_rep'
+
         db.session.commit()
-        print("Profiles created.")
+        print("Profiles and Class Reps created.")
 
         # =====================================================================
         # 5. COURSES (under sections)
         # =====================================================================
         # Section 3 courses
         s3_courses = [
-            Course(section_id=sec3.id, name='Discrete Mathematics', code='MATH201', teacher_id=teacher2.id, credits=4),
+            Course(section_id=sec3.id, name='Discrete Mathematics', code='MATH201', teacher_id=teacher2.id, credits=4, meet_link='https://meet.google.com/abc-defg-hij'),
             Course(section_id=sec3.id, name='Indian Constitution and Democracy', code='POL101', teacher_id=teacher2.id, credits=3),
-            Course(section_id=sec3.id, name='Python and Data Structure', code='CS102', teacher_id=teacher1.id, credits=4),
+            Course(section_id=sec3.id, name='Python and Data Structure', code='CS102', teacher_id=teacher1.id, credits=4, meet_link='https://meet.google.com/xyz-pdqr-mno'),
             Course(section_id=sec3.id, name='Introduction to Data Structures', code='CS201', teacher_id=teacher1.id, credits=4),
             Course(section_id=sec3.id, name='Programming in Python', code='CS101', teacher_id=teacher1.id, credits=3),
             Course(section_id=sec3.id, name='Environment and Sustainability', code='ENV101', teacher_id=teacher2.id, credits=3),
@@ -111,7 +117,7 @@ def seed_db():
         ]
         db.session.add_all(s4_courses)
         db.session.commit()
-        print("Courses created.")
+        print("Courses created with meet links.")
 
         # =====================================================================
         # 6. ENROLLMENTS
@@ -130,20 +136,15 @@ def seed_db():
         # =====================================================================
         # --- Section 3 timetable ---
         sec3_timetable = [
-            # Monday
             (0, '10:40 AM', '12:10 PM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
             (0, '02:15 PM', '03:40 PM', 'Indian Constitution and Democracy', 'AB2 - 202', '#a78bfa'),
             (0, '03:50 PM', '05:15 PM', 'Python and Data Structure (LAB)', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
-            # Tuesday
             (1, '09:00 AM', '10:30 AM', 'Introduction to Data Structures', 'AB1 - 101', 'var(--success-color)'),
             (1, '12:15 PM', '01:45 PM', 'Environment and Sustainability', 'AB1 - Moot Court Hall', 'var(--warning-color)'),
-            # Wednesday
             (2, '09:00 AM', '10:30 AM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
             (2, '02:15 PM', '03:40 PM', 'Indian Constitution and Democracy', 'AB2 - 207', '#a78bfa'),
-            # Thursday
             (3, '09:00 AM', '10:30 AM', 'Programming in Python', 'AB2 - 207', '#f472b6'),
             (3, '12:20 PM', '01:40 PM', 'Python and Data Structure (LAB)', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
-            # Friday
             (4, '10:40 AM', '12:10 PM', 'Programming in Python', 'AB2 - 202', '#f472b6'),
             (4, '02:15 PM', '03:40 PM', 'Introduction to Data Structures', 'AB2 - 202', 'var(--success-color)'),
             (4, '03:50 PM', '05:15 PM', 'Environment and Sustainability', 'AB2 - 202', 'var(--warning-color)'),
@@ -152,34 +153,30 @@ def seed_db():
             db.session.add(TimetableEntry(section_id=sec3.id, day=day,
                            start_time=st, end_time=et, title=title, room=room, color=color))
 
-        # --- Section 4 timetable ---
-        sec4_timetable = [
-            # Monday
-            (0, '09:00 AM', '10:30 AM', 'Indian Constitution & Democracy', 'AB2 - 202', '#a78bfa'),
-            # Tuesday
-            (1, '09:00 AM', '10:30 AM', 'Discrete Mathematics', 'AB2 - 202', 'var(--primary-color)'),
-            # Wednesday
-            (2, '09:00 AM', '10:30 AM', 'PDS Lab Sec4', 'AB1 Comp Lab', 'var(--accent-color)'),
-            # Thursday
-            (3, '09:00 AM', '10:30 AM', 'Introduction to Data Structures', 'AB2 - 101', 'var(--success-color)'),
-            (3, '10:40 AM', '12:10 PM', 'PDS Lab Sec4', 'AB1 Comp Lab', 'var(--accent-color)'),
-            (3, '12:40 PM', '02:05 PM', 'Indian Constitution & Democracy', 'AB1 - 104', '#a78bfa'),
-            # Friday
-            (4, '09:00 AM', '10:30 AM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
-            (4, '12:40 PM', '02:05 PM', 'Principles of Economics (SAS)', 'AB1 - 101', 'var(--warning-color)'),
-        ]
-        for day, st, et, title, room, color in sec4_timetable:
-            db.session.add(TimetableEntry(section_id=sec4.id, day=day,
-                           start_time=st, end_time=et, title=title, room=room, color=color))
-
-        # Section 2 timetable — placeholder (pending user input)
-        # Will be populated once timetable data is provided
-
         db.session.commit()
         print("Timetable entries seeded.")
 
         # =====================================================================
-        # 8. SAMPLE ANNOUNCEMENTS
+        # 8. TEACHER TASKS & RATINGS
+        # =====================================================================
+        db.session.add_all([
+            TeacherTodo(teacher_id=teacher1.id, title='Grade Python Assignment 1'),
+            TeacherTodo(teacher_id=teacher1.id, title='Prepare Data Structures Slides', is_completed=True),
+            TeacherRating(student_id=vaibhav.id, teacher_id=teacher1.id, course_id=s3_courses[2].id, rating=5, review='Excellent professor! Extremely clear explanations.'),
+            TeacherRating(student_id=sharan.id, teacher_id=teacher1.id, course_id=s4_courses[2].id, rating=4, review='Great lab sessions.')
+        ])
+
+        # =====================================================================
+        # 9. SOCIAL (Friends)
+        # =====================================================================
+        db.session.add_all([
+            FriendRequest(sender_id=sharan.id, recipient_id=vaibhav.id, status='accepted'),
+            Friendship(user1_id=sharan.id, user2_id=vaibhav.id),
+            FriendRequest(sender_id=harshitha.id, recipient_id=vaibhav.id, status='pending')
+        ])
+
+        # =====================================================================
+        # 10. SAMPLE ANNOUNCEMENTS
         # =====================================================================
         a1 = Announcement(school_id=school.id, course_id=None, teacher_id=dean.id,
                           title='Welcome to the new semester!',
@@ -196,7 +193,7 @@ def seed_db():
         print(f"  Dean:       dean@scds.saiuniversity.edu.in")
         print(f"  Teacher1:   prof.smith@scds.saiuniversity.edu.in")
         print(f"  Teacher2:   prof.davis@scds.saiuniversity.edu.in")
-        print(f"  Vaibhav B   (SEC-3): vaibhav.b-29@scds.saiuniversity.edu.in")
+        print(f"  Vaibhav B   (SEC-3, CLASS_REP): vaibhav.b-29@scds.saiuniversity.edu.in")
         print(f"  Sharanpranav A (SEC-4): sharanpranav.a-29@scds.saiuniversity.edu.in")
         print(f"  Harshitha B (SEC-2): harshitha.b-29@scds.saiuniversity.edu.in")
         print(f"  Riddhima P  (SEC-2): ruddhima.p-29@scds.saiuniversity.edu.in")

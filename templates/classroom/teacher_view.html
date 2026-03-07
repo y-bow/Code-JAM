@@ -1,26 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Hive | Manage CS101{% endblock %}
-{% block page_title %}Manage: CS101 (Intro to Programming){% endblock %}
+{% block title %}Hive | Manage {{ course.code }}{% endblock %}
+{% block page_title %}Manage: {{ course.code }} ({{ course.name }}){% endblock %}
 
 {% block sidebar_links %}
 <a href="{{ url_for('dashboard.teacher_dashboard') }}" class="nav-item">
     <span class="material-symbols-rounded">arrow_back</span>
     Back to Hub
 </a>
-<a href="#" class="nav-item active">
+<a href="#" class="nav-item tab-link active" onclick="openTab(event, 'Students')">
     <span class="material-symbols-rounded">manage_accounts</span>
     Students
 </a>
-<a href="#" class="nav-item">
+<a href="#" class="nav-item tab-link" onclick="openTab(event, 'Assignments')">
     <span class="material-symbols-rounded">assignment</span>
     Assignments
 </a>
-<a href="#" class="nav-item">
+<a href="#" class="nav-item tab-link" onclick="openTab(event, 'Attendance')">
     <span class="material-symbols-rounded">checklist</span>
     Attendance
 </a>
-<a href="#" class="nav-item">
+<a href="#" class="nav-item tab-link" onclick="openTab(event, 'Announcements')">
     <span class="material-symbols-rounded">campaign</span>
     Announcements
 </a>
@@ -32,128 +32,250 @@
         <div style="display: flex; gap: 2rem;">
             <div>
                 <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Enrolled</span>
-                <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">45</div>
+                <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">{{ students|length
+                    }}</div>
             </div>
             <div>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Class Avg</span>
-                <div
-                    style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading); color: var(--success-color);">
-                    84%</div>
-            </div>
-            <div>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">At Risk</span>
-                <div
-                    style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading); color: var(--danger-color);">
-                    3</div>
+                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Section</span>
+                <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">{{
+                    course.section.code }}</div>
             </div>
         </div>
 
-        <button id="startMeetingBtn"
-            style="background: var(--primary-color); color: white; padding: 0.75rem 1.5rem; border: none; border-radius: var(--radius-full); font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 0.5rem;">
-            <span class="material-symbols-rounded">videocam</span>
-            Start Live Class
+        {% if course.meet_link %}
+        <a href="{{ course.meet_link }}" target="_blank" class="primary-btn" style="background: var(--success-color);">
+            <span class="material-symbols-rounded">videocam</span> Live Class Active
+        </a>
+        {% else %}
+        <button class="primary-btn" onclick="document.getElementById('meetModal').showModal()">
+            <span class="material-symbols-rounded">videocam</span> Set Meeting Link
         </button>
+        {% endif %}
     </div>
 </div>
 
-<!-- Student Roster / Grades View -->
-<div class="glass-panel" style="border-radius: var(--radius-lg); overflow: hidden;">
-    <div
-        style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-            <span class="material-symbols-rounded" style="color: var(--primary-color);">groups</span>
-            Student Roster
-        </h3>
-        <div style="display: flex; gap: 1rem;">
-            <input type="text" placeholder="Search students..."
-                style="padding: 0.5rem 1rem; border-radius: var(--radius-full); border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
-            <button class="icon-btn" style="border: 1px solid var(--border-color);"><span
-                    class="material-symbols-rounded">filter_list</span></button>
+<!-- TAB: Students -->
+<div id="Students" class="tab-content active">
+    <div class="glass-panel" style="border-radius: var(--radius-lg); overflow: hidden;">
+        <div
+            style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-rounded" style="color: var(--primary-color);">groups</span>
+                Student Roster
+            </h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+                <thead>
+                    <tr style="background: var(--bg-main); border-bottom: 2px solid var(--border-color);">
+                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Name/ID</th>
+                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Attendance</th>
+                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Grade</th>
+                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Status</th>
+                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr style="border-bottom: 1px solid var(--border-color);">
+                        <td style="padding: 1rem 1.5rem;">
+                            <div style="font-weight: 500;">{{ student.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ student.email }}</div>
+                        </td>
+                        <td style="padding: 1rem 1.5rem;">{{ student.attendance }}%</td>
+                        <td style="padding: 1rem 1.5rem;">{{ student.grade }}</td>
+                        <td style="padding: 1rem 1.5rem;">
+                            <span class="status-pill {{ student.risk }}">
+                                {{ "At Risk" if student.risk == 'high' else "Healthy" }}
+                            </span>
+                        </td>
+                        <td style="padding: 1rem 1.5rem;">
+                            <button class="icon-btn" title="View Progress"><span
+                                    class="material-symbols-rounded">analytics</span></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+</div>
 
-    <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; text-align: left;">
-            <thead>
-                <tr style="background: var(--bg-main); border-bottom: 2px solid var(--border-color);">
-                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted);">Name/ID</th>
-                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted);">Attendance</th>
-                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted);">Grade</th>
-                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted);">Status</th>
-                    <th style="padding: 1rem 1.5rem; font-weight: 600; color: var(--text-muted);">Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr
-                    style="border-bottom: 1px solid var(--border-color); transition: background var(--transition-fast);">
-                    <td style="padding: 1rem 1.5rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">AJ</div>
-                            <div>
-                                <div style="font-weight: 500;">Alex Johnson</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">ID: 2024001</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span style="color: var(--success-color); font-weight: 500;">95%</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span style="font-weight: 500;">92% (A)</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span
-                            style="background: rgba(16, 185, 129, 0.1); color: var(--success-color); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">Excellent</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="icon-btn" title="View Profile"><span
-                                    class="material-symbols-rounded">visibility</span></button>
-                            <button class="icon-btn" title="Message"><span
-                                    class="material-symbols-rounded">mail</span></button>
-                        </div>
-                    </td>
-                </tr>
-
-                <tr
-                    style="border-bottom: 1px solid var(--border-color); transition: background var(--transition-fast);">
-                    <td style="padding: 1rem 1.5rem;">
-                        <div style="display: flex; align-items: center; gap: 1rem;">
-                            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">MG</div>
-                            <div>
-                                <div style="font-weight: 500;">Maria Garcia</div>
-                                <div style="font-size: 0.75rem; color: var(--text-muted);">ID: 2024002</div>
-                            </div>
-                        </div>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span style="color: var(--danger-color); font-weight: 500;">60%</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span style="font-weight: 500;">68% (D)</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <span
-                            style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 4px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;">At
-                            Risk ⚠️</span>
-                    </td>
-                    <td style="padding: 1rem 1.5rem;">
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button class="icon-btn" title="View Profile"><span
-                                    class="material-symbols-rounded">visibility</span></button>
-                            <button class="icon-btn" title="Message"><span
-                                    class="material-symbols-rounded">mail</span></button>
-                        </div>
-                    </td>
-                </tr>
-            </tbody>
-        </table>
+<!-- TAB: Assignments -->
+<div id="Assignments" class="tab-content">
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+            <h3>Existing Assignments</h3>
+            <div class="card-grid" style="margin-top: 1rem;">
+                {% for ass in assignments %}
+                <div class="glass-panel"
+                    style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--primary-color);">
+                    <div style="display: flex; justify-content: space-between;">
+                        <h4>{{ ass.title }}</h4>
+                        <span style="font-size: 0.8rem; color: var(--text-muted);">Due: {{ ass.due_date.strftime('%b
+                            %d') }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); height: fit-content;">
+            <h3>Create New</h3>
+            <form action="{{ url_for('classroom.create_assignment', course_id=course.id) }}" method="POST"
+                style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                <input type="text" name="title" class="glass-input" placeholder="Title" required>
+                <textarea name="description" class="glass-input" placeholder="Instructions..."
+                    style="height: 100px;"></textarea>
+                <input type="datetime-local" name="due_date" class="glass-input" required>
+                <input type="number" name="points" class="glass-input" value="100">
+                <button type="submit" class="primary-btn">Post Assignment</button>
+            </form>
+        </div>
     </div>
 </div>
+
+<!-- TAB: Attendance -->
+<div id="Attendance" class="tab-content">
+    <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+        <form action="{{ url_for('classroom.mark_attendance', course_id=course.id) }}" method="POST">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="margin: 0;">Mark Attendance for Today</h3>
+                <input type="date" name="date" class="glass-input" style="width: auto;" value="{{ today_date }}">
+                <button type="submit" class="primary-btn">Save Records</button>
+            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                {% for student in students %}
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 0.75rem;">{{ student.name }}</td>
+                    <td style="padding: 0.75rem; text-align: right;">
+                        <input type="radio" name="status" value="{{ student.id }}:present" checked> Present
+                        <input type="radio" name="status" value="{{ student.id }}:absent" style="margin-left: 1rem;">
+                        Absent
+                        <input type="radio" name="status" value="{{ student.id }}:late" style="margin-left: 1rem;"> Late
+                    </td>
+                </tr>
+                {% endfor %}
+            </table>
+        </form>
+    </div>
+</div>
+
+<!-- TAB: Announcements -->
+<div id="Announcements" class="tab-content">
+    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+            <h3>Class History</h3>
+            <div style="margin-top: 1rem;">
+                {% for ann in announcements %}
+                <div class="announcement-item glass-panel {{ 'urgent' if ann.urgent }}">
+                    <h4>{{ ann.title }}</h4>
+                    <p>{{ ann.body }}</p>
+                    <small>{{ ann.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); height: fit-content;">
+            <h3>Post Announcement</h3>
+            <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST"
+                style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+                <input type="text" name="title" class="glass-input" placeholder="Subject" required>
+                <textarea name="body" class="glass-input" placeholder="Content..." required
+                    style="height: 150px;"></textarea>
+                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
+                    <input type="checkbox" name="urgent"> Mark as Urgent
+                </label>
+                <button type="submit" class="primary-btn">Post to Class</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<dialog id="meetModal" class="glass-panel"
+    style="margin: auto; border: 1px solid var(--primary-color); padding: 2rem; border-radius: var(--radius-lg); color: white;">
+    <h3 style="margin-bottom: 1rem;">Set Video Class Link</h3>
+    <form action="{{ url_for('dashboard.update_meet_link') }}" method="POST"
+        style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <input type="hidden" name="course_id" value="{{ course.id }}">
+        <input type="url" name="meet_link" class="glass-input" placeholder="Google Meet URL" required
+            style="min-width: 400px;">
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" onclick="document.getElementById('meetModal').close()"
+                class="glass-btn">Cancel</button>
+            <button type="submit" class="primary-btn">Save Link</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabContent, tabLinks;
+        tabContent = document.getElementsByClassName("tab-content");
+        for (i = 0; i < tabContent.length; i++) {
+            tabContent[i].style.display = "none";
+        }
+        tabLinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tabLinks.length; i++) {
+            tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "block";
+        evt.currentTarget.className += " active";
+    }
+
+    // Initial display
+    document.getElementById('Students').style.display = "block";
+</script>
 
 <style>
-    tbody tr:hover {
-        background-color: var(--bg-glass-hover);
+    .tab-content {
+        display: none;
+    }
+
+    .tab-content.active {
+        display: block;
+    }
+
+    .status-pill {
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        display: inline-block;
+    }
+
+    .status-pill.low {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+
+    .status-pill.high {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger-color);
+    }
+
+    .announcement-item {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-left: 3px solid var(--border-color);
+    }
+
+    .announcement-item.urgent {
+        border-left-color: var(--danger-color);
+        background: rgba(239, 68, 68, 0.05);
+    }
+
+    .announcement-item h4 {
+        margin: 0 0 0.5rem 0;
+    }
+
+    .announcement-item p {
+        margin: 0 0 0.5rem 0;
+        font-size: 0.9rem;
+        color: var(--text-main);
+    }
+
+    .announcement-item small {
+        color: var(--text-muted);
     }
 </style>
 {% endblock %}
