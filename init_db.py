@@ -1,12 +1,12 @@
-from app import app
-from models import (
+from app import create_app
+from app.models import (
     db, User, Student, Teacher, School, Section,
-    Course, Enrollment, Announcement, TimetableEntry
+    Course, Enrollment, Announcement, TimetableEntry,
+    bcrypt
 )
-from flask_bcrypt import Bcrypt
 from datetime import datetime
 
-bcrypt = Bcrypt(app)
+app = create_app()
 
 
 def seed_db():

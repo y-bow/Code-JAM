@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, g
 from datetime import datetime
-from middleware import school_scoped, role_minimum
-from models import (
+from ..middleware import school_scoped, role_minimum
+from ..models import (
     db, User, Course, Enrollment, Assignment, Submission,
     Section, CustomTask, Announcement, TimetableEntry
 )

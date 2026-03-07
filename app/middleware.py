@@ -12,7 +12,7 @@ Usage in routes:
 """
 from functools import wraps
 from flask import session, g, abort, flash, redirect, url_for
-from models import User, ROLE_HIERARCHY, Message, Announcement
+from .models import User, ROLE_HIERARCHY, Message, Announcement
 
 
 def school_scoped(f):
