@@ -38,7 +38,7 @@ def history(other_user_id):
             and_(Message.sender_id == user.id, Message.recipient_id == other_user_id),
             and_(Message.sender_id == other_user_id, Message.recipient_id == user.id)
         )
-    ).order_by(Message.created_at.asc()).all()
+    ).order_by(Message.sent_at.asc()).all()
     
     # Mark as read
     Message.query.filter_by(sender_id=other_user_id, recipient_id=user.id, is_read=False).update({'is_read': True})
@@ -48,7 +48,7 @@ def history(other_user_id):
         'id': m.id,
         'sender_id': m.sender_id,
         'body': m.body,
-        'timestamp': m.created_at.strftime('%H:%M')
+        'timestamp': m.sent_at.strftime('%H:%M')
     } for m in messages])
 
 @messages_bp.route('/send', methods=['POST'])
@@ -68,7 +68,7 @@ def send():
     msg = Message(sender_id=g.current_user.id, recipient_id=recipient_id, body=body)
     db.session.add(msg)
     db.session.commit()
-    return jsonify({'id': msg.id, 'timestamp': msg.created_at.strftime('%H:%M')})
+    return jsonify({'id': msg.id, 'timestamp': msg.sent_at.strftime('%H:%M')})
 
 @messages_bp.route('/request/send/<int:user_id>', methods=['POST'])
 @school_scoped

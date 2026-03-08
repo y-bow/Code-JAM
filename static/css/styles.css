@@ -228,6 +228,24 @@ a {
     color: var(--text-muted);
 }
 
+.rep-badge-mini {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    font-size: 0.8rem;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+    z-index: 1;
+}
+
+.rep-badge-large {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+    font-size: 1.5rem;
+    filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    z-index: 1;
+}
+
 /* Main Content */
 .main-content {
     flex-grow: 1;

@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, url_for
+from flask import Flask, redirect, url_for, session
 from dotenv import load_dotenv
 from .models import db, bcrypt
 
@@ -36,6 +36,16 @@ def create_app():
 
     @app.route('/')
     def index():
+        if 'user_id' in session:
+            role = session.get('role')
+            if role in ('student', 'class_rep'):
+                return redirect(url_for('dashboard.student_dashboard'))
+            elif role in ('teacher', 'assistant'):
+                return redirect(url_for('dashboard.teacher_dashboard'))
+            elif role == 'dean':
+                return redirect(url_for('dashboard.school_analytics'))
+            elif role == 'timetable_manager':
+                return redirect(url_for('dashboard.manage_timetable'))
         return redirect(url_for('auth.login'))
 
     return app

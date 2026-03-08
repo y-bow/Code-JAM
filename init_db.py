@@ -25,9 +25,14 @@ def seed_db():
             code='SCDS',
             domain='scds.saiuniversity.edu.in'
         )
-        db.session.add(school)
+        school_soai = School(
+            name='Sai University - School of Artificial Intelligence',
+            code='SOAI',
+            domain='soai.saiuniversity.edu.in'
+        )
+        db.session.add_all([school, school_soai])
         db.session.commit()
-        print(f"School created: {school.name}")
+        print(f"Schools created: {school.name}, {school_soai.name}")
 
         # =====================================================================
         # 2. SECTIONS
@@ -35,9 +40,10 @@ def seed_db():
         sec2 = Section(school_id=school.id, name='Section 2', code='SEC-2', batch_year=2025)
         sec3 = Section(school_id=school.id, name='Section 3', code='SEC-3', batch_year=2025)
         sec4 = Section(school_id=school.id, name='Section 4', code='SEC-4', batch_year=2025)
-        db.session.add_all([sec2, sec3, sec4])
+        sec_soai_1 = Section(school_id=school_soai.id, name='SOAI Section 1', code='SOAI-SEC1', batch_year=2025)
+        db.session.add_all([sec2, sec3, sec4, sec_soai_1])
         db.session.commit()
-        print(f"Sections created: SEC-2, SEC-3, SEC-4")
+        print(f"Sections created: SEC-2, SEC-3, SEC-4, SOAI-SEC1")
 
         # =====================================================================
         # 3. USERS
@@ -53,7 +59,7 @@ def seed_db():
         teacher2 = User(school_id=school.id, email='prof.davis@scds.saiuniversity.edu.in',
                         password_hash=pw, role='teacher', name='Prof. Sarah Davis')
 
-        # Students
+        # Students SCDS
         vaibhav = User(school_id=school.id, email='vaibhav.b-29@scds.saiuniversity.edu.in',
                        password_hash=pw, role='student', name='Vaibhav B')
         sharan = User(school_id=school.id, email='sharanpranav.a-29@scds.saiuniversity.edu.in',
@@ -63,7 +69,22 @@ def seed_db():
         riddhima = User(school_id=school.id, email='ruddhima.p-29@scds.saiuniversity.edu.in',
                         password_hash=pw, role='student', name='Riddhima P')
 
-        all_users = [admin, dean, teacher1, teacher2, vaibhav, sharan, harshitha, riddhima]
+        # SOAI Users
+        greeta = User(school_id=school_soai.id, email='greeta@soai.saiuniversity.edu.in',
+                      password_hash=pw, role='teacher', name='Greeta')
+        siddharth = User(school_id=school_soai.id, email='siddharth@soai.saiuniversity.edu.in',
+                         password_hash=pw, role='teacher', name='Siddharth')
+        siddanth = User(school_id=school_soai.id, email='siddanth@soai.saiuniversity.edu.in',
+                        password_hash=pw, role='teacher', name='Siddanth')
+        pankaj = User(school_id=school_soai.id, email='pankaj@soai.saiuniversity.edu.in',
+                      password_hash=pw, role='teacher', name='Pankaj')
+        arun_kumar = User(school_id=school_soai.id, email='arun.kumar@soai.saiuniversity.edu.in',
+                          password_hash=pw, role='teacher', name='Arun Kumar')
+        sadhana = User(school_id=school_soai.id, email='sadhana.s@soai.saiuniversity.edu.in',
+                       password_hash=pw, role='student', name='Sadhana Srinivasan')
+
+        all_users = [admin, dean, teacher1, teacher2, vaibhav, sharan, harshitha, riddhima,
+                     greeta, siddharth, siddanth, pankaj, arun_kumar, sadhana]
         db.session.add_all(all_users)
         db.session.commit()
         print(f"Users created: {len(all_users)}")
@@ -75,20 +96,27 @@ def seed_db():
         t2 = Teacher(user_id=teacher2.id, department='Mathematics', office_hours='Tue/Thu 2pm-4pm')
         db.session.add_all([t1, t2])
 
+        # SOAI Teachers
+        soai_teachers = [
+            Teacher(user_id=greeta.id, department='Artificial Intelligence'),
+            Teacher(user_id=siddharth.id, department='Humanities'),
+            Teacher(user_id=siddanth.id, department='Social Sciences'),
+            Teacher(user_id=pankaj.id, department='Computer Science'),
+            Teacher(user_id=arun_kumar.id, department='Mathematics'),
+        ]
+        db.session.add_all(soai_teachers)
+
         # Student profiles — assigned to correct sections
         student_sections = [
             (vaibhav, sec3),      # Vaibhav B → Section 3
             (sharan, sec4),       # Sharanpranav A → Section 4
             (harshitha, sec2),    # Harshitha B → Section 2
             (riddhima, sec2),     # Riddhima P → Section 2
+            (sadhana, sec_soai_1), # Sadhana Srinivasan → SOAI Section 1
         ]
         for user, section in student_sections:
             db.session.add(Student(user_id=user.id, section_id=section.id,
                                    enrollment_year=2025, major='Computer Science'))
-        
-        # Add a Class Rep for Section 3
-        db.session.add(ClassRep(student_id=vaibhav.id, section_id=sec3.id))
-        vaibhav.role = 'class_rep'
 
         db.session.commit()
         print("Profiles and Class Reps created.")
@@ -113,9 +141,24 @@ def seed_db():
             Course(section_id=sec4.id, name='Discrete Mathematics', code='MATH201', teacher_id=teacher2.id, credits=4),
             Course(section_id=sec4.id, name='PDS Lab Sec4', code='CS102L', teacher_id=teacher1.id, credits=4),
             Course(section_id=sec4.id, name='Introduction to Data Structures', code='CS201', teacher_id=teacher1.id, credits=4),
-            Course(section_id=sec4.id, name='Principles of Economics (SAS)', code='ECO101', teacher_id=teacher2.id, credits=3),
+            Course(section_id=sec4.id, name='Programming in Python', code='CS101', teacher_id=teacher1.id, credits=3),
+            Course(section_id=sec4.id, name='Environment and Sustainability', code='ENV101', teacher_id=teacher2.id, credits=3),
         ]
         db.session.add_all(s4_courses)
+
+        # SOAI Courses
+        soai_courses = [
+            Course(section_id=sec_soai_1.id, name='DS in C Lab', code='AI101L', teacher_id=greeta.id, credits=2),
+            Course(section_id=sec_soai_1.id, name='AI in Programming', code='AI101', teacher_id=greeta.id, credits=4),
+            Course(section_id=sec_soai_1.id, name='Critical Thinking', code='HUM101', teacher_id=siddharth.id, credits=3),
+            Course(section_id=sec_soai_1.id, name='AI Programming Lab', code='AI102L', teacher_id=greeta.id, credits=2),
+            Course(section_id=sec_soai_1.id, name='Intro to Embedded Systems and Robotics', code='AI201', teacher_id=greeta.id, credits=4),
+            Course(section_id=sec_soai_1.id, name='Data Structures', code='AI202', teacher_id=greeta.id, credits=4),
+            Course(section_id=sec_soai_1.id, name='Indian Constitution', code='POL102', teacher_id=siddanth.id, credits=3),
+            Course(section_id=sec_soai_1.id, name='OOP\'s', code='AI203', teacher_id=pankaj.id, credits=4),
+            Course(section_id=sec_soai_1.id, name='P&S', code='MATH102', teacher_id=arun_kumar.id, credits=4),
+        ]
+        db.session.add_all(soai_courses)
         db.session.commit()
         print("Courses created with meet links.")
 
@@ -128,6 +171,9 @@ def seed_db():
         # Enroll Sharan in all Sec4 courses
         for c in s4_courses:
             db.session.add(Enrollment(student_id=sharan.id, course_id=c.id))
+        # Enroll Sadhana in all SOAI courses
+        for c in soai_courses:
+            db.session.add(Enrollment(student_id=sadhana.id, course_id=c.id))
         db.session.commit()
         print("Enrollments created.")
 
@@ -151,6 +197,53 @@ def seed_db():
         ]
         for day, st, et, title, room, color in sec3_timetable:
             db.session.add(TimetableEntry(section_id=sec3.id, day=day,
+                           start_time=st, end_time=et, title=title, room=room, color=color))
+
+        # --- Section 4 timetable ---
+        sec4_timetable = [
+            (0, '09:00 AM', '10:30 AM', 'Indian Constitution and Democracy', 'AB2-202', '#a78bfa'),
+            (0, '01:40 PM', '03:05 PM', 'Programming in Python', 'AB2-101', '#f472b6'),
+            (1, '09:00 AM', '10:30 AM', 'Discrete Mathematics', 'AB1-104', 'var(--primary-color)'),
+            (1, '03:50 PM', '05:15 PM', 'Environment and Sustainability', 'AB2 - 207', 'var(--warning-color)'),
+            (2, '09:00 AM', '10:30 AM', 'PDS Lab', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
+            (2, '10:40 AM', '12:10 PM', 'Introduction to Data Structures', 'AB2 - 202', 'var(--success-color)'),
+            (2, '01:40 PM', '03:05 PM', 'Programming in Python', 'AB2 - 203', '#f472b6'),
+            (3, '09:00 AM', '10:30 AM', 'Introduction to Data Structures', 'AB2-101', 'var(--success-color)'),
+            (3, '10:40 AM', '12:10 PM', 'PDS Lab', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
+            (3, '12:40 PM', '02:05 PM', 'Indian Constitution and Democracy', 'AB1 - 104', '#a78bfa'),
+            (4, '10:35 AM', '12:05 PM', 'Environment and Sustainability', 'AB2 - 101', 'var(--warning-color)'),
+            (4, '02:15 PM', '03:40 PM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
+        ]
+        for day, st, et, title, room, color in sec4_timetable:
+            db.session.add(TimetableEntry(section_id=sec4.id, day=day,
+                           start_time=st, end_time=et, title=title, room=room, color=color))
+
+        # --- SOAI Section 1 timetable ---
+        soai_timetable = [
+            # Monday
+            (0, '09:00 AM', '10:30 AM', 'DS in C Lab', 'AB1 LAB', 'var(--accent-color)'),
+            (0, '12:40 PM', '02:05 PM', 'AI in Programming', 'AB1 101', '#f472b6'),
+            (0, '03:50 PM', '05:15 PM', 'Critical Thinking', 'AB2 101', '#a78bfa'),
+            # Tuesday
+            (1, '09:00 AM', '10:30 AM', 'AI Programming Lab', 'AB1 LAB', 'var(--accent-color)'),
+            (1, '10:40 AM', '12:10 PM', 'Intro to Embedded Systems and Robotics', 'AB2 203', 'var(--warning-color)'),
+            (1, '12:40 PM', '02:05 PM', 'Data Structures', 'AB1 101', 'var(--success-color)'),
+            (1, '02:15 PM', '03:40 PM', 'Intro to Embedded Systems and Robotics', 'AB2 207', 'var(--warning-color)'),
+            # Wednesday
+            (2, '09:00 AM', '10:30 AM', 'Indian Constitution', 'AB2 - 202', '#a78bfa'),
+            (2, '10:40 AM', '12:10 PM', 'OOP\'s', 'Moot court', 'var(--primary-color)'),
+            (2, '12:40 PM', '02:05 PM', 'AI in Programming', 'AB1 101', '#f472b6'),
+            # Thursday
+            (3, '09:00 AM', '10:30 AM', 'Critical Thinking', 'AB2 202', '#a78bfa'),
+            (3, '10:40 AM', '12:10 PM', 'Data Structures', 'AB1 101', 'var(--success-color)'),
+            (3, '02:15 PM', '03:40 PM', 'Indian Constitution', 'AB2 Mini Audi', '#a78bfa'),
+            (3, '03:50 PM', '05:15 PM', 'P&S', 'AB2 - 203', 'var(--danger-color)'),
+            # Friday
+            (4, '09:00 AM', '10:30 AM', 'P&S', 'AB2 - 203', 'var(--danger-color)'),
+            (4, '10:40 AM', '12:10 PM', 'OOP\'s', 'AB1 101', 'var(--primary-color)'),
+        ]
+        for day, st, et, title, room, color in soai_timetable:
+            db.session.add(TimetableEntry(section_id=sec_soai_1.id, day=day,
                            start_time=st, end_time=et, title=title, room=room, color=color))
 
         db.session.commit()
@@ -193,10 +286,11 @@ def seed_db():
         print(f"  Dean:       dean@scds.saiuniversity.edu.in")
         print(f"  Teacher1:   prof.smith@scds.saiuniversity.edu.in")
         print(f"  Teacher2:   prof.davis@scds.saiuniversity.edu.in")
-        print(f"  Vaibhav B   (SEC-3, CLASS_REP): vaibhav.b-29@scds.saiuniversity.edu.in")
+        print(f"  Vaibhav B   (SEC-3): vaibhav.b-29@scds.saiuniversity.edu.in")
         print(f"  Sharanpranav A (SEC-4): sharanpranav.a-29@scds.saiuniversity.edu.in")
         print(f"  Harshitha B (SEC-2): harshitha.b-29@scds.saiuniversity.edu.in")
         print(f"  Riddhima P  (SEC-2): ruddhima.p-29@scds.saiuniversity.edu.in")
+        print(f"  Sadhana S   (SOAI-SEC1): sadhana.s@soai.saiuniversity.edu.in")
 
 
 if __name__ == '__main__':

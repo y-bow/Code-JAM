@@ -189,6 +189,16 @@ def toggle_task(task_id):
     return redirect(url_for('dashboard.tasks'))
 
 
+@dashboard_bp.route('/tasks/delete/<int:task_id>', methods=['POST'])
+@school_scoped
+def delete_task(task_id):
+    task = CustomTask.query.get_or_404(task_id)
+    if task.user_id == g.current_user.id:
+        db.session.delete(task)
+        db.session.commit()
+    return redirect(url_for('dashboard.tasks'))
+
+
 @dashboard_bp.route('/teacher/tasks/add', methods=['POST'])
 @school_scoped
 @role_minimum('teacher')
