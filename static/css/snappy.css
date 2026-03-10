@@ -1,0 +1,509 @@
+/* 
+   HIVE LMS Snappy UI Extensions 
+   Focus: Speed, Visual Feedback, and Premium Feel
+*/
+
+/* 1. NProgress Custom Style */
+#nprogress .bar {
+    background: var(--primary-color) !important;
+    height: 3px !important;
+}
+
+#nprogress .peg {
+    box-shadow: 0 0 10px var(--primary-color), 0 0 5px var(--primary-color) !important;
+}
+
+#nprogress .spinner-icon {
+    border-top-color: var(--primary-color) !important;
+    border-left-color: var(--primary-color) !important;
+}
+
+/* 2. Skeleton Loader */
+.skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: var(--radius-md);
+}
+
+body.dark-theme .skeleton {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.skeleton::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.2),
+            transparent);
+    animation: shimmer 1.5s infinite;
+}
+
+body.dark-theme .skeleton::after {
+    background: linear-gradient(90deg,
+            transparent,
+            rgba(255, 255, 255, 0.05),
+            transparent);
+}
+
+@keyframes shimmer {
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+/* 3. Toast Notifications */
+.toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    z-index: 9999;
+}
+
+.toast {
+    min-width: 280px;
+    max-width: 400px;
+    padding: 1rem 1.25rem;
+    background: var(--bg-glass);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border-color);
+    border-left: 4px solid var(--primary-color);
+    border-radius: var(--radius-md);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    transform: translateX(120%);
+    transition: transform 0.3s ease-in-out;
+}
+
+.toast.show {
+    transform: translateX(0);
+}
+
+.toast.success {
+    border-left-color: var(--success-color);
+}
+
+.toast.error {
+    border-left-color: var(--danger-color);
+}
+
+.toast.warning {
+    border-left-color: var(--warning-color);
+}
+
+.toast-content {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-main);
+}
+
+/* 4. Micro-animations */
+.fade-up {
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUpIn 0.5s ease forwards;
+}
+
+@keyframes fadeUpIn {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.hover-lift {
+    transition: transform var(--transition-fast), box-shadow var(--transition-fast) !important;
+}
+
+.hover-lift:hover {
+    transform: translateY(-3px) !important;
+    box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.2) !important;
+}
+
+.hover-translate {
+    transition: transform 0.3s ease;
+}
+
+.hover-translate:hover {
+    transform: translateX(5px);
+}
+
+.btn-interact {
+    transition: transform var(--transition-fast), filter var(--transition-fast) !important;
+}
+
+.btn-interact:hover {
+    transform: scale(1.02) !important;
+    filter: brightness(1.1);
+}
+
+.btn-interact:active {
+    transform: scale(0.98) !important;
+}
+
+/* 5. Dashboard Specifics */
+.deadline-pulse {
+    position: relative;
+}
+
+.deadline-pulse::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--danger-color);
+    border-radius: 4px 0 0 4px;
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+    }
+
+    70% {
+        box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+    }
+}
+
+/* 6. Forms & Inputs */
+.floating-field {
+    position: relative;
+    margin-bottom: 0.8rem;
+}
+
+.floating-field label {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    padding: 0 0.5rem;
+    color: var(--text-muted);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: all 0.15s ease-out;
+}
+
+.floating-field input:focus+label,
+.floating-field input:not(:placeholder-shown)+label {
+    top: -0.6rem;
+    left: 0.8rem;
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    letter-spacing: 0.5px;
+    background: transparent;
+}
+
+.form-control:focus,
+input:focus,
+textarea:focus,
+select:focus {
+    outline: none;
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1), 0 0 10px rgba(37, 99, 235, 0.1) !important;
+    animation: pulseBorder 2s infinite;
+}
+
+/* Fix for jumping symbols (@, #, etc.) by locking baseline and line-height */
+input,
+textarea,
+select {
+    line-height: 1.2 !important;
+    vertical-align: middle !important;
+    font-feature-settings: "tnum" on, "lnum" on !important;
+    font-variant-numeric: tabular-nums lining-nums !important;
+    padding-right: 3.5rem !important;
+    /* Make space for browser extensions icons */
+}
+
+@keyframes pulseBorder {
+    0% {
+        box-shadow: 0 0 0 0px rgba(37, 99, 235, 0.2);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.05);
+    }
+
+    100% {
+        box-shadow: 0 0 0 0px rgba(37, 99, 235, 0.2);
+    }
+}
+
+.drop-zone {
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 2rem;
+    text-align: center;
+    transition: all var(--transition-normal);
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.drop-zone.drag-over {
+    border-color: var(--primary-color);
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.validation-msg {
+    position: absolute;
+    bottom: -1.8rem;
+    right: 1rem;
+    left: auto;
+    font-size: 0.6rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    transition: opacity 0.3s, transform 0.3s;
+    margin-top: 0.4rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.validation-msg.error {
+    color: var(--danger-color);
+}
+
+/* 11. Video Background Fallback */
+.video-background {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    filter: brightness(0.6);
+}
+
+form div {
+    position: relative;
+}
+
+/* 7. Navigation & Interaction */
+.scroll-top-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    width: 45px;
+    height: 45px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all var(--transition-normal);
+    border: none;
+}
+
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.shortcut-btn {
+    position: fixed;
+    bottom: 2rem;
+    right: 5.5rem;
+    width: 45px;
+    height: 45px;
+    background: var(--bg-glass);
+    border: 1px solid var(--border-color);
+    color: var(--text-main);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 1000;
+}
+
+.shortcuts-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s;
+}
+
+.shortcuts-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.shortcuts-card {
+    background: var(--bg-glass);
+    padding: 2.5rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    width: 400px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.shortcut-item {
+    display: flex;
+    justify-content: space-between;
+    margin: 1rem 0;
+}
+
+.kdb-key {
+    background: var(--text-main);
+    color: var(--bg-main);
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-family: monospace;
+    font-weight: bold;
+}
+
+/* 8. Tooltips */
+[data-tooltip] {
+    position: relative;
+}
+
+[data-tooltip]::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 110%;
+    left: 50%;
+    transform: translateX(-50%) translateY(5px);
+    background: #1e293b;
+    color: white;
+    padding: 0.5rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    pointer-events: none;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+[data-tooltip]:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 9. Mobile Navigation */
+.mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background: var(--bg-glass);
+    backdrop-filter: blur(16px);
+    border-top: 1px solid var(--border-color);
+    height: 65px;
+    z-index: 1000;
+    justify-content: space-around;
+    align-items: center;
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@media (max-width: 768px) {
+    .mobile-nav {
+        display: flex;
+    }
+
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        padding-bottom: 70px;
+    }
+
+    .topbar {
+        padding: 0 1rem;
+    }
+
+    .content-wrapper {
+        padding: 1rem;
+    }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 80px;
+        padding: 1.5rem 0.5rem;
+    }
+
+    .sidebar .logo h1,
+    .sidebar .user-info,
+    .sidebar .nav-item span:not(.material-symbols-rounded) {
+        display: none;
+    }
+
+    .nav-item {
+        justify-content: center;
+    }
+}
+
+/* 10. Sidebar Slide Animation */
+.sidebar-nav .nav-item {
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.2s;
+}
+
+/* Empty States CSS */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: var(--text-muted);
+}
+
+.empty-state svg {
+    width: 80px;
+    height: 80px;
+    margin-bottom: 1.5rem;
+    opacity: 0.5;
+}
+
+.last-updated {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    margin-top: 0.5rem;
+    display: block;
+    text-align: center;
+}

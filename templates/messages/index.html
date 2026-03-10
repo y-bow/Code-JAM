@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Hive | Messages{% endblock %}
-{% block page_title %}Messages & Friends{% endblock %}
+{% block page_title %}Messages{% endblock %}
 
 {% block content %}
 <div class="messages-container">
@@ -9,12 +9,17 @@
     <div class="chat-list-panel glass-panel">
         <div class="panel-header">
             <div class="tab-nav-premium">
-                <button class="tab-btn-p active" onclick="switchSideTab(this, 'chats')">
+                <button type="button" class="tab-btn-p active" onclick="switchSideTab(this, 'chats')">
                     <span class="material-symbols-rounded">chat</span> Chats
                 </button>
-                <button class="tab-btn-p" onclick="switchSideTab(this, 'friends')">
+                {% if g.current_user.role != 'teacher' %}
+                <button type="button" class="tab-btn-p" onclick="switchSideTab(this, 'friends')">
                     <span class="material-symbols-rounded">group</span> Friends
                 </button>
+                <button type="button" class="tab-btn-p" id="add-friend-btn">
+                    <span class="material-symbols-rounded">person_add</span> Add
+                </button>
+                {% endif %}
             </div>
 
             <div class="search-wrapper">
@@ -47,12 +52,18 @@
             <div class="empty-state">
                 <span class="material-symbols-rounded">chat_bubble</span>
                 <p>No active chats</p>
+                {% if g.current_user.role != 'teacher' %}
                 <span class="subtitle">Start a conversation from your friends list</span>
+                {% else %}
+                <span class="subtitle">Search for students or faculty to start a message</span>
+                {% endif %}
             </div>
             {% endif %}
         </div>
 
+        {% if g.current_user.role != 'teacher' %}
         <div id="side-friends" class="side-tab-content" style="display: none;">
+            <!-- ... existing friends list content ... -->
             <div class="friends-list-container">
                 {% if pending_requests %}
                 <div class="section-label">Pending Requests</div>
@@ -98,6 +109,7 @@
                 {% endif %}
             </div>
         </div>
+        {% endif %}
     </div>
 
     <!-- Main Chat Window -->
@@ -153,16 +165,160 @@
     </div>
 </div>
 
+<!-- Add Friend Modal -->
+<div id="add-friend-modal" class="modal-overlay">
+    <div class="modal-content glass-panel" style="width: 500px;">
+        <div class="modal-header-p"
+            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+            <h2 style="margin: 0;">Find Friends</h2>
+            <button type="button" class="close-modal" style="position: static; font-size: 1.5rem;"
+                onclick="closeAddFriendModal()">
+                <span class="material-symbols-rounded">close</span>
+            </button>
+        </div>
+        <div class="modal-body-p">
+            <div class="search-wrapper">
+                <span class="material-symbols-rounded search-icon">search</span>
+                <input type="text" id="user-search-input" class="glass-input-premium"
+                    placeholder="Search by name or email..." oninput="searchUsers(this.value)">
+            </div>
+            <div id="search-results" class="search-results-list"
+                style="margin-top: 1.5rem; max-height: 350px; overflow-y: auto;">
+                <!-- Results injected here -->
+                <div class="empty-state-mini" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                    <p>Type at least 2 characters to search</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let currentRecipientId = null;
     const currentUserId = {{ g.current_user.id }};
 
     function switchSideTab(btn, tab) {
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-btn-p').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.querySelectorAll('.side-tab-content').forEach(c => c.style.display = 'none');
         document.getElementById('side-' + tab).style.display = 'block';
     }
+
+    // Event listener for opening the modal
+    document.getElementById('add-friend-btn').addEventListener('click', function (e) {
+        e.stopPropagation();
+        openAddFriendModal();
+    });
+
+    function openAddFriendModal() {
+        const modal = document.getElementById('add-friend-modal');
+        modal.classList.add('active');
+        setTimeout(() => {
+            document.getElementById('user-search-input').focus();
+        }, 100);
+    }
+
+    function closeAddFriendModal() {
+        const modal = document.getElementById('add-friend-modal');
+        modal.classList.remove('active');
+        document.getElementById('user-search-input').value = '';
+        document.getElementById('search-results').innerHTML = '<div class="empty-state-mini" style="text-align: center; padding: 2rem; color: var(--text-muted);"><p>Type at least 2 characters to search</p></div>';
+    }
+
+    let searchTimeout = null;
+    function searchUsers(query) {
+        clearTimeout(searchTimeout);
+        if (query.length < 2) {
+            document.getElementById('search-results').innerHTML = '<div class="empty-state-mini" style="text-align: center; padding: 2rem; color: var(--text-muted);"><p>Type at least 2 characters to search</p></div>';
+            return;
+        }
+
+        searchTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/messages/search_users?q=${encodeURIComponent(query)}`);
+                const results = await response.json();
+                const container = document.getElementById('search-results');
+
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="empty-state-mini"><p>No users found</p></div>';
+                    return;
+                }
+
+                container.innerHTML = results.map(r => `
+                    <div class="search-result-item">
+                        <div class="user-info">
+                            <div class="avatar-mini">${r.name[0].toUpperCase()}</div>
+                            <div class="name-col">
+                                <span class="res-name">${r.name}</span>
+                                <span class="res-role">${r.role.replace('_', ' ')}</span>
+                            </div>
+                        </div>
+                        <div class="res-actions">
+                            ${renderActionButton(r)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    }
+
+    function renderActionButton(user) {
+        if (user.status === 'friends') {
+            return '<span class="status-tag">Friends</span>';
+        } else if (user.status === 'pending_sent') {
+            return '<span class="status-tag pending">Requested</span>';
+        } else if (user.status === 'pending_received') {
+            return `<button class="p-btn-small" onclick="respondRequestDirect(${user.request_id}, 'accept')">Accept</button>`;
+        } else {
+            return `<button class="p-btn-small" onclick="sendFriendRequest(${user.id})">Add Friend</button>`;
+        }
+    }
+
+    async function sendFriendRequest(userId) {
+        try {
+            const response = await fetch(`/messages/request/send/${userId}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) {
+                searchUsers(document.getElementById('user-search-input').value);
+            }
+        } catch (error) {
+            console.error('Add friend error:', error);
+        }
+    }
+
+    async function respondRequestDirect(requestId, action) {
+        try {
+            const response = await fetch(`/messages/request/respond/${requestId}/${action}`, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            if (response.ok) {
+                searchUsers(document.getElementById('user-search-input').value);
+                // Also update the friends list in the sidebar if it's visible
+                location.reload(); // Simplest way to refresh all states
+            }
+        } catch (error) {
+            console.error('Respond request error:', error);
+        }
+    }
+
+    // Close modal on outside click
+    document.getElementById('add-friend-modal').addEventListener('click', function (e) {
+        if (e.target === this) {
+            closeAddFriendModal();
+        }
+    });
+
+    // Also close on Escape key
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAddFriendModal();
+        }
+    });
 
     async function loadChat(userId, userName) {
         currentRecipientId = userId;
@@ -689,6 +845,109 @@
 
     .danger-item:hover {
         background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Modal Custom Higher Z-Index */
+    #add-friend-modal {
+        z-index: 2000;
+    }
+
+    .search-results-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .search-result-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.75rem;
+        border-radius: var(--radius-md);
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid transparent;
+        transition: all 0.2s;
+    }
+
+    .search-result-item:hover {
+        background: rgba(255, 255, 255, 0.05);
+        border-color: var(--border-color);
+    }
+
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+
+    .avatar-mini {
+        width: 36px;
+        height: 36px;
+        background: var(--primary-color);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 0.9rem;
+        color: white;
+    }
+
+    .name-col {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .res-name {
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .res-role {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: capitalize;
+    }
+
+    .p-btn-small {
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 0.4rem 1rem;
+        border-radius: var(--radius-full);
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .p-btn-small:hover {
+        background: var(--primary-hover);
+        transform: translateY(-1px);
+    }
+
+    .status-tag {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--success-color);
+        padding: 0.25rem 0.75rem;
+        background: rgba(34, 197, 94, 0.1);
+        border-radius: var(--radius-full);
+    }
+
+    .status-tag.pending {
+        color: var(--warning-color);
+        background: rgba(245, 158, 11, 0.1);
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
     }
 </style>
 {% endblock %}

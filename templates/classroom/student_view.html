@@ -73,7 +73,7 @@
     </div>
 
     <!-- Assignments TAB -->
-    <div class="main-column" id="Assignments" style="display: none;">
+    <div class="main-column fade-up" id="Assignments" style="display: none;">
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
             <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
                 <span class="material-symbols-rounded" style="color: var(--warning-color);">assignment</span>
@@ -83,7 +83,7 @@
             {% if assignments %}
             <div style="display: flex; flex-direction: column; gap: 1.5rem;">
                 {% for ass in assignments %}
-                <div class="assignment-item glass-panel">
+                <div class="assignment-item glass-panel hover-lift">
                     <div
                         style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
                         <div>
@@ -91,29 +91,39 @@
                             <span style="font-size: 0.8rem; color: var(--text-muted);">Max Points: {{ ass.max_points
                                 }}</span>
                         </div>
-                        <span class="due-pill">Due: {{ ass.due_date.strftime('%b %d, %H:%M') }}</span>
+                        <span class="due-pill deadline-pulse">Due: {{ ass.due_date.strftime('%b %d, %H:%M') }}</span>
                     </div>
                     <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">{{ ass.description }}
                     </p>
 
-                    <div class="upload-area">
+                    <div class="drop-zone" onclick="document.getElementById('file-{{ ass.id }}').click()"
+                        ondragover="this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')"
+                        ondrop="this.classList.remove('drag-over')">
                         <span class="material-symbols-rounded">cloud_upload</span>
-                        <p>Upload your solution</p>
+                        <p>Drag file here or click to browse</p>
+                        <input type="file" id="file-{{ ass.id }}" style="display: none;">
                     </div>
                     <div style="display: flex; justify-content: flex-end; margin-top: 1rem;">
-                        <button class="primary-btn">Submit Work</button>
+                        <button class="primary-btn btn-interact">Submit Work</button>
                     </div>
                 </div>
                 {% endfor %}
             </div>
             {% else %}
-            <p style="text-align: center; color: var(--text-muted);">No assignments posted yet.</p>
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                </svg>
+                <p>No assignments yet — enjoy the peace ✌️</p>
+            </div>
             {% endif %}
         </div>
     </div>
 
     <!-- Performance TAB -->
-    <div class="main-column" id="Performance" style="display: none;">
+    <div class="main-column fade-up" id="Performance" style="display: none;">
         <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
             <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 2rem;">
                 <span class="material-symbols-rounded" style="color: var(--success-color);">analytics</span>
@@ -121,9 +131,10 @@
             </h3>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem;">
-                <div class="stat-box">
+                <div class="stat-box staggered-item">
                     <span style="color: var(--text-muted); font-size: 0.9rem;">Current Grade</span>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);">{{ avg_grade }}%
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--success-color);"><span
+                            class="animate-number">{{ avg_grade }}</span>%
                     </div>
                     <div class="progress-bar">
                         <div style="width: {{ avg_grade }}%; background: var(--success-color);"></div>
@@ -132,9 +143,10 @@
 
                 {% set att_pct = (attendance|selectattr('status', 'equalto', 'present')|list|length / (attendance|length
                 or 1) * 100)|round(1) %}
-                <div class="stat-box">
+                <div class="stat-box staggered-item">
                     <span style="color: var(--text-muted); font-size: 0.9rem;">Attendance</span>
-                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--warning-color);">{{ att_pct }}%</div>
+                    <div style="font-size: 2.5rem; font-weight: bold; color: var(--warning-color);"><span
+                            class="animate-number">{{ att_pct }}</span>%</div>
                     <div class="progress-bar">
                         <div style="width: {{ att_pct }}%; background: var(--warning-color);"></div>
                     </div>

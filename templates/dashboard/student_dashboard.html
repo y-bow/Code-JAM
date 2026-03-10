@@ -15,7 +15,8 @@
         </div>
 
         <!-- Weekly Timetable Preview -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
+        <div class="glass-panel hover-lift"
+            style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="material-symbols-rounded" style="color: var(--primary-color);">calendar_today</span>
@@ -27,7 +28,7 @@
             <div class="timetable-list" style="display: flex; flex-direction: column; gap: 1rem;">
                 {% if today_classes %}
                 {% for entry in today_classes %}
-                <div
+                <div class="staggered-item hover-translate"
                     style="display: flex; gap: 1rem; align-items: center; padding: 1rem; border-radius: var(--radius-md); background: var(--bg-main); border-left: 4px solid {{ entry.color }};">
                     <div style="display: flex; flex-direction: column; text-align: right; min-width: 80px;">
                         <span style="font-weight: 600;">{{ entry.startTime }}</span>
@@ -35,23 +36,28 @@
                     </div>
                     <div style="flex-grow: 1;">
                         <h4 style="margin: 0;">{{ entry.title }}</h4>
-                        <span style="font-size: 0.85rem; color: var(--text-muted);">Room {{ entry.room }}</span>
+                        <span style="font-size: 0.85rem; color: var(--text-muted);">Room : {{ entry.room }}</span>
                     </div>
                 </div>
                 {% endfor %}
                 {% else %}
-                <div
-                    style="padding: 2rem; text-align: center; color: var(--text-muted); background: var(--bg-main); border-radius: var(--radius-md); border: 1px dashed var(--border-color);">
-                    <span class="material-symbols-rounded"
-                        style="font-size: 2.5rem; margin-bottom: 0.5rem; display: block;">event_busy</span>
-                    No classes scheduled for today.
+                <div class="empty-state">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                        <path d="M9 16l2 2 4-4"></path>
+                    </svg>
+                    <p>No classes scheduled for today. Time for a break! ☕</p>
                 </div>
                 {% endif %}
             </div>
         </div>
 
         <!-- Mini To-Do Lists -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+        <div class="glass-panel hover-lift" style="padding: 1.5rem; border-radius: var(--radius-lg);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
                 <h3 style="display: flex; align-items: center; gap: 0.5rem;">
                     <span class="material-symbols-rounded"
@@ -60,9 +66,9 @@
                 </h3>
             </div>
             <ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0.75rem;">
-                <li
+                <li class="deadline-pulse"
                     style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; border-radius: var(--radius-md); background: var(--bg-main);">
-                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; padding-left: 10px;">
                         <input type="checkbox" style="width: 18px; height: 18px; accent-color: var(--primary-color);">
                         <span>CS101 Assignment 1</span>
                     </div>
@@ -79,43 +85,25 @@
     <div class="side-column" style="display: flex; flex-direction: column; gap: 2rem;">
 
         <!-- CGPA Ring Card -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); text-align: center;">
+        <div class="glass-panel hover-lift"
+            style="padding: 1.5rem; border-radius: var(--radius-lg); text-align: center;">
             <h3 style="margin-bottom: 1.5rem; font-size: 1.1rem; text-align: left;">Overall Progress</h3>
 
             {% set user_cgpa = g.current_user.student_profile.cgpa if g.current_user and g.current_user.student_profile
             else 0.0 %}
-            {% set cgpa_percentage = (user_cgpa / 10.0) * 100 %}
 
-            <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;">
-                <!-- Placeholder for Plotly/SVG Gauge -->
-                <style>
-                    @keyframes progressDynamic {
-                        0% {
-                            stroke-dasharray: 0, 100;
-                        }
-
-                        100% {
-                            stroke-dasharray: {
-                                    {
-                                    cgpa_percentage
-                                }
-                            }
-
-                            ,
-                            100;
-                        }
-                    }
-                </style>
-                <svg viewBox="0 0 36 36" style="width: 100%; height: 100%;">
+            <div style="position: relative; width: 150px; height: 150px; margin: 0 auto;" class="cgpa-ring-container">
+                <svg viewBox="0 0 36 36" style="width: 100%; height: 100%;" class="cgpa-ring-svg">
                     <path style="fill: none; stroke: var(--bg-main); stroke-width: 3;"
                         d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                    <path
-                        style="fill: none; stroke: var(--primary-color); stroke-width: 3; stroke-dasharray: {{ cgpa_percentage }}, 100; animation: progressDynamic 1s ease-out forwards;"
-                        d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                    <circle cx="18" cy="18" r="15.9155"
+                        style="fill: none; stroke: var(--primary-color); stroke-width: 3; stroke-linecap: round;"
+                        data-value="{{ user_cgpa }}" data-max="10" transform="rotate(-90 18 18)" />
                 </svg>
                 <div
                     style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column;">
-                    <span style="font-size: 2rem; font-weight: 700; font-family: var(--font-heading);">{{ user_cgpa
+                    <span class="animate-number"
+                        style="font-size: 2rem; font-weight: 700; font-family: var(--font-heading);">{{ user_cgpa
                         }}</span>
                     <span
                         style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;">CGPA</span>

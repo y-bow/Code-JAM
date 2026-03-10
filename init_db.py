@@ -80,7 +80,7 @@ def seed_db():
                       password_hash=pw, role='teacher', name='Pankaj')
         arun_kumar = User(school_id=school_soai.id, email='arun.kumar@soai.saiuniversity.edu.in',
                           password_hash=pw, role='teacher', name='Arun Kumar')
-        sadhana = User(school_id=school_soai.id, email='sadhana.s@soai.saiuniversity.edu.in',
+        sadhana = User(school_id=school_soai.id, email='sadhana.s-29@soai.saiuniversity.edu.in',
                        password_hash=pw, role='student', name='Sadhana Srinivasan')
 
         all_users = [admin, dean, teacher1, teacher2, vaibhav, sharan, harshitha, riddhima,
@@ -115,8 +115,11 @@ def seed_db():
             (sadhana, sec_soai_1), # Sadhana Srinivasan → SOAI Section 1
         ]
         for user, section in student_sections:
+            cgpa = 8.8 if user == vaibhav else 0.0
+            sgpa = 8.8 if user == vaibhav else 0.0
             db.session.add(Student(user_id=user.id, section_id=section.id,
-                                   enrollment_year=2025, major='Computer Science'))
+                                   enrollment_year=2025, major='Computer Science',
+                                   cgpa=cgpa, sgpa=sgpa))
 
         db.session.commit()
         print("Profiles and Class Reps created.")
@@ -146,6 +149,17 @@ def seed_db():
         ]
         db.session.add_all(s4_courses)
 
+        # Section 2 courses
+        s2_courses = [
+            Course(section_id=sec2.id, name='Discrete Mathematics', code='MATH201', teacher_id=teacher2.id, credits=4),
+            Course(section_id=sec2.id, name='Programming in Python', code='CS101', teacher_id=teacher1.id, credits=3),
+            Course(section_id=sec2.id, name='Introduction to Data Structures', code='CS201', teacher_id=teacher1.id, credits=4),
+            Course(section_id=sec2.id, name='Environment and Sustainability', code='ENV101', teacher_id=teacher2.id, credits=3),
+            Course(section_id=sec2.id, name='Indian Constitution and Democracy', code='POL101', teacher_id=teacher2.id, credits=3),
+            Course(section_id=sec2.id, name='Python and Data Structure', code='CS102', teacher_id=teacher1.id, credits=4),
+        ]
+        db.session.add_all(s2_courses)
+
         # SOAI Courses
         soai_courses = [
             Course(section_id=sec_soai_1.id, name='DS in C Lab', code='AI101L', teacher_id=greeta.id, credits=2),
@@ -171,6 +185,10 @@ def seed_db():
         # Enroll Sharan in all Sec4 courses
         for c in s4_courses:
             db.session.add(Enrollment(student_id=sharan.id, course_id=c.id))
+        # Enroll Harshitha and Riddhima in all Sec2 courses
+        for c in s2_courses:
+            db.session.add(Enrollment(student_id=harshitha.id, course_id=c.id))
+            db.session.add(Enrollment(student_id=riddhima.id, course_id=c.id))
         # Enroll Sadhana in all SOAI courses
         for c in soai_courses:
             db.session.add(Enrollment(student_id=sadhana.id, course_id=c.id))
@@ -197,6 +215,25 @@ def seed_db():
         ]
         for day, st, et, title, room, color in sec3_timetable:
             db.session.add(TimetableEntry(section_id=sec3.id, day=day,
+                           start_time=st, end_time=et, title=title, room=room, color=color))
+
+        # --- Section 2 timetable ---
+        sec2_timetable = [
+            (0, '09:00 AM', '10:40 AM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
+            (0, '10:40 AM', '12:10 PM', 'Indian Constitution and Democracy', 'AB2 - 202', '#a78bfa'),
+            (0, '02:15 PM', '03:40 PM', 'Environment and Sustainability', 'AB2 - Mini Auditorium', 'var(--success-color)'),
+            (1, '09:00 AM', '10:30 AM', 'Programming in Python', 'AB2 - 202', 'var(--warning-color)'),
+            (1, '12:20 PM', '01:40 PM', 'Python and Data Structure (LAB)', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
+            (2, '10:00 AM', '11:30 AM', 'Indian Constitution and Democracy', 'AB2 - 101', '#a78bfa'),
+            (2, '12:40 PM', '02:05 PM', 'Introduction to Data Structures', 'AB1 - Moot Court Hall', 'var(--warning-color)'),
+            (2, '02:15 PM', '03:40 PM', 'Environment and Sustainability', 'AB2 - Mini Auditorium', 'var(--success-color)'),
+            (3, '10:00 AM', '11:30 AM', 'Discrete Mathematics', 'AB2 - 203', 'var(--primary-color)'),
+            (3, '01:40 PM', '03:05 PM', 'Programming in Python', 'AB2 - 101', 'var(--warning-color)'),
+            (4, '10:40 AM', '12:10 PM', 'Python and Data Structure (LAB)', 'Computer Lab - AB1 - First Floor', 'var(--accent-color)'),
+            (4, '12:40 PM', '02:05 PM', 'Introduction to Data Structures', 'AB2 - 202', 'var(--warning-color)'),
+        ]
+        for day, st, et, title, room, color in sec2_timetable:
+            db.session.add(TimetableEntry(section_id=sec2.id, day=day,
                            start_time=st, end_time=et, title=title, room=room, color=color))
 
         # --- Section 4 timetable ---
@@ -226,21 +263,21 @@ def seed_db():
             (0, '03:50 PM', '05:15 PM', 'Critical Thinking', 'AB2 101', '#a78bfa'),
             # Tuesday
             (1, '09:00 AM', '10:30 AM', 'AI Programming Lab', 'AB1 LAB', 'var(--accent-color)'),
-            (1, '10:40 AM', '12:10 PM', 'Intro to Embedded Systems and Robotics', 'AB2 203', 'var(--warning-color)'),
+            (1, '10:40 AM', '12:10 PM', 'Introduction to Embedded Systems and Robotics', 'AB2 203', 'var(--warning-color)'),
             (1, '12:40 PM', '02:05 PM', 'Data Structures', 'AB1 101', 'var(--success-color)'),
-            (1, '02:15 PM', '03:40 PM', 'Intro to Embedded Systems and Robotics', 'AB2 207', 'var(--warning-color)'),
+            (1, '02:15 PM', '03:40 PM', 'Introduction to Embedded Systems and Robotics', 'AB2 207', 'var(--warning-color)'),
             # Wednesday
-            (2, '09:00 AM', '10:30 AM', 'Indian Constitution', 'AB2 - 202', '#a78bfa'),
-            (2, '10:40 AM', '12:10 PM', 'OOP\'s', 'Moot court', 'var(--primary-color)'),
+            (2, '09:00 AM', '10:30 AM', 'Indian Constitution and Democracy', 'AB2 - 202', '#a78bfa'),
+            (2, '10:40 AM', '12:10 PM', 'Object Oriented Programming\'s', 'Moot court', 'var(--primary-color)'),
             (2, '12:40 PM', '02:05 PM', 'AI in Programming', 'AB1 101', '#f472b6'),
             # Thursday
-            (3, '09:00 AM', '10:30 AM', 'Critical Thinking', 'AB2 202', '#a78bfa'),
-            (3, '10:40 AM', '12:10 PM', 'Data Structures', 'AB1 101', 'var(--success-color)'),
-            (3, '02:15 PM', '03:40 PM', 'Indian Constitution', 'AB2 Mini Audi', '#a78bfa'),
+            (3, '09:00 AM', '10:30 AM', 'Critical Thinking', 'AB2 - 202', '#a78bfa'),
+            (3, '10:40 AM', '12:10 PM', 'Data Structures', 'AB1 - 101', 'var(--success-color)'),
+            (3, '02:15 PM', '03:40 PM', 'Indian Constitution and Democracy', 'Mini Auditorium', '#a78bfa'),
             (3, '03:50 PM', '05:15 PM', 'P&S', 'AB2 - 203', 'var(--danger-color)'),
             # Friday
             (4, '09:00 AM', '10:30 AM', 'P&S', 'AB2 - 203', 'var(--danger-color)'),
-            (4, '10:40 AM', '12:10 PM', 'OOP\'s', 'AB1 101', 'var(--primary-color)'),
+            (4, '10:40 AM', '12:10 PM', 'Object Oriented Programming\'s', 'AB1 - 101', 'var(--primary-color)'),
         ]
         for day, st, et, title, room, color in soai_timetable:
             db.session.add(TimetableEntry(section_id=sec_soai_1.id, day=day,
@@ -290,7 +327,7 @@ def seed_db():
         print(f"  Sharanpranav A (SEC-4): sharanpranav.a-29@scds.saiuniversity.edu.in")
         print(f"  Harshitha B (SEC-2): harshitha.b-29@scds.saiuniversity.edu.in")
         print(f"  Riddhima P  (SEC-2): ruddhima.p-29@scds.saiuniversity.edu.in")
-        print(f"  Sadhana S   (SOAI-SEC1): sadhana.s@soai.saiuniversity.edu.in")
+        print(f"  Sadhana S   (SOAI-SEC1): sadhana.s-29@soai.saiuniversity.edu.in")
 
 
 if __name__ == '__main__':

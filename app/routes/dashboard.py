@@ -1,10 +1,10 @@
-from flask import Blueprint, render_template, session, request, redirect, url_for, g
+from flask import Blueprint, render_template, session, request, redirect, url_for, g, flash
 from datetime import datetime
 from ..middleware import school_scoped, role_minimum
 from ..models import (
     db, User, Course, Enrollment, Assignment, Submission,
     Section, CustomTask, Announcement, TimetableEntry,
-    TeacherTodo, TeacherRating, Attendance, Grade
+    TeacherTodo, TeacherRating, Attendance, Grade, School
 )
 import pandas as pd
 import plotly.express as px
@@ -117,28 +117,38 @@ def teacher_dashboard():
                            graphs=graphs_json)
 
 
-@dashboard_bp.route('/timetable')
+@dashboard_bp.route('/timetable', methods=['GET', 'POST'])
 @school_scoped
 def timetable():
     user = g.current_user
     
     timetable_data = {}
-    if user.student_profile and user.student_profile.section_id:
-        entries = TimetableEntry.query.filter_by(
-            section_id=user.student_profile.section_id
+    my_section_id = None
+    
+    if user.role in ('student', 'class_rep') and user.student_profile and user.student_profile.section_id:
+        my_section_id = user.student_profile.section_id
+        entries = TimetableEntry.query.filter_by(section_id=my_section_id).all()
+        for i in range(5): timetable_data[i] = []
+        for entry in entries:
+            timetable_data[entry.day].append(entry.to_dict())
+    elif user.role == 'teacher':
+        # Get all entries from sections where this teacher has a course matching the title
+        assigned_courses = Course.query.filter_by(teacher_id=user.id).all()
+        course_names = [c.name for c in assigned_courses]
+        section_ids = [c.section_id for c in assigned_courses]
+        
+        entries = TimetableEntry.query.filter(
+            TimetableEntry.section_id.in_(section_ids),
+            TimetableEntry.title.in_(course_names)
         ).all()
         
-        # Group by day (0=Monday, 1=Tuesday, ...)
-        for i in range(5):
-            timetable_data[i] = []
-            
+        for i in range(5): timetable_data[i] = []
         for entry in entries:
-            # Simple sorting by start_time (assuming standard AM/PM format that sorts OK or we handle it in template)
             timetable_data[entry.day].append(entry.to_dict())
-            
-        # Optional: Sort entries by time within each day
-        for day in timetable_data:
-            timetable_data[day].sort(key=lambda x: datetime.strptime(x['startTime'], '%I:%M %p').time() if 'AM' in x['startTime'] or 'PM' in x['startTime'] else x['startTime'])
+
+    # Sort entries by time within each day
+    for day in timetable_data:
+        timetable_data[day].sort(key=lambda x: datetime.strptime(x['startTime'], '%I:%M %p').time() if 'AM' in x['startTime'] or 'PM' in x['startTime'] else x['startTime'])
             
     # Calculate current day of week (0=Monday, 6=Sunday)
     current_day = datetime.now().weekday()
@@ -146,7 +156,33 @@ def timetable():
     if current_day > 4:
         current_day = -1
 
-    return render_template('dashboard/timetable.html', timetable_data=timetable_data, current_day=current_day)
+    # --- Find Common Free Slot Integration ---
+    sections = []
+    my_section = None
+    selected_section = None
+    free_slots_by_day = None
+
+    if user.role == 'student' and my_section_id:
+        my_section = Section.query.get(my_section_id)
+        # Load all sections from all schools, joining School for efficient access
+        sections = Section.query.join(School).order_by(School.name, Section.name).all()
+        
+        if request.method == 'POST':
+            selected_section_id = request.form.get('compare_section_id', type=int)
+            if selected_section_id:
+                selected_section = Section.query.get(selected_section_id)
+                if selected_section:
+                    free_slots_by_day = get_common_free_slots(my_section_id, selected_section_id)
+
+    return render_template(
+        'dashboard/timetable.html', 
+        timetable_data=timetable_data, 
+        current_day=current_day,
+        sections=sections,
+        my_section=my_section,
+        selected_section=selected_section,
+        free_slots_by_day=free_slots_by_day
+    )
 
 
 @dashboard_bp.route('/tasks', methods=['GET', 'POST'])
@@ -399,4 +435,103 @@ def manage_timetable():
         .order_by(Section.code, TimetableEntry.day, TimetableEntry.start_time)
         .all()
     )
-    return render_template('dashboard/manage_timetable.html', sections=sections, entries=entries)
+def get_common_free_slots(section_a_id, section_b_id):
+    """
+    Finds continuous common free slots across the 9:00 AM to 5:15 PM day.
+    Merges busy intervals for both sections to find gaps >= 15 mins.
+    """
+    entries_a = TimetableEntry.query.filter_by(section_id=section_a_id).all()
+    entries_b = TimetableEntry.query.filter_by(section_id=section_b_id).all()
+    
+    def to_minutes(t_str):
+        t = datetime.strptime(t_str.strip(), "%I:%M %p")
+        return t.hour * 60 + t.minute
+
+    def to_time_str(mins):
+        h = mins // 60
+        m = mins % 60
+        is_pm = h >= 12
+        display_h = h if h <= 12 else h - 12
+        if display_h == 0: display_h = 12
+        ampm = "PM" if is_pm else "AM"
+        return f"{display_h}:{m:02d} {ampm}"
+        
+    DAYS_MAP = {0: 'Monday', 1: 'Tuesday', 2: 'Wednesday', 3: 'Thursday', 4: 'Friday'}
+    DAY_START = 9 * 60       # 09:00 AM
+    DAY_END = 17 * 60 + 15   # 05:15 PM
+    
+    free_slots_by_day = []
+    
+    for day_idx in range(5):
+        busy_intervals = []
+        for e in entries_a + entries_b:
+            if e.day == day_idx:
+                try:
+                    start_m = to_minutes(e.start_time)
+                    end_m = to_minutes(e.end_time)
+                    busy_intervals.append((start_m, end_m))
+                except Exception:
+                    pass
+                    
+        # Merge overlapping intervals
+        busy_intervals.sort(key=lambda x: x[0])
+        merged = []
+        for interval in busy_intervals:
+            if not merged:
+                merged.append([interval[0], interval[1]])
+            else:
+                prev = merged[-1]
+                if interval[0] <= prev[1]:
+                    prev[1] = max(prev[1], interval[1])
+                else:
+                    merged.append([interval[0], interval[1]])
+                    
+        # Find free gaps within DAY_START and DAY_END
+        gaps = []
+        current_time = DAY_START
+        for start, end in merged:
+            clp_ctime = max(current_time, DAY_START)
+            clp_start = min(start, DAY_END)
+            
+            if clp_start > clp_ctime:
+                gap_len = clp_start - clp_ctime
+                if gap_len >= 15:
+                    gaps.append((clp_ctime, clp_start, gap_len))
+            
+            current_time = max(current_time, end)
+            
+        # Check gap after last class until DAY_END
+        clp_ctime = max(current_time, DAY_START)
+        if clp_ctime < DAY_END:
+            gap_len = DAY_END - clp_ctime
+            if gap_len >= 15:
+                gaps.append((clp_ctime, DAY_END, gap_len))
+                
+        if not gaps:
+            free_slots_by_day.append({
+                'day_name': DAYS_MAP[day_idx],
+                'slots': [],
+                'msg': "No common free time",
+                'has_free': False
+            })
+        else:
+            if len(gaps) == 1 and gaps[0][0] == DAY_START and gaps[0][1] == DAY_END:
+                msg = "All day free"
+                has_free = True
+                slots_formatted = []
+            else:
+                msg = ""
+                has_free = True
+                slots_formatted = [
+                    {'text': f"{to_time_str(g[0])} – {to_time_str(g[1])}", 'duration': g[2]} 
+                    for g in gaps
+                ]
+                
+            free_slots_by_day.append({
+                'day_name': DAYS_MAP[day_idx],
+                'slots': slots_formatted,
+                'msg': msg,
+                'has_free': has_free
+            })
+            
+    return free_slots_by_day

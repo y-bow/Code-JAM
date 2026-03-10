@@ -23,6 +23,10 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+
+    <!-- UX Extensions: NProgress & Snappy UI -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/snappy.css') }}">
 </head>
 
 <body class="light-theme">
@@ -39,45 +43,56 @@
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="material-symbols-rounded">school</span>
-                    <h1>Hive</h1>
+                    <img src="{{ url_for('static', filename='images/lighttheme.png') }}" class="logo-img logo-light"
+                        alt="Hive Logo">
+                    <img src="{{ url_for('static', filename='images/darktheme.png') }}" class="logo-img logo-dark"
+                        alt="Hive Logo">
                 </div>
             </div>
 
             <nav class="sidebar-nav">
                 {% block sidebar_links %}
                 <a href="{{ url_for('index') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'index' or request.endpoint == 'dashboard.student_dashboard' or request.endpoint == 'dashboard.teacher_dashboard' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'index' or request.endpoint == 'dashboard.student_dashboard' or request.endpoint == 'dashboard.teacher_dashboard' }}"
+                    data-tooltip="Dashboard">
                     <span class="material-symbols-rounded">space_dashboard</span>
                     Global Hub
                 </a>
 
-                {% if g.current_user.role == 'student' or g.current_user.role == 'class_rep' %}
+                {# --- Unified Student & Teacher Nav Section --- #}
+                {% if g.current_user.role in ['student', 'class_rep', 'teacher'] %}
                 <a href="{{ url_for('dashboard.timetable') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.timetable' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.timetable' }}"
+                    data-tooltip="Timetable">
                     <span class="material-symbols-rounded">calendar_today</span>
                     Timetable
                 </a>
                 <a href="{{ url_for('dashboard.tasks') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.tasks' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.tasks' }}" data-tooltip="Tasks">
                     <span class="material-symbols-rounded">task_alt</span>
                     Tasks
                 </a>
+                {% if g.current_user.role != 'teacher' %}
                 <a href="{{ url_for('dashboard.grades') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.grades' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.grades' }}"
+                    data-tooltip="Grades Overviews">
                     <span class="material-symbols-rounded">bar_chart</span>
                     Grades Overview
                 </a>
+                {% endif %}
                 <a href="{{ url_for('dashboard.announcements') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}"
+                    data-tooltip="Announcements">
                     <span class="material-symbols-rounded">campaign</span>
                     Announcements
                 </a>
                 {% endif %}
 
+                {# --- Management Section --- #}
                 {% if g.current_user.role_level >= 4 %}
                 <a href="{{ url_for('dashboard.manage_timetable') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}"
+                    data-tooltip="Manage Schedule">
                     <span class="material-symbols-rounded">calendar_month</span>
                     Manage Schedule
                 </a>
@@ -85,14 +100,16 @@
 
                 {% if g.current_user.role_level >= 5 %}
                 <a href="{{ url_for('dashboard.dean_ratings') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_ratings' }}">
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_ratings' }}"
+                    data-tooltip="Teacher Performance">
                     <span class="material-symbols-rounded">star_half</span>
                     Teacher Ratings
                 </a>
                 {% endif %}
 
+                {# --- Communication Section --- #}
                 <a href="{{ url_for('messages.index') }}"
-                    class="nav-item {{ 'active' if 'messages' in request.endpoint }}">
+                    class="nav-item {{ 'active' if 'messages' in request.endpoint }}" data-tooltip="Direct Messages">
                     <span class="material-symbols-rounded">forum</span>
                     Messages
                 </a>
@@ -108,16 +125,10 @@
                         {% endif %}
                     </div>
                     <div class="user-info">
-                        <span class="user-name">
-                            {% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{% endif %}
-                        </span>
-                        <span class="user-role">
-                            {% if g.current_user %}
-                            {{ g.current_user.role | replace('_', ' ') | title }}
-                            {% else %}
-                            Student
-                            {% endif %}
-                        </span>
+                        <span class="user-name">{% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{%
+                            endif %}</span>
+                        <span class="user-role">{% if g.current_user %}{{ g.current_user.role | replace('_', ' ') |
+                            title }}{% else %}Student{% endif %}</span>
                     </div>
                 </a>
             </div>
@@ -205,6 +216,19 @@
             </header>
 
             <div class="content-wrapper">
+                <!-- Flash Messages to Toasts -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                {% for category, message in messages %}
+                <script>
+                    document.addEventListener('DOMContentLoaded', () => {
+                        showToast("{{ message }}", "{{ 'success' if category == 'success' else ('error' if category == 'danger' else 'warning') }}");
+                    });
+                </script>
+                {% endfor %}
+                {% endif %}
+                {% endwith %}
+
                 {% block content %}
                 <!-- Main Page Content Goes Here -->
                 <div class="welcome-card glass-panel gradient-border">
@@ -288,8 +312,44 @@
         </div>
     </div>
 
+    <!-- Mobile Bottom Navigation -->
+    <nav class="mobile-nav">
+        <a href="{{ url_for('index') }}" class="mobile-nav-item">
+            <span class="material-symbols-rounded">space_dashboard</span>
+        </a>
+        <a href="{{ url_for('dashboard.my_courses') }}" class="mobile-nav-item">
+            <span class="material-symbols-rounded">school</span>
+        </a>
+        <a href="{{ url_for('messages.index') }}" class="mobile-nav-item">
+            <span class="material-symbols-rounded">forum</span>
+        </a>
+        <a href="#" class="mobile-nav-item" onclick="document.getElementById('userProfileBtn').click()">
+            <span class="material-symbols-rounded">person</span>
+        </a>
+    </nav>
+
+    <!-- Keyboard Shortcuts Button & Modal -->
+    <button class="shortcut-btn" onclick="document.querySelector('.shortcuts-modal').classList.toggle('active')"
+        data-tooltip="Keyboard Shortcuts (or press ?)">
+        <span class="material-symbols-rounded">keyboard</span>
+    </button>
+
+    <div class="shortcuts-modal glass-panel" onclick="this.classList.remove('active')">
+        <div class="shortcuts-card glass-panel" onclick="event.stopPropagation()">
+            <h3 style="margin-bottom: 1.5rem;">Keyboard Shortcuts</h3>
+            <div class="shortcut-item"><span>Dashboard</span><span class="kdb-key">G + D</span></div>
+            <div class="shortcut-item"><span>Messages</span><span class="kdb-key">G + M</span></div>
+            <div class="shortcut-item"><span>Courses</span><span class="kdb-key">G + C</span></div>
+            <div class="shortcut-item"><span>Show Help</span><span class="kdb-key">?</span></div>
+            <button class="btn-logout" style="width: 100%; margin-top: 1rem; border: none; cursor: pointer;"
+                onclick="document.querySelector('.shortcuts-modal').classList.remove('active')">Close</button>
+        </div>
+    </div>
+
     <!-- Custom JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/snappy.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 

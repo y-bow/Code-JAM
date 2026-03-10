@@ -73,6 +73,12 @@ def send():
 @messages_bp.route('/request/send/<int:user_id>', methods=['POST'])
 @school_scoped
 def send_request(user_id):
+    if g.current_user.role == 'teacher':
+        return "Teachers cannot use social features", 403
+    # Cross-school request support: check for target user existence
+    target_user = User.query.get_or_404(user_id)
+    if not target_user.is_active:
+        return "User not found", 404
     # Check if already friends or request exists
     existing = FriendRequest.query.filter(
         or_(
@@ -89,11 +95,15 @@ def send_request(user_id):
         db.session.commit()
         flash('Friend request sent!', 'success')
         
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True})
     return redirect(url_for('messages.index'))
 
 @messages_bp.route('/request/respond/<int:request_id>/<action>', methods=['POST'])
 @school_scoped
 def respond_request(request_id, action):
+    if g.current_user.role == 'teacher':
+        return "Teachers cannot use social features", 403
     req = FriendRequest.query.get_or_404(request_id)
     if req.recipient_id != g.current_user.id:
         return "Unauthorized", 403
@@ -108,6 +118,8 @@ def respond_request(request_id, action):
         flash('Request declined.', 'info')
         
     db.session.commit()
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({'success': True})
     return redirect(url_for('messages.index'))
 
 @messages_bp.route('/block/<int:user_id>', methods=['POST'])
@@ -135,3 +147,49 @@ def unblock_user(user_id):
     
     flash('User unblocked.', 'success')
     return redirect(url_for('messages.index'))
+@messages_bp.route('/search_users')
+@school_scoped
+def search_users():
+    query = request.args.get('q', '')
+    if len(query) < 2:
+        return jsonify([])
+    
+    user = g.current_user
+    # Find active non-teacher users matching name or email, excluding self
+    # Note: Cross-school search enabled for students; Teachers are excluded from social discovery
+    results = User.query.filter(
+        User.id != user.id,
+        User.is_active == True,
+        User.role != 'teacher',
+        or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
+    ).limit(10).all()
+    
+    # Check friendship/request status for each result
+    friend_ids = [f.user2_id if f.user1_id == user.id else f.user1_id 
+                  for f in Friendship.query.filter(or_(Friendship.user1_id == user.id, Friendship.user2_id == user.id)).all()]
+    
+    pending_sent = {r.recipient_id: r.id for r in FriendRequest.query.filter_by(sender_id=user.id, status='pending').all()}
+    pending_received = {r.sender_id: r.id for r in FriendRequest.query.filter_by(recipient_id=user.id, status='pending').all()}
+
+    output = []
+    for r in results:
+        status = 'none'
+        req_id = None
+        if r.id in friend_ids:
+            status = 'friends'
+        elif r.id in pending_sent:
+            status = 'pending_sent'
+            req_id = pending_sent[r.id]
+        elif r.id in pending_received:
+            status = 'pending_received'
+            req_id = pending_received[r.id]
+            
+        output.append({
+            'id': r.id,
+            'name': r.name,
+            'role': r.role,
+            'status': status,
+            'request_id': req_id
+        })
+        
+    return jsonify(output)

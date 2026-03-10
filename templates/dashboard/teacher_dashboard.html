@@ -43,33 +43,34 @@
 {% block content %}
 <!-- Analytics Overview -->
 <div class="stats-grid">
-    <div class="glass-panel stat-card" style="border-left: 4px solid var(--primary-color);">
+    <div class="glass-panel stat-card hover-lift" style="border-left: 4px solid var(--primary-color);">
         <div class="stat-icon" style="background: rgba(99, 102, 241, 0.1);">
             <span class="material-symbols-rounded" style="color: var(--primary-color);">groups</span>
         </div>
         <div>
             <h4>Total Students</h4>
-            <span>{{ stats.students }}</span>
+            <span class="animate-number">{{ stats.students }}</span>
         </div>
     </div>
 
-    <div class="glass-panel stat-card" style="border-left: 4px solid var(--success-color);">
+    <div class="glass-panel stat-card hover-lift" style="border-left: 4px solid var(--success-color);">
         <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1);">
             <span class="material-symbols-rounded" style="color: var(--success-color);">school</span>
         </div>
         <div>
             <h4>Assigned Courses</h4>
-            <span>{{ stats.courses }}</span>
+            <span class="animate-number">{{ stats.courses }}</span>
         </div>
     </div>
 
-    <div class="glass-panel stat-card" style="border-left: 4px solid var(--warning-color);">
+    <div class="glass-panel stat-card hover-lift" style="border-left: 4px solid var(--warning-color);">
         <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1);">
             <span class="material-symbols-rounded" style="color: var(--warning-color);">star</span>
         </div>
         <div>
             <h4>Instructor Rating</h4>
-            <span>{{ stats.rating }} <small style="font-size: 0.8rem; color: var(--text-muted);">({{ stats.rating_count
+            <span><span class="animate-number">{{ stats.rating }}</span> <small
+                    style="font-size: 0.8rem; color: var(--text-muted);">({{ stats.rating_count
                     }})</small></span>
         </div>
     </div>
@@ -79,7 +80,8 @@
     <!-- Main Area -->
     <div class="main-column">
         <!-- Today's Schedule -->
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
+        <div class="glass-panel hover-lift"
+            style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
             <h3 style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1.5rem;">
                 <span class="material-symbols-rounded" style="color: var(--primary-color);">event_note</span>
                 Today's Schedule
@@ -88,12 +90,12 @@
             {% if today_classes %}
             <div class="timeline">
                 {% for entry in today_classes %}
-                <div class="timeline-item">
+                <div class="timeline-item staggered-item">
                     <div class="time">{{ entry.startTime }}</div>
-                    <div class="class-info glass-panel" style="border-left: 4px solid {{ entry.color }};">
+                    <div class="class-info glass-panel" style="border-left-color: {{ entry.color }};">
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                             <div>
-                                <h4>{{ entry.title }}</h4>
+                                <h4 style="margin: 0; font-size: 1rem;">{{ entry.title }}</h4>
                                 <span class="room"><span class="material-symbols-rounded">location_on</span> {{
                                     entry.room }}</span>
                             </div>
@@ -105,9 +107,15 @@
                 {% endfor %}
             </div>
             {% else %}
-            <div style="text-align: center; color: var(--text-muted); padding: 2rem;">
-                <span class="material-symbols-rounded"
-                    style="font-size: 3rem; margin-bottom: 1rem; opacity: 0.5;">calendar_today</span>
+            <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                    <polyline points="10 9 9 9 8 9"></polyline>
+                </svg>
                 <p>No classes scheduled for today.</p>
             </div>
             {% endif %}
@@ -115,13 +123,17 @@
 
         <!-- Analytics -->
         <div class="analytics-grid">
-            <div class="glass-panel chart-container">
+            <div class="glass-panel chart-container hover-lift">
                 <h3><span class="material-symbols-rounded">bar_chart</span> Avg Grade per Class</h3>
-                <div id="grades-chart"></div>
+                <div id="grades-chart" class="plotly-graph-div" data-plotly='{{ graphs.grades | safe }}'
+                    style="height: 300px;"></div>
+                <span class="last-updated">Updated just now</span>
             </div>
-            <div class="glass-panel chart-container">
+            <div class="glass-panel chart-container hover-lift">
                 <h3><span class="material-symbols-rounded">pie_chart</span> Attendance Distribution</h3>
-                <div id="attendance-chart"></div>
+                <div id="attendance-chart" class="plotly-graph-div" data-plotly='{{ graphs.attendance | safe }}'
+                    style="height: 300px;"></div>
+                <span class="last-updated">Updated just now</span>
             </div>
         </div>
     </div>
@@ -217,14 +229,7 @@
     </div>
 </div>
 
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script>
-    const gradesGraph = {{ graphs.grades | safe }};
-    Plotly.newPlot('grades-chart', gradesGraph.data, gradesGraph.layout, { responsive: true });
-
-    const attendanceGraph = {{ graphs.attendance | safe }};
-    Plotly.newPlot('attendance-chart', attendanceGraph.data, attendanceGraph.layout, { responsive: true });
-</script>
+<!-- Charts are now handled by snappy.js using data-plotly attributes -->
 
 <style>
     .stats-grid {
