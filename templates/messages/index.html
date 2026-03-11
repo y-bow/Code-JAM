@@ -1,0 +1,858 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Messages{% endblock %}
+{% block page_title %}Messages & Friends{% endblock %}
+
+{% block content %}
+<div class="messages-container">
+    <!-- Sidebar: Conversations & Friends -->
+    <div class="chat-list-panel glass-panel">
+        <div class="panel-header">
+            <div class="tab-nav-premium">
+                <button class="tab-btn-p active" onclick="switchSideTab(this, 'chats')">
+                    <span class="material-symbols-rounded">chat</span> Chats
+                </button>
+                <button class="tab-btn-p" onclick="switchSideTab(this, 'friends')">
+                    <span class="material-symbols-rounded">group</span> Friends
+                </button>
+                <button class="tab-btn-p" onclick="switchSideTab(this, 'search')">
+                    <span class="material-symbols-rounded">person_add</span> Find
+                </button>
+            </div>
+
+            <div class="search-wrapper">
+                <span class="material-symbols-rounded search-icon">search</span>
+                <input type="text" class="glass-input-premium" placeholder="Search conversations...">
+            </div>
+        </div>
+
+        <div id="side-chats" class="side-tab-content active">
+            {% if partners %}
+            <div class="chat-items-list">
+                {% for p in partners %}
+                <div class="chat-item-premium" onclick="loadChat({{ p.id }}, '{{ p.name }}')">
+                    <div class="avatar-wrapper">
+                        <div class="avatar">{{ p.name[:1].upper() }}</div>
+                        {% if p.role == 'class_rep' %}
+                        <span class="rep-mini">👑</span>
+                        {% endif %}
+                    </div>
+                    <div class="chat-info">
+                        <div class="chat-name-row">
+                            <span class="chat-name">{{ p.name }}</span>
+                        </div>
+                        <span class="chat-meta">{{ p.role | replace('_', ' ') | title }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="material-symbols-rounded">chat_bubble</span>
+                <p>No active chats</p>
+                <span class="subtitle">Start a conversation from your friends list</span>
+            </div>
+            {% endif %}
+        </div>
+
+        <div id="side-friends" class="side-tab-content" style="display: none;">
+            <div class="friends-list-container">
+                {% if pending_requests %}
+                <div class="section-label">Pending Requests</div>
+                {% for req in pending_requests %}
+                <div class="friend-req-card">
+                    <span class="friend-name">{{ req.sender.name }}</span>
+                    <div class="req-actions">
+                        <button class="action-btn accept" onclick="manageFriendship('accept', {{ req.id }}, this)"
+                            title="Accept">
+                            <span class="material-symbols-rounded">check</span>
+                        </button>
+                        <button class="action-btn decline" onclick="manageFriendship('decline', {{ req.id }}, this)"
+                            title="Decline">
+                            <span class="material-symbols-rounded">close</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                <div class="divider"></div>
+                {% endif %}
+
+                <div class="section-label">Your Friends</div>
+                {% if friends %}
+                {% for f in friends %}
+                <div class="chat-item-premium searchable-friend">
+                    <div class="avatar-wrapper" onclick="loadChat({{ f.id }}, '{{ f.name }}')">
+                        <div class="avatar" style="background: var(--secondary-color);">{{ f.name[:1].upper() }}</div>
+                        {% if f.role == 'class_rep' %}
+                        <span class="rep-mini">👑</span>
+                        {% endif %}
+                    </div>
+                    <div class="chat-info" onclick="loadChat({{ f.id }}, '{{ f.name }}')">
+                        <span class="chat-name">{{ f.name }}</span>
+                    </div>
+                    <div class="friend-actions">
+                        <button class="action-btn decline" onclick="manageFriendship('unfriend', {{ f.id }}, this)"
+                            title="Unfriend">
+                            <span class="material-symbols-rounded">person_remove</span>
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div class="empty-state-mini">
+                    <p>No friends yet</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div id="side-search" class="side-tab-content" style="display: none;">
+            <div class="search-tab-container">
+                <div class="search-box" style="padding: 1rem;">
+                    <input type="text" id="social-search-input" class="glass-input-premium"
+                        placeholder="Enter name or email..." onkeyup="doSocialSearch(this.value)">
+                </div>
+                <div id="social-search-results" class="search-results-mini"
+                    style="padding: 0.5rem; flex: 1; overflow-y: auto;">
+                    <div class="empty-state-mini">
+                        <p>Search for anyone in your school</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Chat Window -->
+    <div class="chat-main-window glass-panel" id="chat-window">
+        <div id="chat-placeholder" class="full-centered-placeholder">
+            <div class="placeholder-icon-wrapper">
+                <span class="material-symbols-rounded">forum</span>
+            </div>
+            <h3>Your Messages</h3>
+            <p>Select a conversation or a friend to start chatting</p>
+        </div>
+
+        <div id="chat-active" style="display: none; flex: 1; flex-direction: column; overflow: hidden;">
+            <div class="chat-header">
+                <div class="active-user-info">
+                    <div class="avatar" id="active-chat-avatar"></div>
+                    <div>
+                        <h3 id="active-chat-name" style="margin: 0;"></h3>
+                        <span id="active-user-status" class="status-indicator">Online</span>
+                    </div>
+                </div>
+                <div class="chat-actions">
+                    <div class="dropdown">
+                        <button class="icon-btn-p"><span class="material-symbols-rounded">more_vert</span></button>
+                        <div class="dropdown-content-p glass-panel">
+                            <form id="block-form" method="POST" onsubmit="return confirm('Block this user?')">
+                                <button type="submit" class="danger-item">
+                                    <span class="material-symbols-rounded">block</span> Block User
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="message-container" class="messages-viewport">
+                <!-- Messages load here -->
+            </div>
+
+            <div class="chat-input-area">
+                <form id="send-form" class="send-message-form">
+                    <input type="hidden" id="recipient-id">
+                    <div class="input-wrapper">
+                        <input type="text" id="message-input" class="message-input-glass"
+                            placeholder="Write something..." required autocomplete="off">
+                        <button type="submit" class="send-btn">
+                            <span class="material-symbols-rounded">send</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let currentRecipientId = null;
+    const currentUserId = {{ g.current_user.id }};
+
+    function switchSideTab(btn, tab) {
+        document.querySelectorAll('.tab-btn-p').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.querySelectorAll('.side-tab-content').forEach(c => c.style.display = 'none');
+        document.getElementById('side-' + tab).style.display = 'block';
+    }
+
+    async function loadChat(userId, userName) {
+        currentRecipientId = userId;
+        document.getElementById('chat-placeholder').style.display = 'none';
+        document.getElementById('chat-active').style.display = 'flex';
+        document.getElementById('active-chat-name').innerText = userName;
+        document.getElementById('active-chat-avatar').innerText = userName[0].toUpperCase();
+        document.getElementById('recipient-id').value = userId;
+        document.getElementById('block-form').action = `/messages/block/${userId}`;
+
+        await refreshMessages();
+        const container = document.getElementById('message-container');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function refreshMessages() {
+        if (!currentRecipientId) return;
+        try {
+            const response = await fetch(`/messages/history/${currentRecipientId}`);
+            if (!response.ok) throw new Error('History fetch failed');
+            const messages = await response.json();
+
+            const container = document.getElementById('message-container');
+            container.innerHTML = messages.map(m => `
+                <div class="msg-premium ${m.sender_id == currentUserId ? 'sent' : 'received'}">
+                    <div class="msg-bubble-p">${m.body}</div>
+                    <div class="msg-time-p">${m.timestamp}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Refresh error:', error);
+        }
+    }
+
+    document.getElementById('send-form').onsubmit = async (e) => {
+        e.preventDefault();
+        const input = document.getElementById('message-input');
+        const body = input.value.trim();
+        if (!body || !currentRecipientId) return;
+
+        const formData = new FormData();
+        formData.append('recipient_id', currentRecipientId);
+        formData.append('body', body);
+
+        try {
+            const response = await fetch('/messages/send', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (response.ok) {
+                input.value = '';
+                await refreshMessages();
+                const container = document.getElementById('message-container');
+                container.scrollTop = container.scrollHeight;
+            } else {
+                const err = await response.json();
+                console.error('Send error:', err);
+                alert(err.error || 'Failed to send message. Please check the console.');
+            }
+        } catch (error) {
+            console.error('Fetch error:', error);
+            alert('A network error occurred. See console for details.');
+        }
+    };
+
+    // Auto-refresh every 5 seconds
+    setInterval(refreshMessages, 5000);
+
+    // Social Search Logic
+    let searchTimeoutId = null;
+    async function doSocialSearch(query) {
+        clearTimeout(searchTimeoutId);
+        const container = document.getElementById('social-search-results');
+
+        if (!query.trim()) {
+            container.innerHTML = '<div class="empty-state-mini"><p>Search for anyone in your school</p></div>';
+            return;
+        }
+
+        searchTimeoutId = setTimeout(async () => {
+            try {
+                const response = await fetch(`/social/search_ajax?q=${encodeURIComponent(query)}`);
+                const results = await response.json();
+
+                if (results.length === 0) {
+                    container.innerHTML = '<div class="empty-state-mini"><p>No users found</p></div>';
+                    return;
+                }
+
+                container.innerHTML = results.map(u => `
+                    <div class="chat-item-premium no-hover" style="cursor: default;">
+                        <div class="avatar-wrapper">
+                            <div class="avatar" style="background: var(--primary-color);">${u.avatar}</div>
+                        </div>
+                        <div class="chat-info">
+                            <span class="chat-name">${u.name}</span>
+                            <span class="chat-meta">${u.email}</span>
+                        </div>
+                        <div class="search-action">
+                            ${getSearchActionBadge(u)}
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    }
+
+    function getSearchActionBadge(u) {
+        if (u.is_friend) return `
+            <button class="action-btn decline" onclick="manageFriendship('unfriend', ${u.id}, this)" title="Unfriend">
+                <span class="material-symbols-rounded">person_remove</span>
+            </button>
+        `;
+        if (u.sent_request) return '<span class="badge warning">Pending</span>';
+        if (u.received_request) return '<span class="badge warning">Invited you</span>';
+
+        return `
+            <button class="action-btn accept" onclick="sendSocialRequest(${u.id}, this)" title="Add Friend">
+                <span class="material-symbols-rounded">person_add</span>
+            </button>
+        `;
+    }
+
+    async function sendSocialRequest(userId, btn) {
+        try {
+            const response = await fetch(`/social/request/${userId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                const parent = btn.parentElement;
+                parent.innerHTML = '<span class="badge warning">Pending</span>';
+            } else {
+                alert(data.error || 'Failed to send request');
+            }
+        } catch (error) {
+            console.error('Request error:', error);
+            alert('A network error occurred.');
+        }
+    }
+
+    async function manageFriendship(action, id, btn) {
+        if (action === 'unfriend' && !confirm('Are you sure you want to remove this friend?')) return;
+
+        const url = action === 'unfriend' ? `/social/unfriend/${id}` : `/social/respond/${id}/${action}`;
+        // Note: the respond route in social.py is actually /accept/<id> and /decline/<id>
+        // Let's use the correct social.py routes
+        let finalUrl = `/social/${action}/${id}`;
+
+        try {
+            const response = await fetch(finalUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                // For simplicity, refresh the page or update UI
+                // Refreshing the page is easiest to catch all state changes
+                window.location.reload();
+            } else {
+                alert(data.error || 'Action failed');
+            }
+        } catch (error) {
+            console.error('Action error:', error);
+        }
+    }
+</script>
+
+<style>
+    .messages-container {
+        display: flex;
+        gap: 1.5rem;
+        height: calc(100vh - 140px);
+        align-items: stretch;
+    }
+
+    /* Chat List Panel */
+    .chat-list-panel {
+        width: 350px;
+        display: flex;
+        flex-direction: column;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+        background: var(--bg-glass);
+    }
+
+    .panel-header {
+        padding: 1.25rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+
+    /* Tab Switcher Premium */
+    .tab-nav-premium {
+        display: flex;
+        background: rgba(0, 0, 0, 0.2);
+        padding: 0.25rem;
+        border-radius: var(--radius-md);
+        gap: 0.25rem;
+    }
+
+    .tab-btn-p {
+        flex: 1;
+        padding: 0.6rem;
+        border: none;
+        background: none;
+        color: var(--text-muted);
+        font-weight: 600;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        border-radius: calc(var(--radius-md) - 4px);
+        transition: all var(--transition-fast);
+    }
+
+    .tab-btn-p.active {
+        background: var(--primary-color);
+        color: white;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .tab-btn-p .material-symbols-rounded {
+        font-size: 1.1rem;
+    }
+
+    /* Search Bar Premium */
+    .search-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        color: var(--text-muted);
+        font-size: 1.1rem;
+    }
+
+    .glass-input-premium {
+        width: 100%;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-full);
+        padding: 0.75rem 1rem 0.75rem 2.8rem;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        transition: all var(--transition-fast);
+    }
+
+    .glass-input-premium:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* Chat Items List */
+    .chat-items-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0.5rem;
+    }
+
+    .chat-item-premium {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 0.85rem;
+        border-radius: var(--radius-md);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        margin-bottom: 0.25rem;
+    }
+
+    .chat-item-premium:hover {
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .chat-item-premium.active {
+        background: rgba(37, 99, 235, 0.1);
+        border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+
+    .avatar-wrapper {
+        position: relative;
+    }
+
+    .rep-mini {
+        position: absolute;
+        bottom: -2px;
+        right: -2px;
+        font-size: 0.7rem;
+    }
+
+    .chat-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .chat-name {
+        font-weight: 600;
+        font-size: 0.95rem;
+        display: block;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .chat-meta {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+    }
+
+    /* Main Chat Window */
+    .chat-main-window {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        border-radius: var(--radius-lg);
+        overflow: hidden;
+    }
+
+    .full-centered-placeholder {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 2rem;
+        color: var(--text-muted);
+    }
+
+    .placeholder-icon-wrapper {
+        width: 100px;
+        height: 100px;
+        background: rgba(255, 255, 255, 0.03);
+        border-radius: var(--radius-full);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .placeholder-icon-wrapper .material-symbols-rounded {
+        font-size: 3.5rem;
+        opacity: 0.2;
+    }
+
+    .full-centered-placeholder h3 {
+        color: var(--text-main);
+        margin-bottom: 0.5rem;
+    }
+
+    .full-centered-placeholder p {
+        font-size: 0.9rem;
+    }
+
+    /* Active Chat Styles */
+    .chat-header {
+        padding: 1rem 1.5rem;
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        background: rgba(255, 255, 255, 0.02);
+    }
+
+    .active-user-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .status-indicator {
+        font-size: 0.75rem;
+        color: var(--success-color);
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+    }
+
+    .status-indicator::before {
+        content: '';
+        width: 8px;
+        height: 8px;
+        background: var(--success-color);
+        border-radius: 50%;
+        display: inline-block;
+    }
+
+    .messages-viewport {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+        background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.1));
+    }
+
+    /* Message Bubbles */
+    .msg-premium {
+        display: flex;
+        flex-direction: column;
+        max-width: 70%;
+        animation: slideIn 0.3s ease;
+    }
+
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .msg-premium.sent {
+        align-self: flex-end;
+        align-items: flex-end;
+    }
+
+    .msg-premium.received {
+        align-self: flex-start;
+        align-items: flex-start;
+    }
+
+    .msg-bubble-p {
+        padding: 0.8rem 1.2rem;
+        border-radius: 1.2rem;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .msg-premium.sent .msg-bubble-p {
+        background: var(--primary-color);
+        color: white;
+        border-bottom-right-radius: 0.3rem;
+    }
+
+    .msg-premium.received .msg-bubble-p {
+        background: var(--bg-glass-hover);
+        color: var(--text-main);
+        border-bottom-left-radius: 0.3rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .msg-time-p {
+        font-size: 0.65rem;
+        color: var(--text-muted);
+        margin-top: 0.4rem;
+        opacity: 0.8;
+    }
+
+    /* Chat Input Area */
+    .chat-input-area {
+        padding: 1.25rem 1.5rem;
+        background: var(--bg-glass);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .input-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+
+    .message-input-glass {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-md);
+        padding: 0.85rem 1.25rem;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        transition: all var(--transition-fast);
+    }
+
+    .message-input-glass:focus {
+        outline: none;
+        border-color: var(--primary-color);
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .send-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: var(--radius-md);
+        border: none;
+        background: var(--primary-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+    }
+
+    .send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(37, 99, 235, 0.3);
+    }
+
+    /* Friends List Premium */
+    .friends-list-container {
+        padding: 1rem;
+    }
+
+    .section-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        letter-spacing: 1px;
+        margin: 1.5rem 0 1rem 0.5rem;
+    }
+
+    .friend-req-card {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 0.85rem;
+        border-radius: var(--radius-md);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        border: 1px solid var(--border-color);
+    }
+
+    .action-btn {
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 0.4rem;
+        border-radius: 50%;
+        transition: background 0.2s;
+    }
+
+    .action-btn.accept {
+        color: var(--success-color);
+    }
+
+    .action-btn.decline {
+        color: var(--danger-color);
+    }
+
+    .action-btn:hover {
+        background: rgba(255, 255, 255, 0.08);
+    }
+
+    .empty-state,
+    .empty-state-mini {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 2.5rem 1.5rem;
+        color: var(--text-muted);
+    }
+
+    .empty-state .material-symbols-rounded {
+        font-size: 2.5rem;
+        opacity: 0.2;
+        margin-bottom: 1rem;
+    }
+
+    .empty-state p {
+        font-weight: 600;
+        font-size: 0.95rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .empty-state .subtitle {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+
+    /* Dropdown Premium */
+    .dropdown-content-p {
+        display: none;
+        position: absolute;
+        right: 0;
+        min-width: 180px;
+        z-index: 100;
+        border-radius: var(--radius-md);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+        background: rgba(15, 23, 42, 0.98) !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    .dropdown:hover .dropdown-content-p {
+        display: block;
+    }
+
+    .danger-item {
+        color: var(--danger-color);
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        padding: 0.85rem 1.25rem;
+        cursor: pointer;
+        font-size: 0.85rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        transition: background 0.2s;
+    }
+
+    .danger-item:hover {
+        background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* Social Search Results Styling */
+    .search-results-mini {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .no-hover:hover {
+        background: none !important;
+    }
+
+    .search-action {
+        margin-left: auto;
+    }
+
+    .badge {
+        position: static !important;
+        display: inline-block;
+        font-size: 0.7rem;
+        padding: 0.2rem 0.5rem;
+        border-radius: 10px;
+        font-weight: 600;
+    }
+
+    .badge.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+
+    .badge.warning {
+        background: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+</style>
+{% endblock %}

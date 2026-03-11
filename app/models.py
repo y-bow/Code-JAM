@@ -104,6 +104,43 @@ class User(db.Model):
     def __repr__(self):
         return f'<User {self.email} ({self.role}) @ School {self.school_id}>'
 
+    # Social Features
+    @property
+    def friends(self):
+        """Returns a list of User objects who are confirmed friends."""
+        f1 = Friendship.query.filter_by(user1_id=self.id).all()
+        f2 = Friendship.query.filter_by(user2_id=self.id).all()
+        friend_ids = [f.user2_id for f in f1] + [f.user1_id for f in f2]
+        if not friend_ids:
+            return []
+        return User.query.filter(User.id.in_(friend_ids)).all()
+
+    @property
+    def pending_requests(self):
+        """Incoming friend requests."""
+        return FriendRequest.query.filter_by(recipient_id=self.id, status='pending').all()
+
+    @property
+    def sent_requests(self):
+        """Outgoing friend requests."""
+        return FriendRequest.query.filter_by(sender_id=self.id, status='pending').all()
+
+    def is_friends_with(self, other_user_id):
+        return Friendship.query.filter(
+            ((Friendship.user1_id == self.id) & (Friendship.user2_id == other_user_id)) |
+            ((Friendship.user1_id == other_user_id) & (Friendship.user2_id == self.id))
+        ).first() is not None
+
+    def has_pending_request_to(self, other_user_id):
+        return FriendRequest.query.filter_by(
+            sender_id=self.id, recipient_id=other_user_id, status='pending'
+        ).first() is not None
+
+    def has_pending_request_from(self, other_user_id):
+        return FriendRequest.query.filter_by(
+            sender_id=other_user_id, recipient_id=self.id, status='pending'
+        ).first() is not None
+
 
 class Student(db.Model):
     __tablename__ = 'students'
@@ -405,3 +442,46 @@ class TimetableEntry(db.Model):
             'room': self.room,
             'color': self.color,
         }
+
+# =============================================================================
+# ADDITIONAL MODELS (Teacher & Social)
+# =============================================================================
+
+class TeacherTodo(db.Model):
+    __tablename__ = 'teacher_todos'
+    id = db.Column(db.Integer, primary_key=True)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    title = db.Column(db.String(200), nullable=False)
+    is_completed = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class TeacherRating(db.Model):
+    __tablename__ = 'teacher_ratings'
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    rating = db.Column(db.Integer, nullable=False)
+    review = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+class FriendRequest(db.Model):
+    __tablename__ = 'friend_requests'
+    id = db.Column(db.Integer, primary_key=True)
+    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, accepted, declined
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    sender = db.relationship('User', foreign_keys=[sender_id], backref=db.backref('sent_friend_requests', lazy='dynamic'))
+    recipient = db.relationship('User', foreign_keys=[recipient_id], backref=db.backref('received_friend_requests', lazy='dynamic'))
+
+class Friendship(db.Model):
+    __tablename__ = 'friendships'
+    id = db.Column(db.Integer, primary_key=True)
+    user1_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    user2_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    user1 = db.relationship('User', foreign_keys=[user1_id])
+    user2 = db.relationship('User', foreign_keys=[user2_id])

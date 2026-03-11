@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
-from models import User, School, bcrypt
+from ..models import User, School, bcrypt
 
 auth_bp = Blueprint('auth', __name__)
 

@@ -39,23 +39,63 @@
         <aside class="sidebar glass-panel">
             <div class="sidebar-header">
                 <div class="logo">
-                    <span class="material-symbols-rounded">school</span>
-                    <h1>Hive</h1>
+                    <img src="{{ url_for('static', filename='images/light_theme.png') }}" alt="Hive Logo"
+                        class="logo-light">
+                    <img src="{{ url_for('static', filename='images/dark_theme.png') }}" alt="Hive Logo"
+                        class="logo-dark">
                 </div>
             </div>
 
             <nav class="sidebar-nav">
                 {% block sidebar_links %}
-                <!-- Dynamic Navigation Links Go Here based on Role -->
-                <a href="{{ url_for('index') }}" class="nav-item active">
+                <a href="{{ url_for('index') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'index' or request.endpoint == 'dashboard.student_dashboard' or request.endpoint == 'dashboard.teacher_dashboard' }}">
                     <span class="material-symbols-rounded">space_dashboard</span>
-                    Dashboard
+                    Global Hub
                 </a>
-                <a href="#" class="nav-item">
-                    <span class="material-symbols-rounded">calendar_month</span>
+
+                {% if g.current_user.role == 'student' or g.current_user.role == 'class_rep' %}
+                <a href="{{ url_for('dashboard.timetable') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.timetable' }}">
+                    <span class="material-symbols-rounded">calendar_today</span>
                     Timetable
                 </a>
-                <a href="#" class="nav-item">
+
+                <a href="{{ url_for('dashboard.tasks') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.tasks' }}">
+                    <span class="material-symbols-rounded">task_alt</span>
+                    Tasks
+                </a>
+                <a href="{{ url_for('dashboard.grades') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.grades' }}">
+                    <span class="material-symbols-rounded">bar_chart</span>
+                    Grades Overview
+                </a>
+                <a href="{{ url_for('dashboard.announcements') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}">
+                    <span class="material-symbols-rounded">campaign</span>
+                    Announcements
+                </a>
+                {% endif %}
+
+                {% if g.current_user.role_level >= 4 %}
+                <a href="{{ url_for('dashboard.manage_timetable') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}">
+                    <span class="material-symbols-rounded">calendar_month</span>
+                    Manage Schedule
+                </a>
+                {% endif %}
+
+                {% if g.current_user.role_level >= 5 %}
+                <a href="{{ url_for('dashboard.dean_ratings') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_ratings' }}">
+                    <span class="material-symbols-rounded">star_half</span>
+                    Teacher Ratings
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('messages.index') }}"
+                    class="nav-item {{ 'active' if 'messages' in request.endpoint }}">
                     <span class="material-symbols-rounded">forum</span>
                     Messages
                 </a>
@@ -64,13 +104,23 @@
 
             <div class="sidebar-footer">
                 <a href="#" class="nav-item user-profile" id="userProfileBtn">
-                    <div class="avatar">{% if g.current_user %}{{ g.current_user.name[0] | upper }}{% else %}U{% endif
-                        %}</div>
+                    <div class="avatar" style="position: relative;">
+                        {% if g.current_user %}{{ g.current_user.name[0] | upper }}{% else %}U{% endif %}
+                        {% if g.current_user and g.current_user.role == 'class_rep' %}
+                        <span class="rep-badge-mini" title="Class Representative">👑</span>
+                        {% endif %}
+                    </div>
                     <div class="user-info">
-                        <span class="user-name">{% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{%
-                            endif %}</span>
-                        <span class="user-role">{% if g.current_user %}{{ g.current_user.role | title }}{% else
-                            %}Student{% endif %}</span>
+                        <span class="user-name">
+                            {% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{% endif %}
+                        </span>
+                        <span class="user-role">
+                            {% if g.current_user %}
+                            {{ g.current_user.role | replace('_', ' ') | title }}
+                            {% else %}
+                            Student
+                            {% endif %}
+                        </span>
                     </div>
                 </a>
             </div>
@@ -111,7 +161,7 @@
                                 <div class="notification-section">
                                     <label>Recent Messages</label>
                                     {% for msg in g.unread_messages %}
-                                    <a href="{{ url_for('dashboard.messages') }}" class="dropdown-item message-item">
+                                    <a href="{{ url_for('messages.index') }}" class="dropdown-item message-item">
                                         <div class="item-avatar">{{ msg.sender.name[0] | upper }}</div>
                                         <div class="item-content">
                                             <p class="item-title">{{ msg.sender.name }}</p>

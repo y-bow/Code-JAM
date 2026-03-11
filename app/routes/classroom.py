@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, g, flash, redirect, url_for
-from middleware import school_scoped, owns_resource
-from models import Course, Enrollment, Section
+from ..middleware import school_scoped, owns_resource
+from ..models import Course, Enrollment, Section
 
 classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom')
 
