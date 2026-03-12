@@ -15,6 +15,7 @@ ROLE_HIERARCHY = {
     'assistant': 3,
     'timetable_manager': 4,
     'dean': 5,
+    'admin': 10,
     'superadmin': 99,
 }
 
@@ -349,18 +350,22 @@ class Announcement(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True)  # NULL = school-wide
+    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=True) # NULL = school-wide
     teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     body = db.Column(db.Text, nullable=False)
     urgent = db.Column(db.Boolean, default=False)
+    category = db.Column(db.String(50), default='general')  # 'general', 'timetable'
     posted_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     course = db.relationship('Course', backref=db.backref('announcements', lazy='dynamic'))
+    section = db.relationship('Section', backref=db.backref('announcements', lazy='dynamic'))
     author = db.relationship('User', backref=db.backref('authored_announcements', lazy='dynamic'))
 
     __table_args__ = (
         db.Index('ix_announcement_school', 'school_id'),
         db.Index('ix_announcement_course', 'course_id'),
+        db.Index('ix_announcement_section', 'section_id'),
     )
 
 
@@ -423,8 +428,13 @@ class TimetableEntry(db.Model):
     start_time = db.Column(db.String(20), nullable=False)  # e.g. '09:00 AM'
     end_time = db.Column(db.String(20), nullable=False)    # e.g. '10:30 AM'
     title = db.Column(db.String(200), nullable=False)      # course/class name
+    teacher = db.Column(db.String(100))                     # teacher name
+    period = db.Column(db.String(50))                      # e.g. 'Period 1'
     room = db.Column(db.String(100), nullable=False)
     color = db.Column(db.String(50), default='var(--primary-color)')
+    status = db.Column(db.String(20), default='active')           # 'active', 'cancelled'
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     section = db.relationship('Section', backref=db.backref('timetable_entries', lazy='dynamic'))
 
@@ -435,12 +445,17 @@ class TimetableEntry(db.Model):
     def to_dict(self):
         """Serialize for JSON injection into templates."""
         return {
+            'id': self.id,
             'day': self.day,
             'startTime': self.start_time,
             'endTime': self.end_time,
             'title': self.title,
+            'subject': self.title,
+            'teacher': self.teacher or '',
+            'period': self.period or '',
             'room': self.room,
             'color': self.color,
+            'status': self.status,
         }
 
 # =============================================================================

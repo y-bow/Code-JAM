@@ -58,8 +58,8 @@ def login():
                 return redirect(url_for('dashboard.student_dashboard'))
             elif user.role in ('teacher', 'assistant'):
                 return redirect(url_for('dashboard.teacher_dashboard'))
-            elif user.role in ('dean', 'timetable_manager'):
-                return redirect(url_for('dashboard.student_dashboard'))  # TODO: dean dashboard
+            elif user.role in ('admin', 'superadmin', 'dean', 'timetable_manager'):
+                return redirect(url_for('dashboard.admin_dashboard'))
             else:
                 return redirect(url_for('index'))
 

@@ -23,6 +23,10 @@ def create_app():
     db.init_app(app)
     bcrypt.init_app(app)
 
+    @app.template_filter('fix_time')
+    def fix_time_filter(s):
+        return s.replace(" ", "") if s else s
+
     # Session Security
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
