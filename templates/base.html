@@ -143,22 +143,15 @@
                 </a>
                 {% endif %}
 
-<<<<<<< HEAD
+                <a href="{{ url_for('internships.index') }}"
+                    class="nav-item {{ 'active' if request.endpoint == 'internships.index' }}">
+                    <span class="nav-icon material-symbols-rounded">work</span>
+                    <span class="nav-label">Internships</span>
+                </a>
+
                 <a href="{{ url_for('messages.index') }}" class="nav-item {{ 'active' if 'messages' in request.endpoint and 'fees' not in request.endpoint }}">
                     <span class="nav-icon material-symbols-rounded">forum</span>
                     <span class="nav-label">Messages</span>
-=======
-                <a href="{{ url_for('internships.index') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'internships.index' }}">
-                    <span class="material-symbols-rounded">work</span>
-                    Internships
-                </a>
-
-                <a href="{{ url_for('messages.index') }}"
-                    class="nav-item {{ 'active' if 'messages' in request.endpoint }}">
-                    <span class="material-symbols-rounded">forum</span>
-                    Messages
->>>>>>> origin/internship_listings
                 </a>
 
                 <a href="{{ url_for('dashboard.announcements') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}">
