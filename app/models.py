@@ -505,7 +505,6 @@ class Friendship(db.Model):
     user1 = db.relationship('User', foreign_keys=[user1_id])
     user2 = db.relationship('User', foreign_keys=[user2_id])
 
-<<<<<<< HEAD
 # =============================================================================
 # FEES MODELS
 # =============================================================================
@@ -565,8 +564,6 @@ class FeePayment(db.Model):
 
     fee = db.relationship('Fee', backref=db.backref('payments', lazy='dynamic', cascade='all, delete-orphan'))
 
-=======
->>>>>>> origin/internship_listings
 
 # =============================================================================
 # INTERNSHIPS

@@ -54,10 +54,7 @@ def create_app():
     from .routes.classroom import classroom_bp
     from .routes.messages import messages_bp
     from .routes.social import social_bp
-<<<<<<< HEAD
     from .routes.fees import fees_bp
-=======
->>>>>>> origin/internship_listings
     from .routes.internships import internships_bp
 
     app.register_blueprint(auth_bp)
@@ -65,10 +62,7 @@ def create_app():
     app.register_blueprint(classroom_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(social_bp)
-<<<<<<< HEAD
     app.register_blueprint(fees_bp)
-=======
->>>>>>> origin/internship_listings
     app.register_blueprint(internships_bp)
 
     @app.route('/')
