@@ -8,6 +8,18 @@ A university Learning Management System (LMS) prototype built for FOSS Hack 2026
 - **Classroom Management**: Course enrollments, assignments, and resource sharing.
 - **Timetable**: Section-specific weekly schedules.
 - **Announcements & Messaging**: Real-time communication within schools and courses.
+- **Lost & Found Module**: Dedicated gallery and reporting system for lost or found items with automated potential-match notifications.
+
+## Lost & Found Module
+
+The Lost & Found module introduces several new API endpoints, which are protected by `@school_scoped`:
+- `GET /lost-found/gallery`: Gallery Dashboard with search and filters (category, location, type).
+- `GET /lost-found/my-items`: User Profile View to manage own items.
+- `GET/POST /lost-found/report`: Submission Form for new lost/found items.
+- `POST /lost-found/resolve/<item_id>`: Endpoint to mark an item as returned/resolved.
+
+**Image Storage Handling:**
+Currently, image uploads for Lost & Found items are handled via **local storage**. Files are saved to `static/uploads/lost_found/` with a securely generated filename combining the user ID and a timestamp. In a production environment with heavier traffic, this should be migrated to an external blob storage provider such as AWS S3.
 
 ## Folder Structure
 ```text

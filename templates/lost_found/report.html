@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Report Lost/Found Item - Hive{% endblock %}
+{% block page_title %}Report Item{% endblock %}
+
+{% block content %}
+<div class="header-actions" style="margin-bottom: 20px;">
+    <a href="{{ url_for('lost_found.gallery') }}" class="glass-button" style="display: flex; align-items: center; gap: 5px; width: fit-content; text-decoration: none; border: none;">
+        <span class="material-symbols-rounded">arrow_back</span> Back to Gallery
+    </a>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} glass-panel">
+            {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="glass-panel" style="max-width: 800px; margin: 0 auto; padding: 30px; border-radius: 12px;">
+    <h2 style="margin-top: 0; margin-bottom: 24px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">Report a Lost or Found Item</h2>
+    
+    <form method="POST" enctype="multipart/form-data" action="{{ url_for('lost_found.report') }}">
+        
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div class="form-group" style="flex: 1;">
+                <label for="report_type">Report Type *</label>
+                <select name="report_type" id="report_type" class="glass-input" required style="width: 100%;">
+                    <option value="" disabled selected>Select Type</option>
+                    <option value="lost">I Lost Something</option>
+                    <option value="found">I Found Something</option>
+                </select>
+            </div>
+            
+            <div class="form-group" style="flex: 1;">
+                <label for="category">Category *</label>
+                <select name="category" id="category" class="glass-input" required style="width: 100%;">
+                    <option value="" disabled selected>Select Category</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="title">Item Title *</label>
+            <input type="text" name="title" id="title" class="glass-input" required placeholder="e.g. Blue Hydroflask Water Bottle, iPhone 13 Pro" style="width: 100%;">
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="location">Location Lost/Found *</label>
+            <div class="input-with-icon" style="width: 100%;">
+                <span class="material-symbols-rounded">location_on</span>
+                <input type="text" name="location" id="location" class="glass-input" required placeholder="e.g. Library 2nd Floor, Cafeteria near entrance" style="width: 100%;">
+            </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+            <label for="description">Detailed Description *</label>
+            <textarea name="description" id="description" class="glass-input" rows="5" required placeholder="Provide distinctive features, brand, color, or condition of the item..." style="width: 100%; resize: vertical;"></textarea>
+            <small style="color: var(--text-secondary); display: block; margin-top: 4px;">More detail increases the chance of a successful match.</small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 30px;">
+            <label for="image">Upload Image</label>
+            <div class="file-upload-wrapper" style="border: 2px dashed var(--border-color); padding: 30px; border-radius: 8px; text-align: center; cursor: pointer; transition: all 0.2s;" onclick="document.getElementById('image').click()">
+                <div id="image-preview" style="display: none; margin-bottom: 15px;">
+                    <img id="preview-img" src="" alt="Preview" style="max-height: 200px; max-width: 100%; border-radius: 8px; object-fit: contain;">
+                </div>
+                <div id="upload-prompt">
+                    <span class="material-symbols-rounded" style="font-size: 48px; color: var(--text-secondary); margin-bottom: 10px; display: block;">cloud_upload</span>
+                    <span style="font-weight: 500; font-size: 16px; display: block; margin-bottom: 4px; color: var(--primary-color);">Click or drag file here to upload</span>
+                    <span style="font-size: 13px; color: var(--text-secondary);">PNG, JPG, GIF up to 5MB</span>
+                </div>
+                <!-- Hidden file input -->
+                <input type="file" name="image" id="image" accept=".png, .jpg, .jpeg, .gif" style="display: none;" onchange="previewImage(event)">
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: flex-end; gap: 15px;">
+            <a href="{{ url_for('lost_found.gallery') }}" class="glass-button" style="text-decoration: none; border: none;">Cancel</a>
+            <button type="submit" class="primary-btn" style="padding-left: 30px; padding-right: 30px;">Submit Report</button>
+        </div>
+    </form>
+</div>
+
+<script>
+function previewImage(event) {
+    const input = event.target;
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+            document.getElementById('upload-prompt').style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('upload-prompt').style.display = 'block';
+    }
+}
+
+// Add hover effects for file dropzone
+const uploadWrapper = document.querySelector('.file-upload-wrapper');
+uploadWrapper.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--primary-color)';
+    uploadWrapper.style.background = 'rgba(23, 115, 234, 0.05)';
+});
+uploadWrapper.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--border-color)';
+    uploadWrapper.style.background = 'transparent';
+});
+uploadWrapper.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--border-color)';
+    uploadWrapper.style.background = 'transparent';
+    const fileInput = document.getElementById('image');
+    
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        // Trigger change event manually
+        const event = new Event('change');
+        fileInput.dispatchEvent(event);
+    }
+});
+</script>
+{% endblock %}

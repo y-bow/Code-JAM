@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}My Reported Items - Hive{% endblock %}
+{% block page_title %}My Reported Items{% endblock %}
+
+{% block content %}
+<div class="header-actions" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div style="display: flex; gap: 10px;">
+        <a href="{{ url_for('lost_found.gallery') }}" class="glass-button" style="text-decoration: none; border: none;">Gallery</a>
+        <a href="{{ url_for('lost_found.my_items') }}" class="primary-btn">My Items</a>
+    </div>
+    <a href="{{ url_for('lost_found.report') }}" class="primary-btn" style="display: flex; align-items: center; gap: 5px; text-decoration: none; border: none;">
+        <span class="material-symbols-rounded">add</span> Report New
+    </a>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} glass-panel">
+            {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="user-items-container" style="display: flex; flex-direction: column; gap: 16px;">
+    {% for item in items %}
+    <div class="item-list-card glass-panel" style="display: flex; overflow: hidden; border-radius: 12px; gap: 20px;">
+        {% if item.image_path %}
+        <div class="item-list-img" style="width: 200px; min-width: 200px; background-image: url('{{ url_for('static', filename=item.image_path) }}'); background-size: cover; background-position: center;"></div>
+        {% else %}
+        <div class="item-list-img placeholder" style="width: 200px; min-width: 200px; background: var(--bg-secondary); display: flex; align-items: center; justify-content: center;">
+            <span class="material-symbols-rounded" style="font-size: 40px; opacity: 0.3;">image</span>
+        </div>
+        {% endif %}
+        
+        <div class="item-list-content" style="padding: 20px 20px 20px 0; flex: 1; display: flex; flex-direction: column;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span class="badge {{ 'badge-danger' if item.report_type == 'lost' else 'badge-success' }}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                        {{ item.report_type }}
+                    </span>
+                    <span class="badge {{ 'badge-neutral' if item.status == 'open' else 'badge-resolved' }}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; text-transform: uppercase;">
+                        {{ item.status }}
+                    </span>
+                </div>
+                <span class="timestamp" style="font-size: 13px; color: var(--text-secondary);">Added {{ item.timestamp.strftime('%B %d, %Y') }}</span>
+            </div>
+            
+            <h3 style="margin: 0 0 8px 0; font-size: 20px; color: var(--text-primary);">{{ item.title }}</h3>
+            
+            <p style="margin: 0 0 16px 0; font-size: 14px; color: var(--text-secondary); line-height: 1.5; padding-right: 20px;">
+                {{ item.description }}
+            </p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto;">
+                <div style="display: flex; gap: 24px;">
+                    <span style="font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">category</span> {{ item.category }}
+                    </span>
+                    <span style="font-size: 13px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">location_on</span> {{ item.location }}
+                    </span>
+                </div>
+                
+                {% if item.status == 'open' %}
+                <form action="{{ url_for('lost_found.resolve', item_id=item.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to resolve this item? It will be marked as returned and removed from the public gallery.');">
+                    <button type="submit" class="glass-button" style="display: flex; align-items: center; gap: 6px; border: 1px solid var(--border-color); background: transparent;">
+                        <span class="material-symbols-rounded" style="font-size: 18px;">check_circle</span> 
+                        {% if item.report_type == 'lost' %}Mark as Found{% else %}Mark as Returned{% endif %}
+                    </button>
+                </form>
+                {% else %}
+                <span style="color: var(--text-secondary); font-size: 14px; font-weight: 500; display: flex; align-items: center; gap: 6px;">
+                    <span class="material-symbols-rounded">check_circle</span> Resolved
+                </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state glass-panel" style="padding: 60px 40px; text-align: center; color: var(--text-secondary); border-radius: 12px;">
+        <span class="material-symbols-rounded" style="font-size: 64px; margin-bottom: 16px; opacity: 0.5;">inventory_2</span>
+        <h3>No items reported</h3>
+        <p style="margin-bottom: 24px;">You haven't reported any lost or found items yet.</p>
+        <a href="{{ url_for('lost_found.report') }}" class="primary-btn" style="text-decoration: none; border: none;">Create Your First Report</a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .badge-danger { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .badge-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .badge-neutral { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .badge-resolved { background: rgba(107, 114, 128, 0.2); color: #6b7280; }
+    
+    .dark-theme .badge-danger { background: rgba(239, 68, 68, 0.3); }
+    .dark-theme .badge-success { background: rgba(34, 197, 94, 0.3); }
+    .dark-theme .badge-neutral { background: rgba(59, 130, 246, 0.3); }
+    .dark-theme .badge-resolved { background: rgba(107, 114, 128, 0.3); }
+    
+    .btn-outline {
+        background: transparent;
+        border: 1px solid var(--border-color);
+        color: var(--text-primary);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    .btn-outline:hover {
+        background: var(--bg-hover);
+        border-color: var(--text-secondary);
+    }
+    
+    @media (max-width: 768px) {
+        .item-list-card {
+            flex-direction: column;
+        }
+        .item-list-img {
+            width: 100% !important;
+            height: 200px;
+        }
+        .item-list-content {
+            padding: 20px !important;
+        }
+    }
+</style>
+{% endblock %}

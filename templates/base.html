@@ -93,6 +93,12 @@
                     Teacher Ratings
                 </a>
                 {% endif %}
+                
+                <a href="{{ url_for('lost_found.gallery') }}"
+                    class="nav-item {{ 'active' if 'lost_found' in request.endpoint }}">
+                    <span class="material-symbols-rounded">find_in_page</span>
+                    Lost & Found
+                </a>
 
                 <a href="{{ url_for('messages.index') }}"
                     class="nav-item {{ 'active' if 'messages' in request.endpoint }}">

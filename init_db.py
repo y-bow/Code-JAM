@@ -2,7 +2,8 @@ from app import create_app
 from app.models import (
     db, User, Student, Teacher, School, Section,
     Course, Enrollment, Announcement, TimetableEntry, bcrypt,
-    TeacherTodo, TeacherRating, FriendRequest, Friendship
+    TeacherTodo, TeacherRating, FriendRequest, Friendship, 
+    LostFoundItem
 )
 from datetime import datetime
 
