@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Lost & Found Gallery - Hive{% endblock %}
+{% block page_title %}Lost & Found{% endblock %}
+
+{% block content %}
+<div class="header-actions">
+    <div class="header-tabs">
+        <a href="{{ url_for('lost_found.gallery') }}" class="glass-button {{ 'active' if request.endpoint == 'lost_found.gallery' }}">
+            <span class="material-symbols-rounded">grid_view</span> Gallery
+        </a>
+        <a href="{{ url_for('lost_found.my_items') }}" class="glass-button {{ 'active' if request.endpoint == 'lost_found.my_items' }}">
+            <span class="material-symbols-rounded">person_pin</span> My Items
+        </a>
+    </div>
+    <a href="{{ url_for('lost_found.report') }}" class="primary-btn">
+        <span class="material-symbols-rounded">add_circle</span> Report Item
+    </a>
+</div>
+
+<!-- Flash Messages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-messages">
+      {% for category, message in messages %}
+        <div class="alert alert-{{ category }} glass-panel">
+            {{ message }}
+        </div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<div class="filter-section glass-panel">
+    <form method="GET" action="{{ url_for('lost_found.gallery') }}" class="filter-form">
+        
+        <div class="form-group flex-1">
+            <label class="form-label" for="q">Search Items or Locations</label>
+            <div class="input-with-icon">
+                <span class="material-symbols-rounded">search</span>
+                <input type="text" name="q" id="q" value="{{ query }}" placeholder="Search by name, description or location..." class="glass-input">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="type">Type</label>
+            <select name="type" id="type" class="glass-input">
+                <option value="">All Types</option>
+                <option value="lost" {% if selected_type == 'lost' %}selected{% endif %}>Lost</option>
+                <option value="found" {% if selected_type == 'found' %}selected{% endif %}>Found</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="category">Category</label>
+            <select name="category" id="category" class="glass-input">
+                <option value="">All Categories</option>
+                {% for cat in categories %}
+                <option value="{{ cat }}" {% if selected_category == cat %}selected{% endif %}>{{ cat }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="primary-btn">
+                <span class="material-symbols-rounded">filter_alt</span> Filter
+            </button>
+            <a href="{{ url_for('lost_found.gallery') }}" class="glass-button reset-btn">Reset</a>
+        </div>
+    </form>
+</div>
+
+<div class="gallery-grid">
+    {% for item in items %}
+    <div class="item-card glass-panel">
+        <div class="item-image-container">
+            {% if item.image_path %}
+            <div class="item-image" style="background-image: url('{{ url_for('static', filename=item.image_path) }}');"></div>
+            {% else %}
+            <div class="item-image placeholder">
+                <span class="material-symbols-rounded">image_not_supported</span>
+                <span>No image provided</span>
+            </div>
+            {% endif %}
+            <span class="badge {{ 'badge-danger' if item.report_type == 'lost' else 'badge-success' }}">
+                {{ item.report_type }}
+            </span>
+        </div>
+        
+        <div class="item-details">
+            <div class="item-header">
+                <h3 class="item-title">{{ item.title }}</h3>
+                <span class="item-date">{{ item.timestamp.strftime('%b %d, %Y') }}</span>
+            </div>
+            
+            <p class="item-description">{{ item.description }}</p>
+            
+            <div class="item-meta">
+                <div class="meta-row">
+                    <span class="material-symbols-rounded">category</span>
+                    {{ item.category }}
+                </div>
+                <div class="meta-row">
+                    <span class="material-symbols-rounded">location_on</span>
+                    {{ item.location }}
+                </div>
+                <div class="meta-row reporter">
+                    <span class="material-symbols-rounded">person</span>
+                    Reported by {{ item.reporter.name }}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state glass-panel">
+        <span class="material-symbols-rounded">manage_search</span>
+        <h3>No items found</h3>
+        <p>There are no active lost or found items matching your criteria.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .header-actions {
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center; 
+        margin-bottom: 2rem;
+    }
+    .header-tabs {
+        display: flex; 
+        gap: 0.75rem;
+    }
+    .filter-form {
+        display: flex; 
+        gap: 1.5rem; 
+        align-items: flex-end; 
+        flex-wrap: wrap;
+    }
+    .flex-1 { flex: 1; min-width: 250px; }
+    .filter-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    .reset-btn { border: none; }
+    
+    .gallery-grid {
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); 
+        gap: 1.5rem;
+    }
+    
+    .item-image-container {
+        position: relative;
+        height: 200px;
+        overflow: hidden;
+    }
+    .item-image {
+        height: 100%;
+        width: 100%;
+        background-size: cover;
+        background-position: center;
+        transition: transform 0.5s ease;
+    }
+    .item-image.placeholder {
+        background: var(--bg-secondary); 
+        display: flex; 
+        align-items: center; 
+        justify-content: center; 
+        flex-direction: column; 
+        color: var(--text-secondary);
+        gap: 0.5rem;
+    }
+    .item-image.placeholder span:first-child { font-size: 3rem; opacity: 0.3; }
+    
+    .badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.4rem 0.8rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        backdrop-filter: blur(8px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    .badge-danger { background: rgba(239, 68, 68, 0.9); color: white; }
+    .badge-success { background: rgba(34, 197, 94, 0.9); color: white; }
+    
+    .item-details {
+        padding: 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    .item-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+    }
+    .item-title {
+        margin: 0;
+        font-size: 1.25rem;
+        color: var(--text-main);
+    }
+    .item-date {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+    .item-description {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--text-muted);
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+    .item-meta {
+        margin-top: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    .meta-row {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+    }
+    .meta-row span { font-size: 1.1rem; color: var(--primary-color); }
+    .meta-row.reporter { margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--border-color); }
+
+    .empty-state {
+        grid-column: 1 / -1;
+        padding: 4rem;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+    .empty-state span { font-size: 4rem; color: var(--primary-color); opacity: 0.5; }
+</style>
+{% endblock %}

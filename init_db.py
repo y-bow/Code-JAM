@@ -2,7 +2,7 @@ from app import create_app
 from app.models import (
     db, User, Student, Teacher, School, Section,
     Course, Enrollment, Announcement, TimetableEntry, bcrypt,
-    TeacherTodo, TeacherRating, Message, Internship
+    TeacherTodo, TeacherRating, Message, Internship, LostFoundItem
 )
 from datetime import datetime, timedelta
 
