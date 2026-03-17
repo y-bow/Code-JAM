@@ -40,7 +40,7 @@
             <div class="input-group">
                 <input type="password" id="password" name="password" required placeholder=" ">
                 <label for="password">Password</label>
-                <span class="material-symbols-rounded">lock</span>
+                <span class="material-symbols-rounded" style="cursor: pointer;" onclick="togglePassword('password', this)">visibility_off</span>
             </div>
 
             <button type="submit" class="login-btn">
@@ -50,6 +50,19 @@
         </form>
     </div>
 </div>
+
+<script>
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.textContent = "visibility";
+        } else {
+            input.type = "password";
+            icon.textContent = "visibility_off";
+        }
+    }
+</script>
 
 <style>
     /* Hide sidebar and topbar on login page */
@@ -156,6 +169,7 @@
         color: var(--text-muted);
         font-size: 20px;
         transition: all var(--transition-fast);
+        user-select: none;
     }
 
     /* Floating Label Logic */
