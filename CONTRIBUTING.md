@@ -2,6 +2,26 @@
 
 First off, thank you for considering contributing to Code-JAM! It's people like you that make the open-source community such an amazing place to learn, inspire, and create.
 
+## First Time Setup
+
+After cloning, run this once to clean your local git cache:
+
+    git rm --cached -r --ignore-unmatch __pycache__/
+    find . -name "*.pyc" -exec git rm --cached --ignore-unmatch {} \;
+    git pull origin main
+
+## Local Database
+
+Never commit instance/app.db — it is gitignored.
+After pulling, if models.py or init_db.py changed,
+rebuild your local database:
+
+    python init_db.py
+
+This wipes local data and reseeds fresh.
+You will never see pycache or app.db in git status,
+git diff, or PRs ever again after this fix.
+
 ## How Can I Contribute?
 
 ### Reporting Bugs
