@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Manage Sections{% endblock %}
+{% block page_title %}Section Management{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-rounded" style="color: var(--success-color);">meeting_room</span> Academic Sections
+        </h3>
+        <button class="glass-button" onclick="document.getElementById('addSectionModal').style.display='flex'" style="padding: 0.6rem 1.25rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded" style="font-size: 20px;">add</span> Add New Section
+        </button>
+    </div>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Section Name</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Code</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Batch</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">School</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for section in sections %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1.25rem 0.5rem;">
+                        <div style="font-weight: 600; color: var(--text-main);">{{ section.name }}</div>
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem; font-family: monospace; color: var(--accent-color);">{{ section.code }}</td>
+                    <td style="padding: 1.25rem 0.5rem; color: var(--text-main);">{{ section.batch_year }}</td>
+                    <td style="padding: 1.25rem 0.5rem; color: var(--primary-color);">{{ section.school.name }}</td>
+                    <td style="padding: 1.25rem 0.5rem; text-align: right;">
+                        <a href="{{ url_for('dashboard.admin_timetable', section_id=section.id) }}" class="icon-btn" title="View Timetable">
+                            <span class="material-symbols-rounded">calendar_view_week</span>
+                        </a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-muted);">No sections found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add Section Modal -->
+<div id="addSectionModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="width: 100%; max-width: 500px; padding: 2.5rem; position: relative;">
+        <button onclick="document.getElementById('addSectionModal').style.display='none'" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        
+        <h2 style="margin-top: 0; margin-bottom: 2rem; color: var(--text-main);">Add New Section</h2>
+        
+        <form action="{{ url_for('dashboard.add_section') }}" method="POST">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School</label>
+                <select name="school_id" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);">
+                    {% for school in schools %}
+                    <option value="{{ school.id }}">{{ school.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Section Name</label>
+                <input type="text" name="name" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);" placeholder="e.g. 2024 Computer Science A">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Section Code (Unique in School)</label>
+                <input type="text" name="code" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);" placeholder="e.g. CS-24-A">
+            </div>
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Batch Year</label>
+                <input type="number" name="batch_year" required value="2024" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);">
+            </div>
+            
+            <button type="submit" class="glass-button" style="width: 100%; padding: 1rem; font-weight: 600;">Create Section</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

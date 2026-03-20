@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Manage Schools{% endblock %}
+{% block page_title %}School Management{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-rounded" style="color: var(--primary-color);">domain</span> Registered Schools
+        </h3>
+        <button class="glass-button" onclick="document.getElementById('addSchoolModal').style.display='flex'" style="padding: 0.6rem 1.25rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded" style="font-size: 20px;">add</span> Add New School
+        </button>
+    </div>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">School Name</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Code</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Domain</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: center;">Status</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for school in schools %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1.25rem 0.5rem;">
+                        <div style="font-weight: 600; color: var(--text-main);">{{ school.name }}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">Registered: {{ school.created_at.strftime('%Y-%m-%d') }}</div>
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem; font-family: monospace; color: var(--accent-color);">{{ school.code }}</td>
+                    <td style="padding: 1.25rem 0.5rem; color: var(--primary-color);">{{ school.domain or 'N/A' }}</td>
+                    <td style="padding: 1.25rem 0.5rem; text-align: center;">
+                        {% if school.is_active %}
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                            Active
+                        </span>
+                        {% else %}
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                            Suspended
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem; text-align: right;">
+                        <form action="{{ url_for('dashboard.toggle_school', school_id=school.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="icon-btn" title="{{ 'Suspend' if school.is_active else 'Activate' }}" style="color: {{ '#ef4444' if school.is_active else '#10b981' }};">
+                                <span class="material-symbols-rounded">{{ 'block' if school.is_active else 'check_circle' }}</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="padding: 3rem; text-align: center; color: var(--text-muted);">No schools registered in the system.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Add School Modal -->
+<div id="addSchoolModal" class="modal-overlay" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); z-index: 1000; align-items: center; justify-content: center;">
+    <div class="glass-panel" style="width: 100%; max-width: 500px; padding: 2.5rem; position: relative;">
+        <button onclick="document.getElementById('addSchoolModal').style.display='none'" style="position: absolute; top: 1.5rem; right: 1.5rem; background: none; border: none; color: var(--text-muted); cursor: pointer;">
+            <span class="material-symbols-rounded">close</span>
+        </button>
+        
+        <h2 style="margin-top: 0; margin-bottom: 2rem; color: var(--text-main);">Add New School</h2>
+        
+        <form action="{{ url_for('dashboard.add_school') }}" method="POST">
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School Name</label>
+                <input type="text" name="name" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);">
+            </div>
+            <div class="form-group" style="margin-bottom: 1.5rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School Code (Unique)</label>
+                <input type="text" name="code" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);" placeholder="e.g. SCDS">
+            </div>
+            <div class="form-group" style="margin-bottom: 2rem;">
+                <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">Domain (Optional)</label>
+                <input type="text" name="domain" style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);" placeholder="e.g. school.edu">
+            </div>
+            
+            <button type="submit" class="glass-button" style="width: 100%; padding: 1rem; font-weight: 600;">Register School</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

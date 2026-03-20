@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Global Admin Dashboard{% endblock %}
+{% block page_title %}Global Hub{% endblock %}
+
+{% block content %}
+
+<div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+    <div class="glass-panel" style="padding: 1.5rem; text-align: center; border-left: 4px solid var(--primary-color);">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Students</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: var(--text-main);">{{ "{:,}".format(stats.students) }}</div>
+    </div>
+    <div class="glass-panel" style="padding: 1.5rem; text-align: center; border-left: 4px solid var(--accent-color);">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Faculty</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: var(--text-main);">{{ "{:,}".format(stats.professors) }}</div>
+    </div>
+    <div class="glass-panel" style="padding: 1.5rem; text-align: center; border-left: 4px solid var(--success-color);">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Active Sections</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: var(--text-main);">{{ "{:,}".format(stats.sections) }}</div>
+    </div>
+    <div class="glass-panel" style="padding: 1.5rem; text-align: center; border-left: 4px solid #8b5cf6;">
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Schools</div>
+        <div style="font-size: 2.2rem; font-weight: 700; color: var(--text-main);">{{ stats.schools }}</div>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem;">
+    <!-- Schools Overview -->
+    <div class="glass-panel" style="padding: 2rem;">
+        <h3 style="margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-rounded" style="color: var(--primary-color);">domain</span> Registered Schools
+        </h3>
+        <div class="table-container" style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">School Name</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Domain</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: center;">Status</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for school in schools %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1rem 0.5rem;">
+                            <div style="font-weight: 600;">{{ school.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">ID: {{ school.id }}</div>
+                        </td>
+                        <td style="padding: 1rem 0.5rem; font-family: monospace; color: var(--primary-color);">{{ school.domain or 'N/A' }}</td>
+                        <td style="padding: 1rem 0.5rem; text-align: center;">
+                            {% if school.is_active %}
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                                <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span> Active
+                            </span>
+                            {% else %}
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                                <span style="width: 6px; height: 6px; background: #ef4444; border-radius: 50%;"></span> Suspended
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td style="padding: 1rem 0.5rem; text-align: right;">
+                            <a href="#" class="icon-btn" title="Manage School" style="color: var(--text-muted);"><span class="material-symbols-rounded" style="font-size: 1.2rem;">settings</span></a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="4" style="padding: 2rem; text-align: center; color: var(--text-muted);">No schools registered.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div style="margin-top: 1.5rem; text-align: right;">
+            <button class="glass-button" style="padding: 0.5rem 1.25rem; font-size: 0.85rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-rounded" style="font-size: 18px;">add</span> Add New School
+            </button>
+        </div>
+    </div>
+
+    <!-- Right Column: Quick Actions & System Health -->
+    <div style="display: flex; flex-direction: column; gap: 2rem;">
+        <!-- Global Announcements -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+            <h3 style="margin-top: 0; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-rounded" style="color: #f59e0b;">campaign</span> Global Alerts
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                {% for a in announcements %}
+                <div style="padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); border-left: 3px solid var(--primary-color);">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <strong style="font-size: 0.85rem;">{{ a.title }}</strong>
+                        <span style="font-size: 0.7rem; color: var(--text-muted);">{{ a.posted_at.strftime('%m/%d') }}</span>
+                    </div>
+                </div>
+                {% else %}
+                <p style="color: var(--text-muted); font-size: 0.85rem; text-align: center;">No global announcements.</p>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 1rem; text-align: center;">
+                <a href="{{ url_for('dashboard.announcements') }}" style="font-size: 0.75rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Post New Announcement</a>
+            </div>
+        </div>
+
+        <!-- Global Quick Actions -->
+        <div class="glass-panel" style="padding: 1.5rem;">
+             <h3 style="margin-top: 0; margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                <span class="material-symbols-rounded" style="color: var(--success-color);">bolt</span> Quick Actions
+            </h3>
+            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                 <a href="{{ url_for('dashboard.admin_timetable') }}" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; font-size: 0.9rem; justify-content: flex-start;">
+                    <span class="material-symbols-rounded" style="font-size: 20px;">calendar_view_week</span>
+                    Master Timetable
+                </a>
+                <a href="#" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; font-size: 0.9rem; justify-content: flex-start;">
+                    <span class="material-symbols-rounded" style="font-size: 20px;">group_add</span>
+                    Invite Admins
+                </a>
+                <a href="#" class="glass-button" style="opacity: 0.6; cursor: not-allowed; text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; font-size: 0.9rem; justify-content: flex-start;">
+                    <span class="material-symbols-rounded" style="font-size: 20px;">settings_suggest</span>
+                    System Logs
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

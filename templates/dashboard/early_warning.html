@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Early Warning System{% endblock %}
+{% block page_title %}Student Support Hub{% endblock %}
+
+{% block content %}
+<div style="display: grid; grid-template-columns: 1fr; gap: 2rem;">
+    <!-- Welcome Header -->
+    <div class="glass-panel" style="padding: 2rem; border-left: 5px solid #f59e0b;">
+        <h2 style="margin-top: 0; color: #f59e0b; display: flex; align-items: center; gap: 1rem;">
+            <span class="material-symbols-rounded" style="font-size: 32px;">warning</span> Early Warning Dashboard
+        </h2>
+        <p style="color: var(--text-muted); margin-bottom: 0;">Identifying students who may need additional academic support or engagement intervention.</p>
+    </div>
+
+    <!-- At-Risk Section -->
+    <div class="glass-panel" style="padding: 2rem;">
+        <h3 style="margin-top: 0; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-rounded" style="color: #ef4444;">priority_high</span> Students Requiring Action
+        </h3>
+
+        <div class="table-container">
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead>
+                    <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Student</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Major / Section</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Risk Category</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Metric Value</th>
+                        <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: right;">Support</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in at_risk_students %}
+                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                        <td style="padding: 1.25rem 0.5rem;">
+                            <div style="font-weight: 600; color: var(--text-main);">{{ item.user.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ item.user.email }}</div>
+                        </td>
+                        <td style="padding: 1.25rem 0.5rem;">
+                            <div style="font-size: 0.9rem; color: var(--text-main);">{{ item.user.student_profile.major or 'General' }}</div>
+                            <div style="font-size: 0.75rem; color: var(--primary-color);">{{ item.user.student_profile.section.code }}</div>
+                        </td>
+                        <td style="padding: 1.25rem 0.5rem;">
+                            <span style="background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                                {{ item.reason }}
+                            </span>
+                        </td>
+                        <td style="padding: 1.25rem 0.5rem; font-weight: 700; color: #ef4444;">
+                            {{ item.value }}
+                        </td>
+                        <td style="padding: 1.25rem 0.5rem; text-align: right;">
+                            <a href="{{ url_for('messages.index', recipient_id=item.user.id) }}" class="glass-button" style="padding: 0.4rem 0.8rem; font-size: 0.8rem; text-decoration: none;"> Reach Out </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="padding: 4rem; text-align: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; gap: 1rem;">
+                                <span class="material-symbols-rounded" style="font-size: 48px; color: #10b981;">check_circle</span>
+                                <p style="color: var(--text-muted);">All students are currently meeting engagement thresholds.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Intervention Strategy -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem;">
+        <div class="glass-panel" style="padding: 1.5rem;">
+            <h4 style="margin-top: 0; color: var(--primary-color);">Academic Probation Criteria</h4>
+            <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                <li>CGPA falls below 1.5 in any semester.</li>
+                <li>Cumulative attendance drops below 75%.</li>
+                <li>Failed to submit more than 3 major assessments.</li>
+            </ul>
+        </div>
+        <div class="glass-panel" style="padding: 1.5rem;">
+            <h4 style="margin-top: 0; color: var(--success-color);">Recommended Support</h4>
+            <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
+                <li>Peer mentoring sessions for core subjects.</li>
+                <li>Mandatory counseling with the department Head.</li>
+                <li>Temporary restriction from extracurricular clubs.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

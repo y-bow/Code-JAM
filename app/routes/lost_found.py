@@ -20,7 +20,10 @@ def gallery():
     category = request.args.get('category', '')
     report_type = request.args.get('type', '')
 
-    base_query = LostFoundItem.query.filter_by(school_id=g.school_id, status='open')
+    if g.current_user.role == 'admin':
+        base_query = LostFoundItem.query.filter_by(status='open')
+    else:
+        base_query = LostFoundItem.query.filter_by(school_id=g.school_id, status='open')
     
     if query:
         base_query = base_query.filter(
@@ -137,7 +140,7 @@ def report():
 @school_scoped
 def resolve(item_id):
     item = LostFoundItem.query.get_or_404(item_id)
-    if item.school_id != g.school_id or item.reporter_id != g.current_user.id:
+    if g.current_user.role != 'admin' and (item.school_id != g.school_id or item.reporter_id != g.current_user.id):
         flash("Unauthorized action.", "danger")
         return redirect(url_for('lost_found.my_items'))
     

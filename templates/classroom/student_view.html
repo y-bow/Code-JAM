@@ -35,6 +35,26 @@
                 Class Announcements
             </h3>
 
+            {% if is_cr %}
+            <!-- CR Post Announcement Form -->
+            <div class="glass-panel" style="padding: 1.25rem; border-radius: var(--radius-md); margin-bottom: 2rem; border-color: var(--primary-color);">
+                <h4 style="margin: 0 0 1rem 0; font-size: 0.95rem; display: flex; align-items: center; gap: 0.4rem;">
+                    <span class="material-symbols-rounded" style="color: var(--primary-color); font-size: 1.2rem;">edit_note</span>
+                    Post Section Announcement (as Rep)
+                </h4>
+                <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST">
+                    <input type="text" name="title" class="glass-input" placeholder="Subject" required style="margin-bottom: 0.75rem; font-size: 0.9rem;">
+                    <textarea name="body" class="glass-input" placeholder="What's happening in your section?" required style="height: 80px; font-size: 0.9rem; margin-bottom: 0.75rem;"></textarea>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label style="display: flex; align-items: center; gap: 0.4rem; font-size: 0.8rem; color: var(--text-muted); cursor: pointer;">
+                            <input type="checkbox" name="urgent"> Urgent
+                        </label>
+                        <button type="submit" class="primary-btn" style="padding: 0.5rem 1rem; font-size: 0.85rem;">Post Announcement</button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+
             {% if announcements %}
             <div style="display: flex; flex-direction: column; gap: 1rem;">
                 {% for ann in announcements %}

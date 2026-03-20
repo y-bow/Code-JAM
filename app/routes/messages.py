@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, session, request, redirect, url_for, g, jsonify, abort
-from app.models import db, User, Message, Course, Enrollment, MessageLog, Teacher
+from app.models import db, User, Message, Course, Enrollment, MessageLog
 from sqlalchemy import or_, and_
 from datetime import datetime, timedelta
 from markupsafe import escape
@@ -25,8 +25,8 @@ def can_message(sender, recipient):
         return False
         
     if sender.role == 'student':
-        # Student CAN ONLY message teachers of courses they are currently enrolled in
-        if recipient.role != 'teacher' and recipient.role != 'assistant':
+        # Student CAN ONLY message professors of courses they are currently enrolled in
+        if recipient.role not in ('professor', 'assistant_professor'):
             return False
             
         # Check if recipient teaches any course the student is enrolled in
@@ -36,16 +36,29 @@ def can_message(sender, recipient):
             Course.teacher_id == recipient.id
         ).first()
         
+        # Or if they are an assistant for an enrolled course
+        if not taught_by_recipient and recipient.role == 'assistant_professor':
+             from app.models import ProfessorAssistant
+             taught_by_recipient = ProfessorAssistant.query.filter(
+                 ProfessorAssistant.course_id.in_(enrolled_course_ids),
+                 ProfessorAssistant.assistant_teacher_id == recipient.id,
+                 ProfessorAssistant.is_active == True
+             ).first()
+        
         return taught_by_recipient is not None
         
-    elif sender.role in ['teacher', 'assistant']:
-        # Teacher can message any student enrolled in their courses
-        # OR another teacher in the same school
-        if recipient.role in ['teacher', 'assistant', 'dean', 'admin', 'superadmin']:
-            return sender.school_id == recipient.school_id
+    elif sender.role in ['professor', 'assistant_professor']:
+        # Professor/Assistant can message any student enrolled in their courses
+        # OR another professor/assistant in the same school
+        if recipient.role in ['professor', 'assistant_professor', 'dean', 'admin']:
+            return sender.school_id == recipient.school_id or sender.role == 'admin' or recipient.role == 'admin'
             
         if recipient.role == 'student':
             taught_course_ids = [c.id for c in sender.taught_courses]
+            if sender.role == 'assistant_professor':
+                from app.models import ProfessorAssistant
+                taught_course_ids = [pa.course_id for pa in ProfessorAssistant.query.filter_by(assistant_teacher_id=sender.id, is_active=True).all()]
+            
             enrolled_by_student = Enrollment.query.filter(
                 Enrollment.course_id.in_(taught_course_ids),
                 Enrollment.student_id == recipient.id
@@ -55,10 +68,9 @@ def can_message(sender, recipient):
         return False
         
     elif sender.role == 'dean':
-        # Dean can message anyone in their school (department filtering usually applies, but keeping it simple)
-        return sender.school_id == recipient.school_id
+        return sender.school_id == recipient.school_id or recipient.role == 'admin'
         
-    elif sender.role in ['admin', 'superadmin']:
+    elif sender.role == 'admin':
         return True
         
     return False
@@ -143,25 +155,29 @@ def index():
     # For the "To:" searchable dropdown, get all authorized recipients
     allowed_recipients = []
     if user.role == 'student':
-        # Get teachers of enrolled courses
+        # Get professors of enrolled courses
         enrolled_course_ids = [e.course_id for e in user.enrollments]
-        teachers = User.query.join(Course, Course.teacher_id == User.id).filter(
+        professors = User.query.join(Course, Course.teacher_id == User.id).filter(
             Course.id.in_(enrolled_course_ids)
         ).distinct().all()
-        allowed_recipients = teachers
-    elif user.role in ['teacher', 'assistant']:
+        allowed_recipients = professors
+    elif user.role in ['professor', 'assistant_professor']:
         # Get all students enrolled in their courses
         taught_course_ids = [c.id for c in user.taught_courses]
+        if user.role == 'assistant_professor':
+             from app.models import ProfessorAssistant
+             taught_course_ids = [pa.course_id for pa in ProfessorAssistant.query.filter_by(assistant_teacher_id=user.id, is_active=True).all()]
+             
         students = User.query.join(Enrollment, Enrollment.student_id == User.id).filter(
             Enrollment.course_id.in_(taught_course_ids)
         ).distinct().all()
-        # Plus other teachers in same school
-        other_teachers = User.query.filter(
+        # Plus other professors in same school
+        other_profs = User.query.filter(
             User.school_id == user.school_id, 
-            User.role.in_(['teacher', 'assistant', 'dean']),
+            User.role.in_(['professor', 'assistant_professor', 'dean']),
             User.id != user.id
         ).all()
-        allowed_recipients = students + other_teachers
+        allowed_recipients = students + other_profs
 
     return render_template('messages/index.html', inbox_items=partner_data, allowed_recipients=allowed_recipients)
 

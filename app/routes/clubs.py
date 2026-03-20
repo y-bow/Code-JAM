@@ -12,26 +12,40 @@ clubs_bp = Blueprint('clubs', __name__, url_prefix='/clubs')
 @clubs_bp.route('/')
 @school_scoped
 def index():
-    clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
-    events = ExternalEvent.query.filter(
-        ExternalEvent.school_id == g.school_id,
-        ExternalEvent.date >= datetime.utcnow()
-    ).order_by(ExternalEvent.date).limit(5).all()
+    if g.current_user.role == 'admin':
+        clubs = Club.query.order_by(Club.name).all()
+        events = ExternalEvent.query.filter(
+            ExternalEvent.date >= datetime.utcnow()
+        ).order_by(ExternalEvent.date).limit(10).all()
+    else:
+        clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
+        events = ExternalEvent.query.filter(
+            ExternalEvent.school_id == g.school_id,
+            ExternalEvent.date >= datetime.utcnow()
+        ).order_by(ExternalEvent.date).limit(5).all()
     return render_template('clubs/student_clubs.html', clubs=clubs, events=events)
 
 @clubs_bp.route('/<int:club_id>')
 @school_scoped
 def club_details(club_id):
-    club = Club.query.filter_by(id=club_id, school_id=g.school_id).first_or_404()
+    if g.current_user.role == 'admin':
+        club = Club.query.get_or_404(club_id)
+    else:
+        club = Club.query.filter_by(id=club_id, school_id=g.school_id).first_or_404()
     return render_template('clubs/club_details.html', club=club)
 
 @clubs_bp.route('/events')
 @school_scoped
 def events():
-    events = ExternalEvent.query.filter(
-        ExternalEvent.school_id == g.school_id,
-        ExternalEvent.date >= datetime.utcnow()
-    ).order_by(ExternalEvent.date).all()
+    if g.current_user.role == 'admin':
+        events = ExternalEvent.query.filter(
+            ExternalEvent.date >= datetime.utcnow()
+        ).order_by(ExternalEvent.date).all()
+    else:
+        events = ExternalEvent.query.filter(
+            ExternalEvent.school_id == g.school_id,
+            ExternalEvent.date >= datetime.utcnow()
+        ).order_by(ExternalEvent.date).all()
     return render_template('clubs/student_events.html', events=events)
 
 # =============================================================================
@@ -60,14 +74,20 @@ def admin_clubs():
         flash('Club created successfully.', 'success')
         return redirect(url_for('clubs.admin_clubs'))
         
-    clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
+    if g.current_user.role == 'admin':
+        clubs = Club.query.order_by(Club.name).all()
+    else:
+        clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
     return render_template('clubs/admin_clubs.html', clubs=clubs)
 
 @clubs_bp.route('/admin/edit/<int:club_id>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def edit_club(club_id):
-    club = Club.query.filter_by(id=club_id, school_id=g.school_id).first_or_404()
+    if g.current_user.role == 'admin':
+        club = Club.query.get_or_404(club_id)
+    else:
+        club = Club.query.filter_by(id=club_id, school_id=g.school_id).first_or_404()
     club.name = request.form.get('name')
     club.category = request.form.get('category')
     club.description = request.form.get('description')

@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Manage Accounts{% endblock %}
+{% block page_title %}Account Management{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
+            <span class="material-symbols-rounded" style="color: var(--primary-color);">group</span> User Accounts
+        </h3>
+        <button class="glass-button" disabled style="opacity: 0.6; cursor: not-allowed; padding: 0.6rem 1.25rem; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded" style="font-size: 20px;">person_add</span> Onboard User (CSV)
+        </button>
+    </div>
+
+    <div class="search-bar" style="margin-bottom: 1.5rem;">
+        <input type="text" id="userSearch" placeholder="Search by name or email..." style="width: 100%; max-width: 400px; padding: 0.75rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-main);">
+    </div>
+
+    <div class="table-container" style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">User</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500;">Role / School</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: center;">Status</th>
+                    <th style="padding: 1rem 0.5rem; color: var(--text-muted); font-weight: 500; text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="userTableBody">
+                {% for user in users %}
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 1.25rem 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <div class="avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">{{ user.name[0] | upper }}</div>
+                            <div>
+                                <div style="font-weight: 600; color: var(--text-main);">{{ user.name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">{{ user.email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem;">
+                        <div style="font-size: 0.9rem; color: var(--text-main);">{{ user.role | title }}</div>
+                        <div style="font-size: 0.75rem; color: var(--primary-color);">{{ user.school.name if user.school else 'Global System' }}</div>
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem; text-align: center;">
+                        {% if user.is_active %}
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                            Active
+                        </span>
+                        {% else %}
+                        <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(239, 68, 68, 0.1); color: #ef4444; padding: 4px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
+                            Deactivated
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td style="padding: 1.25rem 0.5rem; text-align: right;">
+                        <form action="{{ url_for('dashboard.toggle_user', user_id=user.id) }}" method="POST" style="display: inline;">
+                            <button type="submit" class="icon-btn" title="{{ 'Deactivate' if user.is_active else 'Activate' }}" style="color: {{ '#ef4444' if user.is_active else '#10b981' }};">
+                                <span class="material-symbols-rounded">{{ 'person_off' if user.is_active else 'person' }}</span>
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="4" style="padding: 3rem; text-align: center; color: var(--text-muted);">No users found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('userSearch').addEventListener('input', function(e) {
+        const term = e.target.value.toLowerCase();
+        const rows = document.querySelectorAll('#userTableBody tr');
+        rows.forEach(row => {
+            const text = row.textContent.toLowerCase();
+            row.style.display = text.includes(term) ? '' : 'none';
+        });
+    });
+</script>
+{% endblock %}

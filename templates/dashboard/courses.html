@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | My Courses{% endblock %}
+{% block page_title %}Academic Overview: My Courses{% endblock %}
+
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg);">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h3 style="margin: 0;">Enrolled & Assigned Courses</h3>
+        <div style="display: flex; gap: 1rem;">
+            <span class="status-pill low">{{ courses|length }} Active</span>
+        </div>
+    </div>
+
+    {% if courses %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem;">
+        {% for course in courses %}
+        <a href="{{ url_for('classroom.view_classroom', course_id=course.id) }}" style="text-decoration: none; color: inherit;">
+            <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); transition: all 0.2s ease; cursor: pointer;" onmouseover="this.style.borderColor='var(--primary-color)';" onmouseout="this.style.borderColor='var(--border-color)';">
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                    <span style="font-size: 0.75rem; font-weight: 600; color: var(--primary-color); text-transform: uppercase;">{{ course.code }}</span>
+                    <span class="material-symbols-rounded" style="color: var(--text-muted); font-size: 1.2rem;">arrow_forward</span>
+                </div>
+                <h4 style="margin: 0 0 0.5rem 0; font-size: 1.1rem;">{{ course.name }}</h4>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: var(--text-muted);">
+                    <span class="material-symbols-rounded" style="font-size: 1rem;">groups</span>
+                    {{ course.section.code }}
+                </div>
+                
+                <div style="margin-top: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; -webkit-mask-image: linear-gradient(to right, black 80%, transparent); mask-image: linear-gradient(to right, black 80%, transparent);">
+                         <!-- Student Avatars Placeholder -->
+                         <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--border-color); border: 2px solid var(--bg-main);"></div>
+                         <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--text-muted); border: 2px solid var(--bg-main); margin-left: -8px;"></div>
+                         <div style="width: 24px; height: 24px; border-radius: 50%; background: var(--primary-color); border: 2px solid var(--bg-main); margin-left: -8px;"></div>
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--primary-color); font-weight: 600;">View Classroom</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 4rem 2rem; color: var(--text-muted);">
+        <span class="material-symbols-rounded" style="font-size: 4rem; opacity: 0.2; margin-bottom: 1rem;">school</span>
+        <p>You don't have any courses assigned or enrolled at the moment.</p>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .status-pill {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    .status-pill.low {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success-color);
+    }
+</style>
+{% endblock %}

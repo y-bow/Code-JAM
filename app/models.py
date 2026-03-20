@@ -9,17 +9,15 @@ bcrypt = Bcrypt()
 # ROLE HIERARCHY
 # =============================================================================
 ROLE_HIERARCHY = {
-    'student': 0,
-    'class_rep': 1,
-    'teacher': 2,
-    'assistant': 3,
-    'timetable_manager': 4,
+    'student': 1,
+    'class_rep': 2,
+    'assistant_professor': 3,
+    'professor': 4,
     'dean': 5,
-    'admin': 10,
-    'superadmin': 99,
+    'admin': 99,
 }
 
-VALID_ROLES = set(ROLE_HIERARCHY.keys())
+VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin'}
 
 
 # =============================================================================
@@ -81,7 +79,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=True) # NULL for Global Admin
     email = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False)
@@ -464,6 +462,7 @@ class TeacherRating(db.Model):
     course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
     rating = db.Column(db.Integer, nullable=False)
     review = db.Column(db.Text)
+    is_anonymous = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 # =============================================================================
@@ -609,3 +608,43 @@ class ExternalEvent(db.Model):
     )
 
     school = db.relationship('School', backref=db.backref('external_events', lazy='dynamic'))
+
+# =============================================================================
+# NEW ROLE MANAGEMENT TABLES
+# =============================================================================
+
+class ProfessorAssistant(db.Model):
+    """Tracks teachers assigned as assistants to specific courses."""
+    __tablename__ = 'professor_assistants'
+
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    professor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    assistant_teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_active = db.Column(db.Boolean, default=True)
+
+    course = db.relationship('Course', backref=db.backref('professor_assistants', cascade='all, delete-orphan'))
+    professor = db.relationship('User', foreign_keys=[professor_id])
+    assistant = db.relationship('User', foreign_keys=[assistant_teacher_id], 
+                                backref=db.backref('assistant_roles', lazy='dynamic'))
+
+class ClassRepNomination(db.Model):
+    """Workflow for appointing a student as Class Rep (Section Rep)."""
+    __tablename__ = 'class_rep_nominations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
+    nominated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Dean
+    status = db.Column(db.String(20), default='pending') # pending, approved, rejected
+    nominated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    decided_at = db.Column(db.DateTime)
+
+    student = db.relationship('User', foreign_keys=[student_id])
+    nominator = db.relationship('User', foreign_keys=[nominated_by])
+    approver = db.relationship('User', foreign_keys=[approved_by])
+    course = db.relationship('Course')
+    section = db.relationship('Section')

@@ -18,17 +18,31 @@
                 <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">{{
                     course.section.code }}</div>
             </div>
+            {% if is_pa %}
+            <div>
+                <span style="color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Role</span>
+                <div style="font-size: 1.2rem; font-weight: bold; font-family: var(--font-heading); color: var(--primary-color);">Assistant Professor</div>
+            </div>
+            {% endif %}
         </div>
 
-        {% if course.meet_link %}
-        <a href="{{ course.meet_link }}" target="_blank" class="primary-btn" style="background: var(--success-color);">
-            <span class="material-symbols-rounded">videocam</span> Live Class Active
-        </a>
-        {% else %}
-        <button class="primary-btn" onclick="document.getElementById('meetModal').showModal()">
-            <span class="material-symbols-rounded">videocam</span> Set Meeting Link
-        </button>
-        {% endif %}
+        <div style="display: flex; gap: 1rem;">
+            {% if not is_pa and not is_dean and not is_admin %}
+            <button class="glass-btn" onclick="document.getElementById('paModal').showModal()" style="border-color: var(--primary-color); color: var(--primary-color);">
+                <span class="material-symbols-rounded">person_add</span> Assign Assistant
+            </button>
+            {% endif %}
+
+            {% if course.meet_link %}
+            <a href="{{ course.meet_link }}" target="_blank" class="primary-btn" style="background: var(--success-color);">
+                <span class="material-symbols-rounded">videocam</span> Live Class Active
+            </a>
+            {% elif not is_pa and not is_dean %}
+            <button class="primary-btn" onclick="document.getElementById('meetModal').showModal()">
+                <span class="material-symbols-rounded">videocam</span> Start Meeting
+            </button>
+            {% endif %}
+        </div>
     </div>
 </div>
 
@@ -57,7 +71,12 @@
                     {% for student in students %}
                     <tr style="border-bottom: 1px solid var(--border-color);">
                         <td style="padding: 1rem 1.5rem;">
-                            <div style="font-weight: 500;">{{ student.name }}</div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="font-weight: 500;">{{ student.name }}</div>
+                                {% if student.role == 'class_rep' %}
+                                <span title="Class Representative" style="font-size: 1.1rem; filter: drop-shadow(0 0 2px rgba(255,215,0,0.5)); cursor: help;">👑</span>
+                                {% endif %}
+                            </div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">{{ student.email }}</div>
                         </td>
                         <td style="padding: 1rem 1.5rem;">{{ student.attendance }}%</td>
@@ -68,8 +87,18 @@
                             </span>
                         </td>
                         <td style="padding: 1rem 1.5rem;">
-                            <button class="icon-btn" title="View Progress"><span
-                                    class="material-symbols-rounded">analytics</span></button>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="icon-btn" title="View Progress"><span
+                                        class="material-symbols-rounded">analytics</span></button>
+                                
+                                {% if not is_pa and not is_dean and student.role != 'class_rep' %}
+                                <form action="{{ url_for('classroom.nominate_class_rep', course_id=course.id, student_id=student.id) }}" method="POST">
+                                    <button type="submit" class="icon-btn" title="Nominate as Class Rep" style="color: var(--primary-color);">
+                                        <span class="material-symbols-rounded">workspace_premium</span>
+                                    </button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% endfor %}
@@ -181,6 +210,22 @@
             <button type="button" onclick="document.getElementById('meetModal').close()"
                 class="glass-btn">Cancel</button>
             <button type="submit" class="primary-btn">Save Link</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="paModal" class="glass-panel"
+    style="margin: auto; border: 1px solid var(--primary-color); padding: 2rem; border-radius: var(--radius-lg); color: white;">
+    <h3 style="margin-bottom: 0.5rem;">Assign Assistant Professor</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Type the email of another teacher to assign them as an assistant for this course.</p>
+    <form action="{{ url_for('classroom.assign_assistant_professor', course_id=course.id) }}" method="POST"
+        style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <input type="email" name="email" class="glass-input" placeholder="teacher@university.edu" required
+            style="min-width: 400px;">
+        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+            <button type="button" onclick="document.getElementById('paModal').close()"
+                class="glass-btn">Cancel</button>
+            <button type="submit" class="primary-btn">Assign Assistant</button>
         </div>
     </form>
 </dialog>

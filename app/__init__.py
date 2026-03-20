@@ -74,12 +74,12 @@ def create_app():
             role = session.get('role')
             if role in ('student', 'class_rep'):
                 return redirect(url_for('dashboard.student_dashboard'))
-            elif role in ('teacher', 'assistant'):
+            elif role in ('professor', 'assistant_professor'):
                 return redirect(url_for('dashboard.teacher_dashboard'))
             elif role == 'dean':
                 return redirect(url_for('dashboard.school_analytics'))
-            elif role == 'timetable_manager':
-                return redirect(url_for('dashboard.manage_timetable'))
+            elif role == 'admin':
+                return redirect(url_for('dashboard.admin_dashboard'))
         return redirect(url_for('auth.login'))
 
     return app

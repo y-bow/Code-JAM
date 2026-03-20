@@ -4,7 +4,7 @@ Tenant isolation and role-based access control middleware.
 Usage in routes:
     @blueprint.route('/courses')
     @school_scoped           # enforces login + loads g.current_user, g.school_id
-    @role_minimum('teacher')  # optional: enforces minimum role level
+    @role_minimum('professor')  # optional: enforces minimum role level
     def list_courses():
         # g.school_id is guaranteed to be set
         # all queries MUST filter by g.school_id
@@ -40,11 +40,12 @@ def school_scoped(f):
             flash('Account not found or deactivated.', 'danger')
             return redirect(url_for('auth.login'))
 
-        # Verify school is still active
-        if not user.school or not user.school.is_active:
-            session.clear()
-            flash('Your institution is currently inactive.', 'danger')
-            return redirect(url_for('auth.login'))
+        # Verify school is still active (Except for Global Admin)
+        if user.role != 'admin':
+            if not user.school or not user.school.is_active:
+                session.clear()
+                flash('Your institution is currently inactive.', 'danger')
+                return redirect(url_for('auth.login'))
 
         g.current_user = user
         g.school_id = user.school_id
@@ -53,8 +54,11 @@ def school_scoped(f):
         g.unread_messages = Message.query.filter_by(recipient_id=user.id, is_read=False).order_by(Message.sent_at.desc()).limit(5).all()
         g.unread_count = Message.query.filter_by(recipient_id=user.id, is_read=False).count()
         
-        # Recent announcements for this school
-        g.recent_announcements = Announcement.query.filter_by(school_id=user.school_id).order_by(Announcement.posted_at.desc()).limit(3).all()
+        # Recent announcements for this school (Admin sees all recent)
+        if user.role == 'admin':
+            g.recent_announcements = Announcement.query.order_by(Announcement.posted_at.desc()).limit(3).all()
+        else:
+            g.recent_announcements = Announcement.query.filter_by(school_id=user.school_id).order_by(Announcement.posted_at.desc()).limit(3).all()
 
         return f(*args, **kwargs)
     return decorated_function
@@ -104,6 +108,9 @@ def owns_resource(resource_obj, school_id_attr='school_id'):
     obj_school_id = getattr(resource_obj, school_id_attr, None)
     if obj_school_id is None:
         abort(404)
+
+    if g.current_user.role == 'admin':
+        return # Global Admin bypass
 
     if obj_school_id != g.school_id:
         abort(403)  # Cross-tenant access attempt

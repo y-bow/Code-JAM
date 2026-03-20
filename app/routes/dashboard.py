@@ -2,9 +2,10 @@ from flask import Blueprint, render_template, session, request, redirect, url_fo
 from datetime import datetime
 from ..middleware import school_scoped, role_minimum
 from ..models import (
-    db, User, Course, Enrollment, Assignment, Submission,
+    db, User, Student, Course, Enrollment, Assignment, Submission,
     Section, CustomTask, Announcement, TimetableEntry,
-    TeacherTodo, TeacherRating, Attendance, Grade, School
+    TeacherTodo, TeacherRating, Attendance, Grade, School,
+    ProfessorAssistant, ClassRepNomination
 )
 import pandas as pd
 import plotly.express as px
@@ -52,27 +53,34 @@ def student_dashboard():
 
 @dashboard_bp.route('/teacher')
 @school_scoped
-@role_minimum('teacher')
+@role_minimum('assistant_professor')
 def teacher_dashboard():
     user = g.current_user
     import plotly.utils
     import json
 
-    # 1. Personalized Timetable (for courses taught by this teacher)
-    assigned_courses = Course.query.filter_by(teacher_id=user.id).all()
-    assigned_course_ids = [c.id for c in assigned_courses]
-    assigned_section_ids = list(set([c.section_id for c in assigned_courses]))
+    # 1. Personalized Timetable (for courses taught by this professor OR assisted by them)
+    if user.role == 'assistant_professor':
+        assigned_courses = Course.query.join(ProfessorAssistant).filter(
+            ProfessorAssistant.assistant_teacher_id == user.id,
+            ProfessorAssistant.is_active == True
+        ).all()
+    else:
+        assigned_courses = Course.query.filter_by(teacher_id=user.id).all()
     
+    assigned_course_ids = [c.id for c in assigned_courses]
+    
+    # 2. Today's Classes
     current_day = datetime.now().weekday()
     today_classes = []
     if current_day <= 4:
-        # Find entries in their sections that match their course titles
-        course_names = [c.name for c in assigned_courses]
-        entries = TimetableEntry.query.filter(
-            TimetableEntry.section_id.in_(assigned_section_ids),
-            TimetableEntry.day == current_day,
-            TimetableEntry.title.in_(course_names)
-        ).all()
+        entries = (
+            TimetableEntry.query
+            .filter(TimetableEntry.course_id.in_(assigned_course_ids))
+            .filter_by(day=current_day)
+            .order_by(TimetableEntry.start_time)
+            .all()
+        )
         
         for entry in entries:
             # Add student count
@@ -136,20 +144,45 @@ def teacher_dashboard():
 @school_scoped
 @role_minimum('admin')
 def admin_dashboard():
-    """Admin Hub: overview of school statistics and quick links."""
-    total_students = User.query.filter_by(school_id=g.school_id, role='student').count()
-    total_teachers = User.query.filter_by(school_id=g.school_id, role='teacher').count()
-    total_sections = Section.query.filter_by(school_id=g.school_id).count()
+    """Global Admin Dashboard: system-wide overview."""
+    total_schools = School.query.count()
+    total_students = User.query.filter_by(role='student').count()
+    total_professors = User.query.filter_by(role='professor').count()
+    total_courses = Course.query.count()
+
+    schools = School.query.all()
+    school_data = []
+    for s in schools:
+        s_students = User.query.filter_by(school_id=s.id, role='student').count()
+        s_professors = User.query.filter_by(school_id=s.id, role='professor').count()
+        s_courses = Course.query.join(Section).filter(Section.school_id == s.id).count()
+        
+        # Simple calculations for demo/analytics
+        avg_cgpa = db.session.query(db.func.avg(Student.cgpa)).join(User).filter(User.school_id == s.id).scalar() or 0
+        
+        school_data.append({
+            'name': s.name,
+            'students': s_students,
+            'professors': s_professors,
+            'courses': s_courses,
+            'avg_cgpa': round(float(avg_cgpa), 2),
+            'avg_attendance': "85%", # Placeholder or derived
+            'status': 'active' if s.is_active else 'inactive'
+        })
+
+    recent_activity = [] # Placeholder for audit logs if implemented
     
-    recent_announcements = Announcement.query.filter_by(school_id=g.school_id).order_by(Announcement.posted_at.desc()).limit(5).all()
-    
-    return render_template('dashboard/admin_dashboard.html', 
+    return render_template('dashboard/admin_dashboard_global.html', 
                            stats={
+                               'schools': total_schools,
                                'students': total_students,
-                               'teachers': total_teachers,
-                               'sections': total_sections
+                               'professors': total_professors,
+                               'courses': total_courses,
+                               'sections': Section.query.count()
                            },
-                           announcements=recent_announcements)
+                           school_data=school_data,
+                           schools=schools,
+                           announcements=Announcement.query.filter_by(school_id=None).order_by(Announcement.posted_at.desc()).limit(5).all())
 
 
 @dashboard_bp.route('/admin/timetable', methods=['GET'])
@@ -157,7 +190,10 @@ def admin_dashboard():
 @role_minimum('admin')
 def admin_timetable():
     """Editable timetable grid for admins."""
-    sections = Section.query.filter_by(school_id=g.school_id).all()
+    if g.current_user.role == 'admin':
+        sections = Section.query.all()
+    else:
+        sections = Section.query.filter_by(school_id=g.school_id).all()
     selected_section_id = request.args.get('section_id', type=int)
     
     # Default to first section if none selected
@@ -170,7 +206,7 @@ def admin_timetable():
     
     if selected_section_id:
         selected_section = Section.query.get(selected_section_id)
-        if selected_section and selected_section.school_id == g.school_id:
+        if selected_section and (g.current_user.role == 'admin' or selected_section.school_id == g.school_id):
             for day_idx in range(5):
                 entries = TimetableEntry.query.filter_by(
                     section_id=selected_section_id, 
@@ -197,10 +233,10 @@ def admin_timetable():
 @role_minimum('admin')
 def timetable_debug():
     """Diagnostic route to confirm data exists in DB."""
-    rows = (TimetableEntry.query
-            .join(Section)
-            .filter(Section.school_id == g.school_id)
-            .all())
+    query = TimetableEntry.query.join(Section)
+    if g.current_user.role != 'admin':
+        query = query.filter(Section.school_id == g.school_id)
+    rows = query.all()
     return jsonify([r.to_dict() for r in rows])
 
 
@@ -218,7 +254,7 @@ def admin_timetable_update():
     new_end = format_time_12hr(request.form.get('end_time'))
     
     entry = TimetableEntry.query.get_or_404(entry_id)
-    if entry.section.school_id != g.school_id:
+    if g.current_user.role != 'admin' and entry.section.school_id != g.school_id:
         abort(403)
         
     old_subject = entry.title
@@ -458,7 +494,7 @@ def timetable():
     if current_day > 4:
         current_day = -1
 
-    if user.role in ['teacher', 'professor_assistant']:
+    if user.role in ['professor', 'assistant_professor']:
         entries = db.session.query(TimetableEntry, Course, Section)\
             .join(Course, TimetableEntry.course_id == Course.id)\
             .join(Section, TimetableEntry.section_id == Section.id)\
@@ -722,7 +758,7 @@ def delete_task(task_id):
 
 @dashboard_bp.route('/teacher/tasks/add', methods=['POST'])
 @school_scoped
-@role_minimum('teacher')
+@role_minimum('assistant_professor')
 def add_teacher_task():
     title = request.form.get('title')
     if title:
@@ -734,7 +770,7 @@ def add_teacher_task():
 
 @dashboard_bp.route('/teacher/tasks/toggle/<int:task_id>', methods=['POST'])
 @school_scoped
-@role_minimum('teacher')
+@role_minimum('assistant_professor')
 def toggle_teacher_task(task_id):
     task = TeacherTodo.query.get_or_404(task_id)
     if task.teacher_id == g.current_user.id:
@@ -745,7 +781,7 @@ def toggle_teacher_task(task_id):
 
 @dashboard_bp.route('/teacher/tasks/delete/<int:task_id>', methods=['POST'])
 @school_scoped
-@role_minimum('teacher')
+@role_minimum('assistant_professor')
 def delete_teacher_task(task_id):
     task = TeacherTodo.query.get_or_404(task_id)
     if task.teacher_id == g.current_user.id:
@@ -756,7 +792,7 @@ def delete_teacher_task(task_id):
 
 @dashboard_bp.route('/teacher/update_meet', methods=['POST'])
 @school_scoped
-@role_minimum('teacher')
+@role_minimum('professor')
 def update_meet_link():
     course_id = request.form.get('course_id')
     meet_link = request.form.get('meet_link')
@@ -822,13 +858,24 @@ def my_courses():
             )
             .all()
         )
-    elif user.role in ('teacher', 'assistant'):
+    elif user.role == 'professor':
         courses = (
             Course.query
             .join(Section)
             .filter(
                 Course.teacher_id == user.id,
                 Section.school_id == g.school_id
+            )
+            .all()
+        )
+    elif user.role == 'assistant_professor':
+        # Courses where they are an active PA
+        courses = (
+            Course.query
+            .join(ProfessorAssistant, ProfessorAssistant.course_id == Course.id)
+            .filter(
+                ProfessorAssistant.assistant_teacher_id == user.id,
+                ProfessorAssistant.is_active == True
             )
             .all()
         )
@@ -860,11 +907,31 @@ def school_analytics():
         .count()
     )
 
+    # Calculate average attendance (simplified: avg of all student attendance records)
+    avg_attendance_raw = db.session.query(db.func.avg(Attendance.status == 'present')).filter(
+        User.school_id == g.school_id, User.role == 'student'
+    ).join(User, Attendance.student_id == User.id).scalar()
+    avg_attendance = round(float(avg_attendance_raw) * 100, 1) if avg_attendance_raw is not None else 0.0
+
+    # Calculate average CGPA
+    from ..models import Student
+    avg_cgpa_raw = db.session.query(db.func.avg(Student.cgpa)).join(User).filter(
+        User.school_id == g.school_id
+    ).scalar()
+    avg_cgpa = round(float(avg_cgpa_raw), 2) if avg_cgpa_raw is not None else 0.0
+
+    # At-risk students (attendance < 75%)
+    at_risk_count = 0
+    # This logic depends on how attendance is stored. 
+    # For now, let's just use a placeholder or basic query.
+    
     return render_template('dashboard/analytics.html',
                            total_students=total_students,
                            total_teachers=total_teachers,
                            total_sections=total_sections,
-                           total_courses=total_courses)
+                           total_courses=total_courses,
+                           avg_attendance=avg_attendance,
+                           avg_cgpa=avg_cgpa)
 
 @dashboard_bp.route('/dean/ratings')
 @school_scoped
@@ -880,12 +947,49 @@ def dean_ratings():
         teacher_stats.append({
             'id': t.id,
             'name': t.name,
-            'avg_rating': round(float(avg_rating), 1),
+            'avg_rating': round(float(avg_rating), 1) if avg_rating else 0.0,
             'total_ratings': total_ratings,
             'recent_reviews': TeacherRating.query.filter_by(teacher_id=t.id).order_by(TeacherRating.created_at.desc()).limit(3).all()
         })
         
     return render_template('dashboard/dean_ratings.html', teacher_stats=teacher_stats)
+
+@dashboard_bp.route('/dean/nominations')
+@school_scoped
+@role_minimum('dean')
+def dean_nominations():
+    """Dean-only: approve or reject class rep nominations."""
+    nominations = ClassRepNomination.query.join(Section).filter(
+        Section.school_id == g.school_id, 
+        ClassRepNomination.status == 'pending'
+    ).all()
+    return render_template('dashboard/dean_nominations.html', nominations=nominations)
+
+@dashboard_bp.route('/dean/nominations/<int:nom_id>/<action>', methods=['POST'])
+@school_scoped
+@role_minimum('dean')
+def handle_nomination(nom_id, action):
+    nom = ClassRepNomination.query.get_or_404(nom_id)
+    # Security check: nomination belongs to dean's school
+    if nom.section.school_id != g.school_id:
+        abort(403)
+    
+    if action == 'approve':
+        nom.status = 'approved'
+        nom.approved_by = g.current_user.id
+        nom.decided_at = datetime.utcnow()
+        # Promote student to class_rep role
+        student = User.query.get(nom.student_id)
+        student.role = 'class_rep'
+        flash(f'Class Rep nomination for {student.name} approved.', 'success')
+    elif action == 'reject':
+        nom.status = 'rejected'
+        nom.approved_by = g.current_user.id
+        nom.decided_at = datetime.utcnow()
+        flash('Class Rep nomination rejected.', 'info')
+    
+    db.session.commit()
+    return redirect(url_for('dashboard.dean_nominations'))
 
 @dashboard_bp.route('/timetable/manage', methods=['GET', 'POST'])
 @school_scoped
@@ -931,3 +1035,135 @@ def manage_timetable():
         .all()
     )
     return render_template('dashboard/manage_timetable.html', sections=sections, entries=entries)
+
+
+# --- Schools Management ---
+@dashboard_bp.route('/admin/schools')
+@school_scoped
+@role_minimum('admin')
+def admin_schools():
+    if g.current_user.role != 'admin': # Only Global Admin can see all schools
+        abort(403)
+    schools = School.query.all()
+    return render_template('dashboard/admin_schools.html', schools=schools)
+
+@dashboard_bp.route('/admin/schools/add', methods=['POST'])
+@school_scoped
+@role_minimum('admin')
+def add_school():
+    if g.current_user.role != 'admin':
+        abort(403)
+    name = request.form.get('name')
+    code = request.form.get('code')
+    domain = request.form.get('domain')
+    
+    if not name or not code:
+        flash('Name and Code are required.', 'danger')
+        return redirect(url_for('dashboard.admin_schools'))
+        
+    new_school = School(name=name, code=code, domain=domain)
+    db.session.add(new_school)
+    db.session.commit()
+    flash('School added successfully!', 'success')
+    return redirect(url_for('dashboard.admin_schools'))
+
+@dashboard_bp.route('/admin/schools/toggle/<int:school_id>', methods=['POST'])
+@school_scoped
+@role_minimum('admin')
+def toggle_school(school_id):
+    if g.current_user.role != 'admin':
+        abort(403)
+    school = School.query.get_or_404(school_id)
+    school.is_active = not school.is_active
+    db.session.commit()
+    status = 'activated' if school.is_active else 'suspended'
+    flash(f'School {school.name} has been {status}.', 'info')
+    return redirect(url_for('dashboard.admin_schools'))
+
+# --- Sections Management ---
+@dashboard_bp.route('/admin/sections')
+@school_scoped
+@role_minimum('admin')
+def admin_sections():
+    if g.current_user.role == 'admin':
+        sections = Section.query.all()
+        schools = School.query.all()
+    else:
+        sections = Section.query.filter_by(school_id=g.school_id).all()
+        schools = [g.current_user.school]
+    return render_template('dashboard/admin_sections.html', sections=sections, schools=schools)
+
+@dashboard_bp.route('/admin/sections/add', methods=['POST'])
+@school_scoped
+@role_minimum('admin')
+def add_section():
+    school_id = request.form.get('school_id', type=int)
+    name = request.form.get('name')
+    code = request.form.get('code')
+    batch_year = request.form.get('batch_year', type=int)
+
+    if g.current_user.role != 'admin' and school_id != g.school_id:
+        abort(403)
+
+    new_section = Section(school_id=school_id, name=name, code=code, batch_year=batch_year)
+    db.session.add(new_section)
+    db.session.commit()
+    flash('Section added successfully!', 'success')
+    return redirect(url_for('dashboard.admin_sections'))
+
+# --- Accounts Management ---
+@dashboard_bp.route('/admin/accounts')
+@school_scoped
+@role_minimum('admin')
+def admin_accounts():
+    if g.current_user.role == 'admin':
+        users = User.query.all()
+        schools = School.query.all()
+    else:
+        users = User.query.filter_by(school_id=g.school_id).all()
+        schools = [g.current_user.school]
+    return render_template('dashboard/admin_accounts.html', users=users, schools=schools)
+
+@dashboard_bp.route('/admin/accounts/toggle/<int:user_id>', methods=['POST'])
+@school_scoped
+@role_minimum('admin')
+def toggle_user(user_id):
+    user = User.query.get_or_404(user_id)
+    if g.current_user.role != 'admin' and user.school_id != g.school_id:
+        abort(403)
+    user.is_active = not user.is_active
+    db.session.commit()
+    status = 'activated' if user.is_active else 'deactivated'
+    flash(f'User {user.name} has been {status}.', 'info')
+    return redirect(url_for('dashboard.admin_accounts'))
+
+# --- Early Warning System ---
+@dashboard_bp.route('/early-warning')
+@school_scoped
+@role_minimum('dean')
+def early_warning():
+    # Identify students with low attendance (< 75%) or low CGPA (< 1.5)
+    at_risk_students = []
+    
+    # Check CGPA
+    # Note: Student model is already imported at the top of the file
+    low_cgpa_students = Student.query.join(User).filter(
+        User.school_id == g.school_id,
+        Student.cgpa < 1.5
+    ).all()
+    
+    for s in low_cgpa_students:
+        at_risk_students.append({
+            'user': s.user,
+            'reason': 'Low CGPA',
+            'value': f"{s.cgpa:.2f}"
+        })
+        
+    return render_template('dashboard/early_warning.html', at_risk_students=at_risk_students)
+
+# --- Settings ---
+@dashboard_bp.route('/admin/settings')
+@school_scoped
+@role_minimum('admin')
+def admin_settings():
+    return render_template('dashboard/admin_settings.html')

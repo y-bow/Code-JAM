@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from app.models import db, Fee, FeePayment, User
-from app.middleware import school_scoped
+from app.middleware import school_scoped, role_minimum
 import uuid
 
 fees_bp = Blueprint('fees', __name__, url_prefix='/fees')
@@ -76,7 +76,7 @@ def print_receipt(payment_id):
     user_id = g.current_user.id
     
     # Security check: only the student who owns the payment, or administration roles, can view the receipt
-    is_admin = g.current_user.role in ['admin', 'superadmin', 'dean']
+    is_admin = g.current_user.role in ['admin', 'dean']
     if not is_admin and payment.fee.student_id != user_id:
         flash("Unauthorized.", "error")
         return redirect(url_for('fees.student_dashboard'))
@@ -85,20 +85,23 @@ def print_receipt(payment_id):
 
 @fees_bp.route('/admin')
 @school_scoped
+@role_minimum('dean')
 def admin_dashboard():
-    if g.current_user.role not in ['admin', 'superadmin', 'dean']:
-        flash("Unauthorized access.", "error")
-        return redirect(url_for('dashboard.student_dashboard'))
         
-    # Get all students and their fees
-    students = User.query.filter_by(role='student').all()
-    # Eager load fees for performance if we had a large DB, but for now this is fine
-    fees = Fee.query.all()
+    # Get students and their fees (Global Admin sees all, Dean sees school-only)
+    if g.current_user.role == 'admin':
+        students = User.query.filter_by(role='student').all()
+        fees = Fee.query.all()
+        recent_payments = FeePayment.query.order_by(FeePayment.payment_date.desc()).limit(20).all()
+    else:
+        students = User.query.filter_by(school_id=g.school_id, role='student').all()
+        # Assuming Fee model has a relationship or we need to join with User
+        # If Fee doesn't have school_id, we join with User
+        fees = Fee.query.join(User).filter(User.school_id == g.school_id).all()
+        recent_payments = FeePayment.query.join(Fee).join(User).filter(User.school_id == g.school_id).order_by(FeePayment.payment_date.desc()).limit(10).all()
     
     total_expected = sum(f.total_amount for f in fees)
     total_collected = sum(f.amount_paid for f in fees)
-    
-    recent_payments = FeePayment.query.order_by(FeePayment.payment_date.desc()).limit(10).all()
     
     return render_template('fees/admin_dashboard.html', 
                           students=students, 

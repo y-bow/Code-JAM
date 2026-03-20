@@ -163,6 +163,8 @@ a {
 .sidebar-header .logo img {
     height: 120px;
     width: auto;
+    max-width: 100%;
+    padding: 0 1rem;
     object-fit: contain;
 }
 
@@ -317,6 +319,7 @@ body.dark-theme .logo-dark {
     position: sticky;
     top: 0;
     z-index: 5;
+    margin-left: var(--sidebar-width);
     border-radius: 0 0 0 var(--radius-lg);
 }
 

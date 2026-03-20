@@ -50,7 +50,7 @@
             <nav class="sidebar-nav">
                 {% if request.endpoint in ['classroom.student_view', 'classroom.teacher_view'] %}
                 <!-- Classroom Specific Navigation -->
-                <a href="{{ url_for('dashboard.student_dashboard' if g.current_user.role == 'student' else 'dashboard.teacher_dashboard') }}" class="nav-item">
+                <a href="{{ url_for('dashboard.student_dashboard' if g.current_user.role in ['student', 'class_rep'] else 'dashboard.teacher_dashboard') }}" class="nav-item">
                     <span class="nav-icon material-symbols-rounded">arrow_back</span>
                     <span class="nav-label">Back to Hub</span>
                 </a>
@@ -89,27 +89,64 @@
 
                 {% else %}
                 <!-- Standard Navigation -->
+                
+                <!-- DASHBOARD -->
                 {% if g.current_user.role == 'admin' %}
                 <a href="{{ url_for('dashboard.admin_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_dashboard' }}">
-                    <span class="nav-icon material-symbols-rounded">admin_panel_settings</span>
-                    <span class="nav-label">Admin Overview</span>
+                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
+                    <span class="nav-label">Global Dashboard</span>
                 </a>
-                <a href="{{ url_for('dashboard.admin_timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_timetable' }}">
-                    <span class="nav-icon material-symbols-rounded">calendar_view_week</span>
-                    <span class="nav-label">Master Timetable</span>
+                <a href="{{ url_for('dashboard.admin_schools') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_schools' }}">
+                    <span class="nav-icon material-symbols-rounded">apartment</span>
+                    <span class="nav-label">Schools</span>
+                </a>
+                <a href="{{ url_for('dashboard.admin_sections') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_sections' }}">
+                    <span class="nav-icon material-symbols-rounded">meeting_room</span>
+                    <span class="nav-label">Sections</span>
+                </a>
+                <a href="{{ url_for('dashboard.my_courses') }}" class="nav-item">
+                    <span class="nav-icon material-symbols-rounded">book</span>
+                    <span class="nav-label">Courses</span>
+                </a>
+                {% elif g.current_user.role == 'dean' %}
+                <a href="{{ url_for('dashboard.school_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.school_analytics' }}">
+                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
+                    <span class="nav-label">Dean Dashboard</span>
+                </a>
+                {% elif g.current_user.role in ['professor', 'assistant_professor'] %}
+                <a href="{{ url_for('dashboard.teacher_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.teacher_dashboard' }}">
+                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
+                    <span class="nav-label">Faculty Dashboard</span>
                 </a>
                 {% else %}
-                <a href="{{ url_for('index') }}" class="nav-item {{ 'active' if request.endpoint in ['index', 'dashboard.student_dashboard', 'dashboard.teacher_dashboard'] }}">
+                <a href="{{ url_for('dashboard.student_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.student_dashboard' }}">
                     <span class="nav-icon material-symbols-rounded">space_dashboard</span>
-                    <span class="nav-label">Global Hub</span>
+                    <span class="nav-label">Student Hub</span>
                 </a>
                 {% endif %}
 
+                <!-- MY COURSES (Professor/Assistant only) -->
+                {% if g.current_user.role in ['professor', 'assistant_professor'] %}
+                <a href="{{ url_for('dashboard.my_courses') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.my_courses' }}">
+                    <span class="nav-icon material-symbols-rounded">school</span>
+                    <span class="nav-label">My Courses</span>
+                </a>
+                {% endif %}
+
+                <!-- TIMETABLE -->
+                {% if g.current_user.role == 'admin' %}
+                <a href="{{ url_for('dashboard.admin_timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_timetable' }}">
+                    <span class="nav-icon material-symbols-rounded">calendar_view_week</span>
+                    <span class="nav-label">Timetable</span>
+                </a>
+                {% else %}
                 <a href="{{ url_for('dashboard.timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.timetable' }}">
                     <span class="nav-icon material-symbols-rounded">calendar_today</span>
                     <span class="nav-label">Timetable</span>
                 </a>
+                {% endif %}
 
+                <!-- TASKS / GRADES / FEES (Student/CR only) -->
                 {% if g.current_user.role in ['student', 'class_rep'] %}
                 <a href="{{ url_for('dashboard.tasks') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.tasks' }}">
                     <span class="nav-icon material-symbols-rounded">task_alt</span>
@@ -117,7 +154,7 @@
                 </a>
                 <a href="{{ url_for('dashboard.grades') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.grades' }}">
                     <span class="nav-icon material-symbols-rounded">bar_chart</span>
-                    <span class="nav-label">Grades Overview</span>
+                    <span class="nav-label">Grades</span>
                 </a>
                 <a href="{{ url_for('fees.student_dashboard') }}" class="nav-item {{ 'active' if 'fees.student_dashboard' in request.endpoint }}">
                     <span class="nav-icon material-symbols-rounded">account_balance_wallet</span>
@@ -125,57 +162,69 @@
                 </a>
                 {% endif %}
 
-                {% if g.current_user.role_level >= 4 %}
-                <a href="{{ url_for('dashboard.manage_timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.manage_timetable' }}">
-                    <span class="nav-icon material-symbols-rounded">calendar_month</span>
-                    <span class="nav-label">Manage Schedule</span>
+                <!-- ANALYTICS / RATINGS / WARNINGS (Dean/Admin) -->
+                {% if g.current_user.role in ['dean', 'admin'] %}
+                <a href="{{ url_for('dashboard.school_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.school_analytics' }}">
+                    <span class="nav-icon material-symbols-rounded">analytics</span>
+                    <span class="nav-label">Analytics</span>
                 </a>
-                {% endif %}
-
-                {% if g.current_user.role_level >= 5 %}
                 <a href="{{ url_for('dashboard.dean_ratings') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_ratings' }}">
                     <span class="nav-icon material-symbols-rounded">star_half</span>
                     <span class="nav-label">Teacher Ratings</span>
                 </a>
-                <a href="{{ url_for('fees.admin_dashboard') }}" class="nav-item {{ 'active' if 'fees.admin_dashboard' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">account_balance</span>
-                    <span class="nav-label">Fees Hub</span>
-                </a>
-                <a href="{{ url_for('clubs.admin_clubs') }}" class="nav-item {{ 'active' if 'clubs.admin' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">groups_3</span>
-                    <span class="nav-label">Manage Clubs</span>
+                <a href="{{ url_for('dashboard.early_warning') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.early_warning' }}">
+                    <span class="nav-icon material-symbols-rounded">warning</span>
+                    <span class="nav-label">Early Warning</span>
                 </a>
                 {% endif %}
 
-                <a href="{{ url_for('clubs.index') }}"
-                    class="nav-item {{ 'active' if request.endpoint in ['clubs.index', 'clubs.club_details', 'clubs.events'] }}">
-                    <span class="nav-icon material-symbols-rounded">groups</span>
-                    <span class="nav-label">Clubs & Events</span>
+                <!-- ACCOUNTS / SETTINGS (Admin only) -->
+                {% if g.current_user.role == 'admin' %}
+                <a href="{{ url_for('dashboard.admin_accounts') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_accounts' }}">
+                    <span class="nav-icon material-symbols-rounded">person_add</span>
+                    <span class="nav-label">Accounts</span>
                 </a>
+                <a href="{{ url_for('dashboard.admin_settings') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.admin_settings' }}">
+                    <span class="nav-icon material-symbols-rounded">settings</span>
+                    <span class="nav-label">Settings</span>
+                </a>
+                {% endif %}
 
-                <a href="{{ url_for('internships.index') }}"
-                    class="nav-item {{ 'active' if request.endpoint == 'internships.index' }}">
+                <!-- CLUBS / INTERNSHIPS / LOST & FOUND (General) -->
+                {% if g.current_user.role in ['student', 'class_rep', 'professor', 'assistant_professor', 'admin'] %}
+                <a href="{{ url_for('clubs.index') }}" class="nav-item {{ 'active' if 'clubs' in request.endpoint }}">
+                    <span class="nav-icon material-symbols-rounded">groups</span>
+                    <span class="nav-label">Clubs</span>
+                </a>
+                <a href="{{ url_for('internships.index') }}" class="nav-item {{ 'active' if request.endpoint == 'internships.index' }}">
                     <span class="nav-icon material-symbols-rounded">work</span>
                     <span class="nav-label">Internships</span>
                 </a>
-
-                <a href="{{ url_for('lost_found.gallery') }}"
-                    class="nav-item {{ 'active' if 'lost_found' in request.endpoint }}">
+                <a href="{{ url_for('lost_found.gallery') }}" class="nav-item {{ 'active' if 'lost_found' in request.endpoint }}">
                     <span class="nav-icon material-symbols-rounded">search_check</span>
                     <span class="nav-label">Lost & Found</span>
                 </a>
+                {% endif %}
 
+                <!-- INBOX -->
                 <a href="{{ url_for('messages.index') }}" class="nav-item {{ 'active' if 'messages' in request.endpoint and 'fees' not in request.endpoint }}">
                     <span class="nav-icon material-symbols-rounded">inbox</span>
                     <span class="nav-label">Inbox</span>
                 </a>
 
-
+                <!-- ANNOUNCEMENTS -->
                 <a href="{{ url_for('dashboard.announcements') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.announcements' }}">
                     <span class="nav-icon material-symbols-rounded">campaign</span>
                     <span class="nav-label">Announcements</span>
-                    <span class="nav-badge">2</span>
                 </a>
+                
+                {% if g.current_user.role == 'dean' %}
+                <a href="{{ url_for('dashboard.dean_nominations') }}" class="nav-item {{ 'active' if request.endpoint == 'dashboard.dean_nominations' }}">
+                    <span class="nav-icon material-symbols-rounded">how_to_reg</span>
+                    <span class="nav-label">CR Nominations</span>
+                </a>
+                {% endif %}
+
                 {% endif %}
             </nav>
 
@@ -199,7 +248,11 @@
                         </span>
                         <span class="user-role">
                             {% if g.current_user %}
-                            {{ g.current_user.role | replace('_', ' ') | title }}
+                                {% if g.current_user.role == 'assistant_professor' %}
+                                    <span style="color: var(--primary-color); font-weight: 600; font-size: 0.75rem;">Assistant</span>
+                                {% else %}
+                                    {{ g.current_user.role | replace('_', ' ') | title }}
+                                {% endif %}
                             {% else %}
                             Student
                             {% endif %}
