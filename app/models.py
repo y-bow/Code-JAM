@@ -112,6 +112,7 @@ class Student(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
     enrollment_year = db.Column(db.Integer, nullable=False)
+    roll_number = db.Column(db.String(50), nullable=False)
     major = db.Column(db.String(100))
     sgpa = db.Column(db.Float, default=0.0)
     cgpa = db.Column(db.Float, default=0.0)
@@ -648,3 +649,37 @@ class ClassRepNomination(db.Model):
     approver = db.relationship('User', foreign_keys=[approved_by])
     course = db.relationship('Course')
     section = db.relationship('Section')
+
+
+# =============================================================================
+# DATA UPLOAD & LOGGING
+# =============================================================================
+
+class UploadedFile(db.Model):
+    """Tracks files uploaded for bulk processing."""
+    __tablename__ = 'uploaded_files'
+
+    id = db.Column(db.Integer, primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    uploader_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    filename = db.Column(db.String(255), nullable=False)
+    filepath = db.Column(db.String(500), nullable=False)
+    file_type = db.Column(db.String(50), nullable=False) # student, course, timetable, attendance, grade
+    status = db.Column(db.String(20), default='pending') # pending, processing, completed, failed
+    row_count = db.Column(db.Integer, default=0)
+    success_count = db.Column(db.Integer, default=0)
+    error_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    logs = db.relationship('UploadLog', backref='upload', lazy='dynamic', cascade='all, delete-orphan')
+
+class UploadLog(db.Model):
+    """Row-level error logging for bulk uploads."""
+    __tablename__ = 'upload_logs'
+
+    id = db.Column(db.Integer, primary_key=True)
+    upload_id = db.Column(db.Integer, db.ForeignKey('uploaded_files.id'), nullable=False)
+    row_number = db.Column(db.Integer)
+    error_message = db.Column(db.Text, nullable=False)
+    row_data = db.Column(db.Text) # JSON representation of the row that failed
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
