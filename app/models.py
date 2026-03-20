@@ -33,6 +33,7 @@ class School(db.Model):
     code = db.Column(db.String(20), unique=True, nullable=False)
     domain = db.Column(db.String(100))  # e.g. 'scds.saiuniversity.edu.in'
     is_active = db.Column(db.Boolean, default=True)
+    onboarding_completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationships
@@ -648,3 +649,49 @@ class ClassRepNomination(db.Model):
     approver = db.relationship('User', foreign_keys=[approved_by])
     course = db.relationship('Course')
     section = db.relationship('Section')
+
+
+# =============================================================================
+# ONBOARDING AND REGISTRATION MODELS
+# =============================================================================
+
+class UniversityRegistration(db.Model):
+    """Pending university applications."""
+    __tablename__ = 'university_registrations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    website_url = db.Column(db.String(200), nullable=False)
+    country = db.Column(db.String(100), nullable=False, default='India')
+    recognition_number = db.Column(db.String(100)) # Optional
+    rep_name = db.Column(db.String(100), nullable=False)
+    rep_email = db.Column(db.String(120), nullable=False)
+    rep_designation = db.Column(db.String(50), nullable=False) 
+    # Chancellor / Registrar / IT Admin / Principal / Director
+    domain = db.Column(db.String(100), nullable=False)
+    status = db.Column(db.String(20), default='pending') # pending, verified, approved, rejected
+    verification_token = db.Column(db.String(100), unique=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def __repr__(self):
+        return f'<UniversityRegistration {self.name} ({self.status})>'
+
+
+class InviteToken(db.Model):
+    """Tokens for inviting Professors and Deans."""
+    __tablename__ = 'invite_tokens'
+
+    id = db.Column(db.Integer, primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    email = db.Column(db.String(120), nullable=False)
+    role = db.Column(db.String(20), nullable=False) # dean, professor, assistant_professor
+    token = db.Column(db.String(100), unique=True, nullable=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    used_at = db.Column(db.DateTime)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    school = db.relationship('School', backref=db.backref('invite_tokens', lazy='dynamic'))
+
+    def is_valid(self):
+        return self.used_at is None and self.expires_at > datetime.utcnow()
+
