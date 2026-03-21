@@ -85,7 +85,7 @@ def check_rate_limits(sender):
     
     if sender.role == 'student' and recent_msgs_count >= 10:
         return False, "Message limit reached. Try again later."
-    elif sender.role in ['teacher', 'assistant'] and recent_msgs_count >= 50:
+    elif sender.role in ['professor', 'assistant_professor'] and recent_msgs_count >= 50:
         return False, "Message limit reached. Try again later."
     elif recent_msgs_count >= 100:
         return False, "Message limit reached. Try again later."
@@ -94,7 +94,7 @@ def check_rate_limits(sender):
 
 def check_spam(sender, recipient):
     """Prevent spamming the same teacher."""
-    if sender.role == 'student' and recipient.role in ['teacher', 'assistant']:
+    if sender.role == 'student' and recipient.role in ['professor', 'assistant_professor']:
         one_hour_ago = datetime.utcnow() - timedelta(hours=1)
         recent_spam_count = MessageLog.query.filter(
             MessageLog.sender_id == sender.id,
@@ -292,7 +292,7 @@ def search_allowed():
             or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
         ).distinct().all()
         allowed_recipients = teachers
-    elif user.role in ['teacher', 'assistant']:
+    elif user.role in ['professor', 'assistant_professor']:
         taught_course_ids = [c.id for c in user.taught_courses]
         students = User.query.join(Enrollment, Enrollment.student_id == User.id).filter(
             Enrollment.course_id.in_(taught_course_ids),
@@ -301,7 +301,7 @@ def search_allowed():
         
         other_teachers = User.query.filter(
             User.school_id == user.school_id, 
-            User.role.in_(['teacher', 'assistant', 'dean']),
+            User.role.in_(['professor', 'assistant_professor', 'dean']),
             User.id != user.id,
             or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
         ).all()

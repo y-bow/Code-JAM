@@ -113,7 +113,7 @@ def admin_dashboard():
 @fees_bp.route('/admin/offline-payment', methods=['POST'])
 @school_scoped
 def record_offline_payment():
-    if g.current_user.role not in ['admin', 'superadmin', 'dean']:
+    if g.current_user.role not in ['admin', 'dean']:
         return "Unauthorized", 403
         
     student_id = request.form.get('student_id')

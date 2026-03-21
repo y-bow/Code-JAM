@@ -51,10 +51,10 @@ def student_dashboard():
     return render_template('dashboard/student_dashboard.html', today_classes=today_classes)
 
 
-@dashboard_bp.route('/teacher')
+@dashboard_bp.route('/professor')
 @school_scoped
 @role_minimum('assistant_professor')
-def teacher_dashboard():
+def professor_dashboard():
     user = g.current_user
     import plotly.utils
     import json
@@ -127,7 +127,7 @@ def teacher_dashboard():
         fig_att.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)', font_color="white")
         graphs_json['attendance'] = json.dumps(fig_att, cls=plotly.utils.PlotlyJSONEncoder)
 
-    return render_template('dashboard/teacher_dashboard.html', 
+    return render_template('dashboard/professor_dashboard.html', 
                            today_classes=today_classes, 
                            tasks=tasks, 
                            stats={
@@ -247,7 +247,7 @@ def admin_timetable_update():
     """Update a timetable entry and auto-generate specialized announcements."""
     entry_id = request.form.get('entry_id', type=int)
     new_subject = request.form.get('subject')
-    new_teacher = request.form.get('teacher')
+    new_professor = request.form.get('professor')
     new_period = request.form.get('period')
     new_room = request.form.get('room')
     new_start = format_time_12hr(request.form.get('start_time'))
@@ -259,7 +259,7 @@ def admin_timetable_update():
         
     old_subject = entry.title
     old_room = entry.room
-    old_teacher = entry.teacher
+    old_professor = entry.teacher
     old_start = entry.start_time
     old_end = entry.end_time
     
@@ -282,11 +282,11 @@ def admin_timetable_update():
         body = f"🚪 Room Change ({entry.section.name}): {entry.title} on {day_name} {entry.start_time}–{entry.end_time} has moved from {old_room} to {new_room}."
         db.session.add(Announcement(school_id=g.school_id, section_id=entry.section_id, teacher_id=g.current_user.id, category='timetable', title="🚪 Room Change", body=body))
 
-    # 3. Teacher Change
-    if new_teacher and new_teacher != old_teacher:
-        entry.teacher = new_teacher
-        body = f"👨‍🏫 Teacher Change ({entry.section.name}): {entry.title} on {day_name} will now be taught by {new_teacher} instead of {old_teacher}."
-        db.session.add(Announcement(school_id=g.school_id, section_id=entry.section_id, teacher_id=g.current_user.id, category='timetable', title="👨‍🏫 Teacher Change", body=body))
+    # 3. Professor Change
+    if new_professor and new_professor != old_professor:
+        entry.teacher = new_professor
+        body = f"👨‍🏫 Professor Change ({entry.section.name}): {entry.title} on {day_name} will now be taught by {new_professor} instead of {old_professor}."
+        db.session.add(Announcement(school_id=g.school_id, section_id=entry.section_id, teacher_id=g.current_user.id, category='timetable', title="👨‍🏫 Professor Change", body=body))
 
     entry.period = new_period
     db.session.commit()
@@ -305,7 +305,7 @@ def admin_timetable_add():
     start_time = format_time_12hr(request.form.get('start_time'))
     end_time = format_time_12hr(request.form.get('end_time'))
     subject = request.form.get('subject')
-    teacher = request.form.get('teacher')
+    professor = request.form.get('professor')
     room = request.form.get('room')
     period = request.form.get('period')
     color = request.form.get('color', 'var(--primary-color)')
@@ -320,7 +320,7 @@ def admin_timetable_add():
         start_time=start_time,
         end_time=end_time,
         title=subject,
-        teacher=teacher,
+        teacher=professor,
         room=room,
         period=period,
         color=color,
@@ -339,7 +339,7 @@ def admin_timetable_add():
         teacher_id=g.current_user.id,
         category='timetable',
         title="📌 New Class Added",
-        body=f"📌 New Class ({section.name}): {subject} added on {day_name} from {start_time} to {end_time} in {room} with {teacher}.",
+        body=f"📌 New Class ({section.name}): {subject} added on {day_name} from {start_time} to {end_time} in {room} with {professor}.",
         posted_at=datetime.utcnow()
     )
     db.session.add(announcement)
@@ -574,7 +574,7 @@ def timetable():
                              free_slots_by_day=free_slots_by_day)
 
     else:
-        # All other roles (dean, superadmin, etc.) get a system wide view
+        # All other roles (dean, admin, etc.) get a system wide view
         all_entries = db.session.query(TimetableEntry, Section)\
             .join(Section, TimetableEntry.section_id == Section.id)\
             .order_by(TimetableEntry.day, TimetableEntry.start_time).all()
@@ -879,7 +879,7 @@ def my_courses():
             )
             .all()
         )
-    elif user.role in ('dean', 'timetable_manager'):
+    elif user.role in ('dean', 'professor'):
         courses = (
             Course.query
             .join(Section)
@@ -898,7 +898,7 @@ def my_courses():
 def school_analytics():
     """Dean-only: analytics scoped to their school."""
     total_students = User.query.filter_by(school_id=g.school_id, role='student').count()
-    total_teachers = User.query.filter_by(school_id=g.school_id, role='teacher').count()
+    total_professors = User.query.filter_by(school_id=g.school_id, role='professor').count()
     total_sections = Section.query.filter_by(school_id=g.school_id).count()
     total_courses = (
         Course.query
@@ -938,7 +938,7 @@ def school_analytics():
 @role_minimum('dean')
 def dean_ratings():
     """Dean-only: view teacher performance ratings."""
-    teachers = User.query.filter_by(school_id=g.school_id, role='teacher').all()
+    professors = User.query.filter_by(school_id=g.school_id, role='professor').all()
     
     teacher_stats = []
     for t in teachers:
@@ -993,7 +993,7 @@ def handle_nomination(nom_id, action):
 
 @dashboard_bp.route('/timetable/manage', methods=['GET', 'POST'])
 @school_scoped
-@role_minimum('timetable_manager')
+@role_minimum('professor')
 def manage_timetable():
     """Manage timetable entries for the school."""
     if request.method == 'POST':
