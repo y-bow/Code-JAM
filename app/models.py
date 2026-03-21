@@ -15,9 +15,10 @@ ROLE_HIERARCHY = {
     'professor': 4,
     'dean': 5,
     'admin': 99,
+    'platform_owner': 100,
 }
 
-VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin'}
+VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin', 'platform_owner'}
 
 
 # =============================================================================
@@ -85,6 +86,7 @@ class User(db.Model):
     role = db.Column(db.String(20), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     is_active = db.Column(db.Boolean, default=True)
+    is_suspended = db.Column(db.Boolean, default=False)
     must_change_password = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -110,6 +112,7 @@ class Student(db.Model):
     __tablename__ = 'students'
 
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
     section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
     enrollment_year = db.Column(db.Integer, nullable=False)
     major = db.Column(db.String(100))
@@ -121,6 +124,7 @@ class Student(db.Model):
 
     __table_args__ = (
         db.Index('ix_student_section', 'section_id'),
+        db.UniqueConstraint('user_id', 'school_id', name='uq_student_user_school'),
     )
 
 
@@ -648,3 +652,24 @@ class ClassRepNomination(db.Model):
     approver = db.relationship('User', foreign_keys=[approved_by])
     course = db.relationship('Course')
     section = db.relationship('Section')
+
+
+class JoinCode(db.Model):
+    """6-character codes for students to join classes."""
+    __tablename__ = 'join_codes'
+
+    id = db.Column(db.Integer, primary_key=True)
+    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    code = db.Column(db.String(6), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    max_uses = db.Column(db.Integer) # NULL = unlimited
+    use_count = db.Column(db.Integer, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    course = db.relationship('Course', backref=db.backref('join_codes', cascade='all, delete-orphan'))
+    school = db.relationship('School')
+
+    def __repr__(self):
+        return f'<JoinCode {self.code} for Course {self.course_id}>'

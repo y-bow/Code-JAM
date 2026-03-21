@@ -40,11 +40,16 @@ def school_scoped(f):
             flash('Account not found or deactivated.', 'danger')
             return redirect(url_for('auth.login'))
 
-        # Verify school is still active (Except for Global Admin)
-        if user.role != 'admin':
+        if user.is_suspended:
+            session.clear()
+            flash('Your account is currently suspended.', 'danger')
+            return redirect(url_for('auth.login'))
+
+        # Verify school is still active (Except for Global Admin/Platform Owner)
+        if user.role not in ('admin', 'platform_owner'):
             if not user.school or not user.school.is_active:
                 session.clear()
-                flash('Your institution is currently inactive.', 'danger')
+                flash('Your institution is currently suspended. Contact your administrator.', 'danger')
                 return redirect(url_for('auth.login'))
 
         g.current_user = user

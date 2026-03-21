@@ -396,6 +396,20 @@
             {% endif %}
 
             <div class="content-wrapper">
+                <!-- Global Alerts -->
+                {% with messages = get_flashed_messages(with_categories=true) %}
+                  {% if messages %}
+                    <div class="alerts-container">
+                      {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} glass-panel" style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.8rem; padding: 1rem 1.25rem; border-radius: var(--radius-md); border: 1px solid rgba(var(--primary-rgb), 0.2); background: rgba(var(--primary-rgb), 0.05); color: var(--text-main); backdrop-filter: blur(10px); animation: slideInDown 0.3s ease;">
+                          <span class="material-symbols-rounded" style="color: var(--primary-color);">info</span>
+                          <span style="font-weight: 500;">{{ message }}</span>
+                        </div>
+                      {% endfor %}
+                    </div>
+                  {% endif %}
+                {% endwith %}
+
                 {% block content %}
                 <!-- Main Page Content Goes Here -->
                 <div class="welcome-card glass-panel gradient-border">

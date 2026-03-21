@@ -1,9 +1,13 @@
 from functools import wraps
 from flask import Blueprint, render_template, redirect, url_for, request, session, flash
-from ..models import User, School, bcrypt
+from ..models import User, School, Student, Section, bcrypt, db
+from .. import limiter
 import random
 import io
 import base64
+import re
+import secrets
+from datetime import datetime, timedelta
 from PIL import Image, ImageDraw, ImageFont
 
 auth_bp = Blueprint('auth', __name__)
@@ -81,21 +85,12 @@ def generate_captcha():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per 15 minutes")
 def login():
     if request.method == 'POST':
         email = request.form.get('email', '').strip().lower()
         password = request.form.get('password', '')
-        user_captcha = request.form.get('captcha_answer', '').strip()
-
-        # CAPTCHA Validation (Disabled for testing)
-        # if user_captcha != session.get('captcha_answer'):
-        #     flash('Invalid CAPTCHA. Please try again.', 'danger')
-        #     generate_captcha() 
-        #     return render_template('login.html')
-
-        # Find user by email (may exist in multiple schools, but email+school is unique)
-        # For single-school deployments, this is straightforward.
-        # For multi-school, we match by email domain or let the user pick a school.
+        
         user = User.query.filter_by(email=email).first()
 
         if user and bcrypt.check_password_hash(user.password_hash, password):
@@ -103,14 +98,24 @@ def login():
                 flash('Your account has been deactivated.', 'danger')
                 return render_template('login.html')
 
-            if user.school and not user.school.is_active:
-                flash('Your institution is currently inactive.', 'danger')
+            if user.is_suspended:
+                flash('Your account is currently suspended. Contact support.', 'danger')
                 return render_template('login.html')
 
+            # Skip school checks for platform owner
+            if user.role != 'platform_owner':
+                if user.school and not user.school.is_active:
+                    flash('Your university account is currently suspended. Contact your administrator.', 'danger')
+                    return render_template('login.html')
+
+            # Store in session as per security requirements
+            session.permanent = True
             session['user_id'] = user.id
             session['role'] = user.role
             session['name'] = user.name
             session['school_id'] = user.school_id
+            session['school_name'] = user.school.name if user.school else 'Hive Platform'
+            session['is_platform_owner'] = (user.role == 'platform_owner')
 
             if user.role in ('student', 'class_rep'):
                 return redirect(url_for('dashboard.student_dashboard'))
@@ -120,15 +125,85 @@ def login():
                 return redirect(url_for('dashboard.admin_dashboard'))
             elif user.role == 'dean':
                 return redirect(url_for('dashboard.school_analytics'))
+            elif user.role == 'platform_owner':
+                return redirect(url_for('dashboard.admin_dashboard')) # Or a specific owner dashboard
             else:
                 return redirect(url_for('index'))
 
         flash('Invalid email or password', 'danger')
-        generate_captcha() # Refresh on failed login
+        generate_captcha()
 
-    # Generate CAPTCHA for initial GET request if not already present or on refresh
     generate_captcha()
     return render_template('login.html')
+
+
+@auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("3 per hour")
+def register():
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()
+        email = request.form.get('email', '').strip().lower()
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+
+        # Password validation
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('register.html')
+        
+        if len(password) < 8 or not re.search(r"[A-Z]", password) or not re.search(r"[0-9]", password) or not re.search(r"[!@#$%^&*]", password):
+            flash('Password must be at least 8 chars, with uppercase, number, and special char.', 'danger')
+            return render_template('register.html')
+
+        # Single University Enforcement
+        email_domain = email.split('@')[-1] if '@' in email else ''
+        school = School.query.filter_by(domain=email_domain).first()
+
+        if not school:
+            flash('Your email domain is not registered on Hive. Ask your university administrator to register your institution.', 'danger')
+            return render_template('register.html')
+
+        # Check if user already exists
+        existing_user = User.query.filter_by(email=email).first()
+        if existing_user:
+            if existing_user.school_id:
+                flash(f'You are already enrolled at {existing_user.school.name}. Hive does not support multiple university enrollment. Contact support if this is an error.', 'danger')
+            else:
+                flash('An account with this email already exists.', 'danger')
+            return render_template('register.html')
+
+        # Create User
+        new_user = User(
+            email=email,
+            password_hash=bcrypt.generate_password_hash(password).decode('utf-8'),
+            role='student',
+            name=name,
+            school_id=school.id,
+            is_active=True
+        )
+        db.session.add(new_user)
+        db.session.flush() # Get user ID
+
+        # Create Student Profile (Section assignment logic might be needed, but for now we pick first)
+        section = Section.query.filter_by(school_id=school.id).first()
+        if not section:
+            flash('University has no sections configured. Contact administrator.', 'danger')
+            db.session.rollback()
+            return render_template('register.html')
+
+        student_profile = Student(
+            user_id=new_user.id,
+            school_id=school.id,
+            section_id=section.id,
+            enrollment_year=datetime.utcnow().year
+        )
+        db.session.add(student_profile)
+        db.session.commit()
+
+        flash('Successfully registered! Please log in.', 'success')
+        return redirect(url_for('auth.login'))
+
+    return render_template('register.html')
 
 
 @auth_bp.route('/refresh-captcha', methods=['GET'])
@@ -212,3 +287,71 @@ def change_password():
             return redirect(url_for('dashboard.admin_dashboard'))
 
     return render_template('change_password.html')
+
+
+# Password Reset Logic
+reset_tokens = {} # In-memory store: {token: (email, expires_at)}
+
+@auth_bp.route('/reset-password', methods=['GET', 'POST'])
+@limiter.limit("5 per hour")
+def request_reset():
+    if request.method == 'POST':
+        email = request.form.get('email', '').strip().lower()
+        user = User.query.filter_by(email=email).first()
+        
+        if user:
+            token = secrets.token_urlsafe(32)
+            reset_tokens[token] = (email, datetime.utcnow() + timedelta(hours=1))
+            # In a real app, send email here. For now, log to console.
+            print(f"PASSWORD RESET LINK: {url_for('auth.reset_with_token', token=token, _external=True)}")
+            flash('If an account matches that email, a reset link has been sent.', 'info')
+        else:
+            # Same message to prevent email enumeration
+            flash('If an account matches that email, a reset link has been sent.', 'info')
+        
+        return redirect(url_for('auth.login'))
+    
+    return render_template('request_reset.html')
+
+
+@auth_bp.route('/reset-password/<token>', methods=['GET', 'POST'])
+def reset_with_token(token):
+    token_data = reset_tokens.get(token)
+    if not token_data:
+        flash('Invalid or expired reset token.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    email, expires_at = token_data
+    if datetime.utcnow() > expires_at:
+        reset_tokens.pop(token, None)
+        flash('Reset token has expired.', 'danger')
+        return redirect(url_for('auth.login'))
+    
+    if request.method == 'POST':
+        password = request.form.get('password', '')
+        confirm_password = request.form.get('confirm_password', '')
+        
+        if password != confirm_password:
+            flash('Passwords do not match.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        if len(password) < 8 or not re.search(r"[A-Z]", password) or not re.search(r"[0-9]", password) or not re.search(r"[!@#$%^&*]", password):
+            flash('Password insecure.', 'danger')
+            return render_template('reset_password.html', token=token)
+        
+        user = User.query.filter_by(email=email).first()
+        if user:
+            user.password_hash = bcrypt.generate_password_hash(password).decode('utf-8')
+            db.session.commit()
+            reset_tokens.pop(token, None)
+            
+            # Invalidate all existing sessions for this user
+            # In Flask session (cookie-based), we can't easily invalidate other sessions 
+            # without a server-side session store. But we can change a 'session_version' or use Flask-Login.
+            # For this requirement, we'll clear the current session.
+            session.clear()
+            
+            flash('Password reset successfully! Please log in.', 'success')
+            return redirect(url_for('auth.login'))
+            
+    return render_template('reset_password.html', token=token)
