@@ -15,9 +15,10 @@ ROLE_HIERARCHY = {
     'professor': 4,
     'dean': 5,
     'admin': 99,
+    'superadmin': 100,
 }
 
-VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin'}
+VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin', 'superadmin'}
 
 
 # =============================================================================

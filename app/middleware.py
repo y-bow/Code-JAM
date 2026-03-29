@@ -41,7 +41,7 @@ def school_scoped(f):
             return redirect(url_for('auth.login'))
 
         # Verify school is still active (Except for Global Admin)
-        if user.role != 'admin':
+        if user.role not in ('admin', 'superadmin'):
             if not user.school or not user.school.is_active:
                 session.clear()
                 flash('Your institution is currently inactive.', 'danger')
