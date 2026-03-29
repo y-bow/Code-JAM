@@ -10,17 +10,30 @@ After cloning, run this once to clean your local git cache:
     find . -name "*.pyc" -exec git rm --cached --ignore-unmatch {} \;
     git pull origin main
 
-## Local Database
+## Running the Project
 
-Never commit instance/app.db — it is gitignored.
-After pulling, if models.py or init_db.py changed,
-rebuild your local database:
+    python run.py
 
-    python init_db.py
+That's it. The database is automatically created and seeded on first run.
 
-This wipes local data and reseeds fresh.
-You will never see pycache or app.db in git status,
-git diff, or PRs ever again after this fix.
+## Force Reseed (after schema changes)
+
+If a teammate updated models.py or init_db.py, run with the reseed flag:
+
+    python run.py --reseed
+
+Warning: this wipes all local data and reseeds fresh from init_db.py.
+
+## Adding Seed Data
+
+If you need to add new students, courses, or timetable entries:
+1. Add them to init_db.py in the correct seed function (seed_section_1, etc.)
+2. Push init_db.py to git
+3. Teammates run: python run.py --reseed
+
+NEVER add data by directly editing app.db.
+NEVER commit app.db to git.
+init_db.py is the only source of truth.
 
 ## How Can I Contribute?
 
