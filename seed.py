@@ -31,7 +31,7 @@ def seed_schools():
         # Idempotency check
         existing = School.query.filter_by(code=code).first()
         if existing:
-            print(f"⏩ School {code} already exists.")
+            print(f"School {code} already exists.")
             schools[code] = existing
             continue
             
@@ -51,7 +51,7 @@ def seed_sections(scds_school):
         code = f"SCDS-CS-S{i}"
         existing = Section.query.filter_by(code=code, school_id=scds_school.id).first()
         if existing:
-            print(f"⏩ Section {code} already exists.")
+            print(f"Section {code} already exists.")
             sections.append(existing)
             continue
             
@@ -97,7 +97,7 @@ def seed_users(scds_school, sections):
     for s_data in students_to_seed:
         existing = User.query.filter_by(email=s_data['email']).first()
         if existing:
-            print(f"⏩ User {s_data['email']} already exists.")
+            print(f"User {s_data['email']} already exists.")
             continue
             
         user = User(
@@ -132,7 +132,7 @@ def seed_users(scds_school, sections):
     for name, email, role, school_id, sec_id in placeholders:
         existing = User.query.filter_by(email=email).first()
         if existing:
-            print(f"⏩ Placeholder {role} already exists.")
+            print(f"Placeholder {role} already exists.")
             continue
             
         user = User(
@@ -165,10 +165,11 @@ def seed_users(scds_school, sections):
 
     db.session.commit()
 
-def run_seed():
+def run_seed(reset=True):
     with app.app_context():
         # Clear database as requested for "RESET"
-        clear_data()
+        if reset:
+            clear_data()
         
         # Seed
         schools = seed_schools()

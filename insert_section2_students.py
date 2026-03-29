@@ -4,7 +4,7 @@ from app.models import db, School, Section, User, Student, bcrypt
 
 app = create_app()
 
-def insert_students():
+def run():
     with app.app_context():
         # Find the School
         school = School.query.filter_by(code='SCDS').first()
@@ -145,4 +145,4 @@ def insert_students():
         print(f"Finished. Added: {added_count}, Already existed: {existing_count}")
 
 if __name__ == "__main__":
-    insert_students()
+    run()

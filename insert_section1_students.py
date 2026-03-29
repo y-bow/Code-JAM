@@ -3,7 +3,7 @@ import json
 from app import create_app
 from app.models import db, School, Section, User, Student, bcrypt
 
-def insert_students():
+def run():
     app = create_app()
     with app.app_context():
         # Find School and Section
@@ -66,4 +66,4 @@ def insert_students():
         print(f"\nFinished! Added {added_count} students, skipped {skipped_count}.")
 
 if __name__ == "__main__":
-    insert_students()
+    run()

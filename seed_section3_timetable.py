@@ -105,5 +105,8 @@ def seed_timetable():
         db.session.commit()
         print("\nTimetable for Section 3 seeded successfully!")
 
-if __name__ == "__main__":
+def run():
     seed_timetable()
+
+if __name__ == "__main__":
+    run()

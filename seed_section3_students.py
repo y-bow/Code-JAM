@@ -219,6 +219,9 @@ def reseed_section3():
         print(f"Total Section 3 students: {len(STUDENTS_SECTION_3)}")
 
 
-if __name__ == "__main__":
+def run():
     ensure_lab_section_column()
     reseed_section3()
+
+if __name__ == "__main__":
+    run()
