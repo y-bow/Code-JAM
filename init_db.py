@@ -713,6 +713,7 @@ def seed_section_2(school):
         student = Student(user_id=user.id, section_id=sec.id, enrollment_year=2025, major='Computer Science')
         db.session.add(student)
     db.session.commit()
+    return sec
 
 def seed_section_3(school):
     print("Seeding Section 3 students...")
@@ -752,6 +753,7 @@ def seed_section_5(school):
         student = Student(user_id=user.id, section_id=sec.id, enrollment_year=2025, major='Computer Science', lab_section=lab_sec)
         db.session.add(student)
     db.session.commit()
+    return sec
 
 def seed_timetable(school, section_3, teacher_user):
     print("Seeding courses and timetable...")
@@ -817,6 +819,130 @@ def seed_timetable(school, section_3, teacher_user):
         db.session.add(entry)
     db.session.commit()
 
+def seed_section5_timetable(school, section_5, teacher_user):
+    print("Seeding Section 5 courses and timetable...")
+    
+    courses_to_create = [
+        ("Discrete Mathematics", "CS-301", 4),
+        ("Indian Constitution and Democracy", "ICD-101", 2),
+        ("Environment and Sustainability", "ES-101", 2),
+        ("Programming in Python", "CS-303", 4),
+        ("Python and Data Structure (LAB)", "CS-302L", 2),
+        ("Introduction to Data Structures", "CS-302", 4),
+    ]
+    
+    section_courses = {}
+    for name, code, credits in courses_to_create:
+        course = Course(
+            section_id=section_5.id,
+            name=name,
+            code=code,
+            teacher_id=teacher_user.id,
+            credits=credits
+        )
+        db.session.add(course)
+        db.session.flush()
+        section_courses[name] = course
+
+    entries_data = [
+        # Monday
+        (0, "10:35 AM", "12:05 PM", "Environment and Sustainability", "AB1 - 101", "#d9ead3"),
+        (0, "12:15 PM", "01:45 PM", "Discrete Mathematics", "AB1 - 104", "#cfe2f3"),
+        (0, "02:10 PM", "03:35 PM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        # Tuesday
+        (1, "09:00 AM", "10:30 AM", "Introduction to Data Structures", "AB2 - 101", "#f9cb9c"),
+        (1, "12:15 PM", "01:45 PM", "Programming in Python", "AB1 - 104", "#fce5cd"),
+        # Wednesday
+        (2, "10:40 AM", "12:10 PM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        (2, "01:40 PM", "03:05 PM", "Indian Constitution and Democracy", "AB2 - 202", "#ead1dc"),
+        # Thursday
+        (3, "10:35 AM", "12:05 PM", "Indian Constitution and Democracy", "AB2 - 202", "#ead1dc"),
+        (3, "02:15 PM", "03:40 PM", "Discrete Mathematics", "AB2 - 203", "#cfe2f3"),
+        # Friday
+        (4, "10:40 AM", "12:10 PM", "Environment and Sustainability", "AB1 - 104", "#d9ead3"),
+        (4, "12:15 PM", "01:45 PM", "Introduction to Data Structures", "AB2 - 101", "#f9cb9c"),
+        (4, "02:15 PM", "03:40 PM", "Programming in Python", "AB2 - 101", "#fce5cd"),
+    ]
+
+    for day, start, end, title, room, color in entries_data:
+        course = section_courses.get(title)
+        entry = TimetableEntry(
+            section_id=section_5.id,
+            course_id=course.id if course else None,
+            day=day,
+            start_time=start,
+            end_time=end,
+            title=title,
+            teacher=teacher_user.name,
+            room=room,
+            color=color,
+            status='active'
+        )
+        db.session.add(entry)
+    db.session.commit()
+
+def seed_section2_timetable(school, section_2, teacher_user):
+    print("Seeding Section 2 courses and timetable...")
+    
+    courses_to_create = [
+        ("Discrete Mathematics", "CS-301", 4),
+        ("Indian Constitution and Democracy", "ICD-101", 2),
+        ("Environment and Sustainability", "ES-101", 2),
+        ("Programming in Python", "CS-303", 4),
+        ("Python and Data Structure (LAB)", "CS-302L", 2),
+        ("Introduction to Data Structures", "CS-302", 4),
+    ]
+    
+    section_courses = {}
+    for name, code, credits in courses_to_create:
+        course = Course(
+            section_id=section_2.id,
+            name=name,
+            code=code,
+            teacher_id=teacher_user.id,
+            credits=credits
+        )
+        db.session.add(course)
+        db.session.flush()
+        section_courses[name] = course
+
+    entries_data = [
+        # Monday
+        (0, "09:00 AM", "10:40 AM", "Discrete Mathematics", "AB2 - 203", "#cfe2f3"),
+        (0, "10:40 AM", "12:10 PM", "Indian Constitution and Democracy", "AB2 - 202", "#ead1dc"),
+        (0, "02:15 PM", "03:40 PM", "Environment and Sustainability", "AB2 - Mini Auditorium", "#d9ead3"),
+        # Tuesday
+        (1, "09:00 AM", "10:30 AM", "Programming in Python", "AB2 - 202", "#fce5cd"),
+        (1, "12:20 PM", "01:40 PM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        # Wednesday
+        (2, "10:00 AM", "11:30 AM", "Indian Constitution and Democracy", "AB2 - 101", "#ead1dc"),
+        (2, "12:40 PM", "02:05 PM", "Introduction to Data Structures", "AB1 - Moot Court Hall", "#f9cb9c"),
+        (2, "02:15 PM", "03:40 PM", "Environment and Sustainability", "AB2 - Mini Auditorium", "#d9ead3"),
+        # Thursday
+        (3, "10:00 AM", "11:30 AM", "Discrete Mathematics", "AB2 - 203", "#cfe2f3"),
+        (3, "01:40 PM", "03:05 PM", "Programming in Python", "AB2 - 101", "#fce5cd"),
+        # Friday
+        (4, "10:40 AM", "12:10 PM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        (4, "12:40 PM", "02:05 PM", "Introduction to Data Structures", "AB2 - 202", "#f9cb9c"),
+    ]
+
+    for day, start, end, title, room, color in entries_data:
+        course = section_courses.get(title)
+        entry = TimetableEntry(
+            section_id=section_2.id,
+            course_id=course.id if course else None,
+            day=day,
+            start_time=start,
+            end_time=end,
+            title=title,
+            teacher=teacher_user.name,
+            room=room,
+            color=color,
+            status='active'
+        )
+        db.session.add(entry)
+    db.session.commit()
+
 def seed_section_4(school):
     print("Seeding Section 4 students...")
     sec = Section(school_id=school.id, name='Section 4', code='SCDS-CS-S4', batch_year=2025)
@@ -832,6 +958,70 @@ def seed_section_4(school):
         
         student = Student(user_id=user.id, section_id=sec.id, enrollment_year=2025, major='Computer Science')
         db.session.add(student)
+    db.session.commit()
+    return sec
+
+
+def seed_section4_timetable(school, section_4, teacher_user):
+    print("Seeding Section 4 courses and timetable...")
+    
+    courses_to_create = [
+        ("Discrete Mathematics", "CS-301", 4),
+        ("Indian Constitution and Democracy", "ICD-101", 2),
+        ("Environment and Sustainability", "ES-101", 2),
+        ("Programming in Python", "CS-303", 4),
+        ("Python and Data Structure (LAB)", "CS-302L", 2),
+        ("Introduction to Data Structures", "CS-302", 4),
+    ]
+    
+    section_courses = {}
+    for name, code, credits in courses_to_create:
+        course = Course(
+            section_id=section_4.id,
+            name=name,
+            code=code,
+            teacher_id=teacher_user.id,
+            credits=credits
+        )
+        db.session.add(course)
+        db.session.flush()
+        section_courses[name] = course
+
+    entries_data = [
+        # Monday
+        (0, "09:00 AM", "10:30 AM", "Indian Constitution and Democracy", "AB2-202", "#ead1dc"),
+        (0, "01:40 PM", "03:05 PM", "Programming in Python", "AB2-101", "#fce5cd"),
+        # Tuesday
+        (1, "09:00 AM", "10:30 AM", "Discrete Mathematics", "AB1-104", "#cfe2f3"),
+        (1, "03:50 PM", "05:15 PM", "Environment and Sustainability", "AB2-207", "#d9ead3"),
+        # Wednesday
+        (2, "09:00 AM", "10:30 AM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        (2, "10:40 AM", "12:10 PM", "Introduction to Data Structures", "AB2-202", "#f9cb9c"),
+        (2, "01:40 PM", "03:05 PM", "Programming in Python", "AB2-203", "#fce5cd"),
+        # Thursday
+        (3, "09:00 AM", "10:30 AM", "Introduction to Data Structures", "AB2-101", "#f9cb9c"),
+        (3, "10:40 AM", "12:10 PM", "Python and Data Structure (LAB)", "Computer Lab - AB1 - First Floor", "#b45f06"),
+        (3, "12:40 PM", "02:05 PM", "Indian Constitution and Democracy", "AB1-104", "#ead1dc"),
+        # Friday
+        (4, "10:35 AM", "12:05 PM", "Environment and Sustainability", "AB2-101", "#d9ead3"),
+        (4, "02:15 PM", "03:40 PM", "Discrete Mathematics", "AB2-203", "#cfe2f3"),
+    ]
+
+    for day, start, end, title, room, color in entries_data:
+        course = section_courses.get(title)
+        entry = TimetableEntry(
+            section_id=section_4.id,
+            course_id=course.id if course else None,
+            day=day,
+            start_time=start,
+            end_time=end,
+            title=title,
+            teacher=teacher_user.name,
+            room=room,
+            color=color,
+            status='active'
+        )
+        db.session.add(entry)
     db.session.commit()
 
 def seed_section_6(scds_school, soai_school):
@@ -855,6 +1045,70 @@ def seed_section_6(scds_school, soai_school):
         student = Student(user_id=user.id, section_id=sec.id, enrollment_year=2025, major='Computer Science')
         db.session.add(student)
     db.session.commit()
+    return sec
+
+
+def seed_section6_timetable(school, section_6, teacher_user):
+    print("Seeding Section 6 courses and timetable...")
+    
+    courses_to_create = [
+        ("Discrete Mathematics", "CS-301", 4),
+        ("Indian Constitution and Democracy", "ICD-101", 2),
+        ("Environment and Sustainability", "ES-101", 2),
+        ("Programming in Python", "CS-303", 4),
+        ("Python and Data Structure (LAB)", "CS-302L", 2),
+        ("Introduction to Data Structures", "CS-302", 4),
+    ]
+    
+    section_courses = {}
+    for name, code, credits in courses_to_create:
+        course = Course(
+            section_id=section_6.id,
+            name=name,
+            code=code,
+            teacher_id=teacher_user.id,
+            credits=credits
+        )
+        db.session.add(course)
+        db.session.flush()
+        section_courses[name] = course
+
+    entries_data = [
+        # Monday
+        (0, "10:35 AM", "12:05 PM", "Programming in Python", "AB1-104", "#fce5cd"),
+        (0, "02:15 PM", "03:40 PM", "Introduction to Data Structures", "AB2-207", "#f9cb9c"),
+        # Tuesday
+        (1, "12:15 PM", "01:04 PM", "Discrete Mathematics", "AB2-203", "#cfe2f3"),
+        (1, "03:50 PM", "05:15 PM", "Environment and Sustainability", "AB2-101", "#d9ead3"),
+        # Wednesday
+        (2, "10:35 AM", "12:05 PM", "Indian Constitution and Democracy", "AB1-104", "#ead1dc"),
+        (2, "12:20 PM", "01:40 PM", "Python and Data Structure (LAB)", "Lab(AB1)", "#b45f06"),
+        (2, "02:15 PM", "03:40 PM", "Programming in Python", "AB1-101", "#fce5cd"),
+        # Thursday
+        (3, "12:15 PM", "01:45 PM", "Indian Constitution and Democracy", "AB2-203", "#ead1dc"),
+        (3, "02:15 PM", "03:40 PM", "Introduction to Data Structures", "AB1-101", "#f9cb9c"),
+        # Friday
+        (4, "10:35 AM", "12:05 PM", "Environment and Sustainability", "AB1-Moot Court Room", "#d9ead3"),
+        (4, "12:15 PM", "01:45 PM", "Discrete Mathematics", "AB2-203", "#cfe2f3"),
+        (4, "03:50 PM", "05:15 PM", "Python and Data Structure (LAB)", "Lab(AB1)", "#b45f06"),
+    ]
+
+    for day, start, end, title, room, color in entries_data:
+        course = section_courses.get(title)
+        entry = TimetableEntry(
+            section_id=section_6.id,
+            course_id=course.id if course else None,
+            day=day,
+            start_time=start,
+            end_time=end,
+            title=title,
+            teacher=teacher_user.name,
+            room=room,
+            color=color,
+            status='active'
+        )
+        db.session.add(entry)
+    db.session.commit()
 
 def seed_section_7(school):
     print("Seeding Section 7 students...")
@@ -877,13 +1131,17 @@ def seed_all():
     scds_school, soai_school = seed_school()
     prof = seed_staff(scds_school)
     seed_section_1(scds_school)
-    seed_section_2(scds_school)
+    secin2 = seed_section_2(scds_school)
     secin3 = seed_section_3(scds_school)
-    seed_section_4(scds_school)
-    seed_section_5(scds_school)
-    seed_section_6(scds_school, soai_school)
+    secin4 = seed_section_4(scds_school)
+    secin5 = seed_section_5(scds_school)
+    secin6 = seed_section_6(scds_school, soai_school)
     seed_section_7(scds_school)
+    seed_section2_timetable(scds_school, secin2, prof)
     seed_timetable(scds_school, secin3, prof)
+    seed_section4_timetable(scds_school, secin4, prof)
+    seed_section5_timetable(scds_school, secin5, prof)
+    seed_section6_timetable(scds_school, secin6, prof)
     print("All data seeded successfully.")
 
 if __name__ == "__main__":

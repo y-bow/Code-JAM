@@ -1,4 +1,4 @@
-# Python cache — current and all future
+# Python
 __pycache__/
 **/__pycache__/
 *.py[cod]
@@ -30,10 +30,14 @@ ENV/
 *.swo
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Logs
 *.log
 flask_session/
+
+# Uploads (user data, not committed)
+static/uploads/
 
 # Distribution
 *.egg-info/
@@ -44,3 +48,12 @@ build/
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Temporary files
+temp_*
+*_backup*
+*_old*
+scratch_*
+cleanup_script.py
+final_audit.py
+check_timetables.py
