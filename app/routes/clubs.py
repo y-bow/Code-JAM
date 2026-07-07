@@ -25,7 +25,7 @@ def index():
         ).order_by(ExternalEvent.date).limit(5).all()
     return render_template('clubs/student_clubs.html', clubs=clubs, events=events)
 
-@clubs_bp.route('/<int:club_id>')
+@clubs_bp.route('/<string:club_id>')
 @school_scoped
 def club_details(club_id):
     if g.current_user.role == 'admin':
@@ -80,7 +80,7 @@ def admin_clubs():
         clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
     return render_template('clubs/admin_clubs.html', clubs=clubs)
 
-@clubs_bp.route('/admin/edit/<int:club_id>', methods=['POST'])
+@clubs_bp.route('/admin/edit/<string:club_id>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def edit_club(club_id):
@@ -97,7 +97,7 @@ def edit_club(club_id):
     flash('Club updated successfully.', 'success')
     return redirect(url_for('clubs.admin_clubs'))
 
-@clubs_bp.route('/admin/delete/<int:club_id>', methods=['POST'])
+@clubs_bp.route('/admin/delete/<string:club_id>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def delete_club(club_id):
@@ -142,7 +142,7 @@ def admin_events():
     events = ExternalEvent.query.filter_by(school_id=g.school_id).order_by(ExternalEvent.date.desc()).all()
     return render_template('clubs/admin_events.html', events=events)
 
-@clubs_bp.route('/admin/events/edit/<int:event_id>', methods=['POST'])
+@clubs_bp.route('/admin/events/edit/<string:event_id>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def edit_event(event_id):
@@ -165,7 +165,7 @@ def edit_event(event_id):
     flash('External event updated successfully.', 'success')
     return redirect(url_for('clubs.admin_events'))
 
-@clubs_bp.route('/admin/events/delete/<int:event_id>', methods=['POST'])
+@clubs_bp.route('/admin/events/delete/<string:event_id>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def delete_event(event_id):

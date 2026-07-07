@@ -34,7 +34,7 @@ def index():
     
     return render_template('internships.html', internships=internships, search=search, location=location, duration=duration)
 
-@internships_bp.route('/api/<int:id>', methods=['GET'])
+@internships_bp.route('/api/<string:id>', methods=['GET'])
 @school_scoped
 def get_internship(id):
     internship = Internship.query.get_or_404(id)
@@ -88,7 +88,7 @@ def add():
     flash('Internship added successfully.', 'success')
     return redirect(url_for('internships.index'))
 
-@internships_bp.route('/edit/<int:id>', methods=['POST'])
+@internships_bp.route('/edit/<string:id>', methods=['POST'])
 @school_scoped
 @role_minimum('admin')
 def edit(id):
@@ -114,7 +114,7 @@ def edit(id):
     flash('Internship updated successfully.', 'success')
     return redirect(url_for('internships.index'))
 
-@internships_bp.route('/delete/<int:id>', methods=['POST'])
+@internships_bp.route('/delete/<string:id>', methods=['POST'])
 @school_scoped
 @role_minimum('admin')
 def delete(id):

@@ -9,7 +9,7 @@ from datetime import datetime
 classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom')
 
 
-@classroom_bp.route('/<int:course_id>')
+@classroom_bp.route('/<string:course_id>')
 @school_scoped
 def view_classroom(course_id):
     user = g.current_user
@@ -104,7 +104,7 @@ def view_classroom(course_id):
     return redirect(url_for('index'))
 
 
-@classroom_bp.route('/<int:course_id>/nominate_cr/<int:student_id>', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/nominate_cr/<string:student_id>', methods=['POST'])
 @school_scoped
 @role_minimum('professor')
 def nominate_class_rep(course_id, student_id):
@@ -140,7 +140,7 @@ def nominate_class_rep(course_id, student_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/assign_assistant', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/assign_assistant', methods=['POST'])
 @school_scoped
 @role_minimum('professor')
 def assign_assistant_professor(course_id):
@@ -171,7 +171,7 @@ def assign_assistant_professor(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/create_assignment', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/create_assignment', methods=['POST'])
 @school_scoped
 @role_minimum('assistant_professor')
 def create_assignment(course_id):
@@ -199,7 +199,7 @@ def create_assignment(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/mark_attendance', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/mark_attendance', methods=['POST'])
 @school_scoped
 @role_minimum('assistant_professor')
 def mark_attendance(course_id):
@@ -234,7 +234,7 @@ def mark_attendance(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/post_announcement', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/post_announcement', methods=['POST'])
 @school_scoped
 def post_announcement(course_id):
     course = Course.query.get_or_404(course_id)
@@ -277,7 +277,7 @@ def post_announcement(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/rate', methods=['POST'])
+@classroom_bp.route('/<string:course_id>/rate', methods=['POST'])
 @school_scoped
 @role_minimum('student')
 def submit_rating(course_id):

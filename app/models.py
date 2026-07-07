@@ -1,9 +1,14 @@
+import uuid
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from datetime import datetime
 
 db = SQLAlchemy()
 bcrypt = Bcrypt()
+
+
+def gen_uuid():
+    return str(uuid.uuid4())
 
 # =============================================================================
 # ROLE HIERARCHY
@@ -32,7 +37,7 @@ class School(db.Model):
     """
     __tablename__ = 'schools'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
     name = db.Column(db.String(200), nullable=False)
     code = db.Column(db.String(20), unique=True, nullable=False)
     domain = db.Column(db.String(100))
@@ -58,8 +63,8 @@ class AcademicYear(db.Model):
     """Defines academic year periods for an institution."""
     __tablename__ = 'academic_years'
 
-    id = db.Column(db.Integer, primary_key=True)
-    institution_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    institution_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     start_date = db.Column(db.Date, nullable=False)
     end_date = db.Column(db.Date, nullable=False)
@@ -81,8 +86,8 @@ class Section(db.Model):
     """A section/batch within a school. Courses and students belong to sections."""
     __tablename__ = 'sections'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), nullable=False)
     batch_year = db.Column(db.Integer, nullable=False)
@@ -108,8 +113,8 @@ class Section(db.Model):
 class User(db.Model):
     __tablename__ = 'users'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=True) # NULL for Global Admin
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=True)
     email = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
     role = db.Column(db.String(20), nullable=False)
@@ -139,8 +144,8 @@ class User(db.Model):
 class Student(db.Model):
     __tablename__ = 'students'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
+    section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=False)
     enrollment_year = db.Column(db.Integer, nullable=False)
     major = db.Column(db.String(100))
     sgpa = db.Column(db.Float, default=0.0)
@@ -158,7 +163,7 @@ class Student(db.Model):
 class Teacher(db.Model):
     __tablename__ = 'teachers'
 
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
     department = db.Column(db.String(100))
     office_hours = db.Column(db.String(200))
 
@@ -172,11 +177,11 @@ class Teacher(db.Model):
 class Course(db.Model):
     __tablename__ = 'courses'
 
-    id = db.Column(db.Integer, primary_key=True)
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     code = db.Column(db.String(20), nullable=False)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
     max_students = db.Column(db.Integer, default=50)
 
@@ -205,8 +210,8 @@ class Course(db.Model):
 class Enrollment(db.Model):
     __tablename__ = 'enrollments'
 
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), primary_key=True)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), primary_key=True)
     enrollment_date = db.Column(db.DateTime, default=datetime.utcnow)
     status = db.Column(db.String(20), default='active')  # active, dropped, completed
 
@@ -225,8 +230,8 @@ class Enrollment(db.Model):
 class Assignment(db.Model):
     __tablename__ = 'assignments'
 
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     due_date = db.Column(db.DateTime, nullable=False)
@@ -243,8 +248,8 @@ class Assignment(db.Model):
 class Submission(db.Model):
     __tablename__ = 'submissions'
 
-    assignment_id = db.Column(db.Integer, db.ForeignKey('assignments.id'), primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    assignment_id = db.Column(db.String(36), db.ForeignKey('assignments.id'), primary_key=True)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
     file_url = db.Column(db.String(500))
     submitted_at = db.Column(db.DateTime, default=datetime.utcnow)
     grade = db.Column(db.Float)
@@ -260,8 +265,8 @@ class Submission(db.Model):
 class Quiz(db.Model):
     __tablename__ = 'quizzes'
 
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     time_limit = db.Column(db.Integer)  # minutes
     questions = db.Column(db.Text)  # JSON
@@ -273,8 +278,8 @@ class Quiz(db.Model):
 class QuizAttempt(db.Model):
     __tablename__ = 'quiz_attempts'
 
-    quiz_id = db.Column(db.Integer, db.ForeignKey('quizzes.id'), primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    quiz_id = db.Column(db.String(36), db.ForeignKey('quizzes.id'), primary_key=True)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
     answers = db.Column(db.Text)  # JSON
     score = db.Column(db.Float)
     attempted_at = db.Column(db.DateTime, default=datetime.utcnow)
@@ -289,9 +294,9 @@ class QuizAttempt(db.Model):
 class Attendance(db.Model):
     __tablename__ = 'attendance'
 
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     date = db.Column(db.Date, nullable=False)
     status = db.Column(db.String(20), nullable=False)  # present, absent, late
 
@@ -308,9 +313,9 @@ class Attendance(db.Model):
 class Grade(db.Model):
     __tablename__ = 'grades'
 
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     grade = db.Column(db.Float, nullable=False)
     calculated_at = db.Column(db.DateTime, default=datetime.utcnow)
 
@@ -326,7 +331,7 @@ class Grade(db.Model):
 class Streak(db.Model):
     __tablename__ = 'streaks'
 
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), primary_key=True)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), primary_key=True)
     current_streak_days = db.Column(db.Integer, default=0)
     last_deadline_met_date = db.Column(db.Date)
     badges_earned = db.Column(db.Text)  # JSON
@@ -341,11 +346,11 @@ class Streak(db.Model):
 class Announcement(db.Model):
     __tablename__ = 'announcements'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True)  # NULL = school-wide
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=True) # NULL = school-wide
-    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=True)
+    section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=True)
+    teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     body = db.Column(db.Text, nullable=False)
     urgent = db.Column(db.Boolean, default=False)
@@ -366,16 +371,16 @@ class Announcement(db.Model):
 class Message(db.Model):
     __tablename__ = 'messages'
 
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    sender_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    recipient_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     subject = db.Column(db.String(100), nullable=False)
     body = db.Column(db.Text, nullable=False)
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_read = db.Column(db.Boolean, default=False)
     is_deleted_by_sender = db.Column(db.Boolean, default=False)
     is_deleted_by_recipient = db.Column(db.Boolean, default=False)
-    thread_id = db.Column(db.Integer, db.ForeignKey('messages.id'), nullable=True)
+    thread_id = db.Column(db.String(36), db.ForeignKey('messages.id'), nullable=True)
 
     sender = db.relationship('User', foreign_keys=[sender_id],
                              backref=db.backref('sent_messages', lazy='dynamic'))
@@ -387,9 +392,9 @@ class Message(db.Model):
 class MessageLog(db.Model):
     __tablename__ = 'message_logs'
 
-    id = db.Column(db.Integer, primary_key=True)
-    sender_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    recipient_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    sender_id = db.Column(db.String(36), db.ForeignKey('users.id'))
+    recipient_id = db.Column(db.String(36), db.ForeignKey('users.id'))
     subject = db.Column(db.String(100))
     sent_at = db.Column(db.DateTime, default=datetime.utcnow)
     ip_address = db.Column(db.String(45))
@@ -400,8 +405,8 @@ class MessageLog(db.Model):
 class Resource(db.Model):
     __tablename__ = 'resources'
 
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     file_name = db.Column(db.String(200), nullable=False)
     file_url = db.Column(db.String(500), nullable=False)
     category = db.Column(db.String(50))
@@ -415,8 +420,8 @@ class Resource(db.Model):
 class CustomTask(db.Model):
     __tablename__ = 'custom_tasks'
 
-    id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     due_date = db.Column(db.Date)
@@ -434,9 +439,9 @@ class TimetableEntry(db.Model):
     """Per-section timetable entry. Each row = one class slot in the weekly schedule."""
     __tablename__ = 'timetable_entries'
 
-    id = db.Column(db.Integer, primary_key=True)
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=True) # Link to Course
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=False)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=True)
     day = db.Column(db.Integer, nullable=False)           # 0=Monday, 1=Tuesday, ..., 4=Friday
     start_time = db.Column(db.String(20), nullable=False)  # e.g. '09:00 AM'
     end_time = db.Column(db.String(20), nullable=False)    # e.g. '10:30 AM'
@@ -479,18 +484,18 @@ class TimetableEntry(db.Model):
 
 class TeacherTodo(db.Model):
     __tablename__ = 'teacher_todos'
-    id = db.Column(db.Integer, primary_key=True)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     is_completed = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class TeacherRating(db.Model):
     __tablename__ = 'teacher_ratings'
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
     rating = db.Column(db.Integer, nullable=False)
     review = db.Column(db.Text)
     is_anonymous = db.Column(db.Boolean, default=False)
@@ -503,8 +508,8 @@ class TeacherRating(db.Model):
 class Fee(db.Model):
     __tablename__ = 'fees'
     
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     
     tuition_fee = db.Column(db.Float, default=0.0)
     lab_fee = db.Column(db.Float, default=0.0)
@@ -545,8 +550,8 @@ class Fee(db.Model):
 class FeePayment(db.Model):
     __tablename__ = 'fee_payments'
     
-    id = db.Column(db.Integer, primary_key=True)
-    fee_id = db.Column(db.Integer, db.ForeignKey('fees.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    fee_id = db.Column(db.String(36), db.ForeignKey('fees.id'), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     payment_method = db.Column(db.String(50))  # UPI, debit card, credit card, net banking, offline
     status = db.Column(db.String(20), default='pending')  # pending, success, failed
@@ -563,7 +568,7 @@ class FeePayment(db.Model):
 class Internship(db.Model):
     __tablename__ = 'internships'
 
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
     company_name = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(200), nullable=False)
     location = db.Column(db.String(100), nullable=False)
@@ -583,9 +588,9 @@ class Internship(db.Model):
 class LostFoundItem(db.Model):
     __tablename__ = 'lost_found_items'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
-    reporter_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    reporter_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     
     report_type = db.Column(db.String(10), nullable=False) # 'lost' or 'found'
     category = db.Column(db.String(50), nullable=False)   # 'Electronics', 'ID Cards', etc.
@@ -606,8 +611,8 @@ class LostFoundItem(db.Model):
 class Club(db.Model):
     __tablename__ = 'clubs'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100))
@@ -624,8 +629,8 @@ class Club(db.Model):
 class ExternalEvent(db.Model):
     __tablename__ = 'external_events'
 
-    id = db.Column(db.Integer, primary_key=True)
-    school_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     hosting_college = db.Column(db.String(200), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
@@ -648,10 +653,10 @@ class ProfessorAssistant(db.Model):
     """Tracks teachers assigned as assistants to specific courses."""
     __tablename__ = 'professor_assistants'
 
-    id = db.Column(db.Integer, primary_key=True)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    professor_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    assistant_teacher_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
+    professor_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    assistant_teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     assigned_at = db.Column(db.DateTime, default=datetime.utcnow)
     is_active = db.Column(db.Boolean, default=True)
 
@@ -708,12 +713,12 @@ class ClassRepNomination(db.Model):
     """Workflow for appointing a student as Class Rep (Section Rep)."""
     __tablename__ = 'class_rep_nominations'
 
-    id = db.Column(db.Integer, primary_key=True)
-    student_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    course_id = db.Column(db.Integer, db.ForeignKey('courses.id'), nullable=False)
-    section_id = db.Column(db.Integer, db.ForeignKey('sections.id'), nullable=False)
-    nominated_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
-    approved_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True) # Dean
+    id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
+    student_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=False)
+    section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=False)
+    nominated_by = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
+    approved_by = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=True)
     status = db.Column(db.String(20), default='pending') # pending, approved, rejected
     nominated_at = db.Column(db.DateTime, default=datetime.utcnow)
     decided_at = db.Column(db.DateTime)

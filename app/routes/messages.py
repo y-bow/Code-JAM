@@ -181,7 +181,7 @@ def index():
 
     return render_template('messages/index.html', inbox_items=partner_data, allowed_recipients=allowed_recipients)
 
-@messages_bp.route('/history/<int:user_id>')
+@messages_bp.route('/history/<string:user_id>')
 def history(user_id):
     partner = User.query.get_or_404(user_id)
     

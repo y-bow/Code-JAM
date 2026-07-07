@@ -751,7 +751,7 @@ def tasks():
     return render_template('dashboard/tasks.html', custom_tasks=custom_tasks)
 
 
-@dashboard_bp.route('/tasks/toggle/<int:task_id>', methods=['POST'])
+@dashboard_bp.route('/tasks/toggle/<string:task_id>', methods=['POST'])
 @school_scoped
 def toggle_task(task_id):
     task = CustomTask.query.get_or_404(task_id)
@@ -761,7 +761,7 @@ def toggle_task(task_id):
     return redirect(url_for('dashboard.tasks'))
 
 
-@dashboard_bp.route('/tasks/delete/<int:task_id>', methods=['POST'])
+@dashboard_bp.route('/tasks/delete/<string:task_id>', methods=['POST'])
 @school_scoped
 def delete_task(task_id):
     task = CustomTask.query.get_or_404(task_id)
@@ -783,7 +783,7 @@ def add_teacher_task():
     return redirect(url_for('dashboard.teacher_dashboard'))
 
 
-@dashboard_bp.route('/teacher/tasks/toggle/<int:task_id>', methods=['POST'])
+@dashboard_bp.route('/teacher/tasks/toggle/<string:task_id>', methods=['POST'])
 @school_scoped
 @role_minimum('assistant_professor')
 def toggle_teacher_task(task_id):
@@ -794,7 +794,7 @@ def toggle_teacher_task(task_id):
     return redirect(url_for('dashboard.teacher_dashboard'))
 
 
-@dashboard_bp.route('/teacher/tasks/delete/<int:task_id>', methods=['POST'])
+@dashboard_bp.route('/teacher/tasks/delete/<string:task_id>', methods=['POST'])
 @school_scoped
 @role_minimum('assistant_professor')
 def delete_teacher_task(task_id):
@@ -980,7 +980,7 @@ def dean_nominations():
     ).all()
     return render_template('dashboard/dean_nominations.html', nominations=nominations)
 
-@dashboard_bp.route('/dean/nominations/<int:nom_id>/<action>', methods=['POST'])
+@dashboard_bp.route('/dean/nominations/<string:nom_id>/<action>', methods=['POST'])
 @school_scoped
 @role_minimum('dean')
 def handle_nomination(nom_id, action):
@@ -1082,7 +1082,7 @@ def add_school():
     flash('School added successfully!', 'success')
     return redirect(url_for('dashboard.admin_schools'))
 
-@dashboard_bp.route('/admin/schools/toggle/<int:school_id>', methods=['POST'])
+@dashboard_bp.route('/admin/schools/toggle/<string:school_id>', methods=['POST'])
 @school_scoped
 @role_minimum('admin')
 def toggle_school(school_id):
@@ -1139,7 +1139,7 @@ def admin_accounts():
         schools = [g.current_user.school]
     return render_template('dashboard/admin_accounts.html', users=users, schools=schools)
 
-@dashboard_bp.route('/admin/accounts/toggle/<int:user_id>', methods=['POST'])
+@dashboard_bp.route('/admin/accounts/toggle/<string:user_id>', methods=['POST'])
 @school_scoped
 @role_minimum('admin')
 def toggle_user(user_id):

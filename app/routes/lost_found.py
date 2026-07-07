@@ -136,7 +136,7 @@ def report():
 
     return render_template('lost_found/report.html', categories=categories)
 
-@lost_found_bp.route('/resolve/<int:item_id>', methods=['POST'])
+@lost_found_bp.route('/resolve/<string:item_id>', methods=['POST'])
 @school_scoped
 def resolve(item_id):
     item = LostFoundItem.query.get_or_404(item_id)

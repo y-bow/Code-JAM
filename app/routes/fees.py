@@ -70,7 +70,7 @@ def process_payment():
         
     return render_template('fees/payment_gateway.html', fee=fee)
 
-@fees_bp.route('/receipt/<int:payment_id>')
+@fees_bp.route('/receipt/<string:payment_id>')
 @school_scoped
 def print_receipt(payment_id):
     payment = FeePayment.query.get_or_404(payment_id)
