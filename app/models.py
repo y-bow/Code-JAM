@@ -26,17 +26,19 @@ VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean
 # =============================================================================
 
 class School(db.Model):
-    """Top-level tenant. All data is isolated per school."""
+    """Top-level tenant. All data is isolated per school.
+
+    Deprecated: Use Institution from app.core.tenant.models instead.
+    """
     __tablename__ = 'schools'
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     code = db.Column(db.String(20), unique=True, nullable=False)
-    domain = db.Column(db.String(100))  # e.g. 'scds.saiuniversity.edu.in'
+    domain = db.Column(db.String(100))
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    # Relationships
     sections = db.relationship('Section', backref='school', lazy='dynamic',
                                cascade='all, delete-orphan')
     users = db.relationship('User', backref='school', lazy='dynamic',
@@ -46,6 +48,33 @@ class School(db.Model):
 
     def __repr__(self):
         return f'<School {self.code}: {self.name}>'
+
+
+# Backward-compatible alias
+Institution = School
+
+
+class AcademicYear(db.Model):
+    """Defines academic year periods for an institution."""
+    __tablename__ = 'academic_years'
+
+    id = db.Column(db.Integer, primary_key=True)
+    institution_id = db.Column(db.Integer, db.ForeignKey('schools.id'), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    start_date = db.Column(db.Date, nullable=False)
+    end_date = db.Column(db.Date, nullable=False)
+    is_current = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    institution = db.relationship(School, backref=db.backref('academic_years', lazy='dynamic'))
+
+    __table_args__ = (
+        db.UniqueConstraint('institution_id', 'name', name='uq_academic_year_name'),
+        db.Index('ix_academic_year_institution', 'institution_id'),
+    )
+
+    def __repr__(self):
+        return f'<AcademicYear {self.name} @ Institution {self.institution_id}>'
 
 
 class Section(db.Model):
