@@ -30,6 +30,7 @@
         {% endwith %}
 
         <form method="POST" style="display: flex; flex-direction: column; gap: 1.25rem;">
+    {{ csrf_token() }}
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;">
                 <div class="form-group">
                     <label style="display: block; font-size: 0.85rem; font-weight: 600; color: var(--text-muted); margin-bottom: 0.4rem;">

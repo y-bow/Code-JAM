@@ -52,6 +52,7 @@
                             
                             <!-- Delete Form/Button -->
                             <form action="{{ url_for('clubs.delete_club', club_id=club.id) }}" method="POST" style="margin: 0;" onsubmit="return confirm('Are you sure you want to delete this club? This action cannot be undone.');">
+    {{ csrf_token() }}
                                 <button type="submit" class="icon-btn" style="background: rgba(239, 68, 68, 0.1); color: #ef4444; border: none; padding: 0.4rem; border-radius: var(--radius-sm); cursor: pointer;" title="Delete">
                                     <span class="material-symbols-rounded" style="font-size: 18px;">delete</span>
                                 </button>
@@ -78,6 +79,7 @@
         <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Create New Club</h3>
         
         <form action="{{ url_for('clubs.admin_clubs') }}" method="POST">
+    {{ csrf_token() }}
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Club Name *</label>
                 <input type="text" name="name" required class="form-control" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">
@@ -114,6 +116,7 @@
         <h3 style="margin-top: 0; margin-bottom: 1.5rem;">Edit Club</h3>
         
         <form id="editClubForm" method="POST">
+    {{ csrf_token() }}
             <div class="form-group" style="margin-bottom: 1rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-weight: 500;">Club Name *</label>
                 <input type="text" name="name" id="edit_name" required class="form-control" style="width: 100%; padding: 0.75rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-main);">

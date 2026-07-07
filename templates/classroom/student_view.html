@@ -43,6 +43,7 @@
                     Post Section Announcement (as Rep)
                 </h4>
                 <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST">
+    {{ csrf_token() }}
                     <input type="text" name="title" class="glass-input" placeholder="Subject" required style="margin-bottom: 0.75rem; font-size: 0.9rem;">
                     <textarea name="body" class="glass-input" placeholder="What's happening in your section?" required style="height: 80px; font-size: 0.9rem; margin-bottom: 0.75rem;"></textarea>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -176,6 +177,7 @@
                     style="margin: 0 0 0.75rem 0; font-size: 0.8rem; text-transform: uppercase; color: var(--text-muted);">
                     Rate your Instructor</h5>
                 <form action="{{ url_for('classroom.submit_rating', course_id=course.id) }}" method="POST">
+    {{ csrf_token() }}
                     <div class="rating-stars"
                         style="color: var(--warning-color); font-size: 1.25rem; display: flex; gap: 0.25rem; margin-bottom: 0.75rem; cursor: pointer;">
                         <span class="material-symbols-rounded star-input" data-value="1">star_outline</span>

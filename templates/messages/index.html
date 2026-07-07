@@ -523,6 +523,10 @@ function loadThread(userId) {
         });
 }
 
+function getCsrfToken() {
+    return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+}
+
 // Sending Logic
 function sendNewMessage(e) {
     e.preventDefault();
@@ -537,7 +541,8 @@ function sendNewMessage(e) {
     fetch('/messages/send', {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
         },
         body: formData
     })
@@ -573,7 +578,8 @@ function sendReply(e) {
     fetch('/messages/send', {
         method: 'POST',
         headers: {
-            'X-Requested-With': 'XMLHttpRequest'
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': getCsrfToken()
         },
         body: formData
     })

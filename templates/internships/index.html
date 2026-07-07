@@ -108,6 +108,7 @@
             </a>
             <form method="POST" action="{{ url_for('internships.delete', internship_id=i.id) }}"
                 onsubmit="return confirm('Remove this listing?');" style="margin: 0;">
+    {{ csrf_token() }}
                 <button type="submit"
                     style="background: none; border: none; cursor: pointer; display: flex; align-items: center;
                            padding: 0.5rem; color: var(--danger-color, #ef4444); border-radius: var(--radius-sm);

@@ -25,6 +25,18 @@ def create_app():
     # Initialize extensions
     db.init_app(app)
     bcrypt.init_app(app)
+    
+    from flask_wtf.csrf import CSRFProtect
+    csrf = CSRFProtect(app)
+    
+    from flask_migrate import Migrate
+    migrate = Migrate(app, db)
+
+    from app.models import get_setting as _get_setting
+
+    @app.context_processor
+    def inject_settings():
+        return dict(get_setting=_get_setting)
 
     @app.template_filter('fix_time')
     def fix_time_filter(s):

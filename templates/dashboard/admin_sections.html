@@ -60,6 +60,7 @@
         <h2 style="margin-top: 0; margin-bottom: 2rem; color: var(--text-main);">Add New Section</h2>
         
         <form action="{{ url_for('dashboard.add_section') }}" method="POST">
+    {{ csrf_token() }}
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School</label>
                 <select name="school_id" required style="width: 100%; padding: 0.8rem; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-main);">

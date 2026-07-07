@@ -27,6 +27,7 @@
     <h2 style="margin-top: 0; margin-bottom: 24px; color: var(--text-primary); border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">Report a Lost or Found Item</h2>
     
     <form method="POST" enctype="multipart/form-data" action="{{ url_for('lost_found.report') }}">
+    {{ csrf_token() }}
         
         <div style="display: flex; gap: 20px; margin-bottom: 20px;">
             <div class="form-group" style="flex: 1;">

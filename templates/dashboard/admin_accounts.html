@@ -57,6 +57,7 @@
                     </td>
                     <td style="padding: 1.25rem 0.5rem; text-align: right;">
                         <form action="{{ url_for('dashboard.toggle_user', user_id=user.id) }}" method="POST" style="display: inline;">
+    {{ csrf_token() }}
                             <button type="submit" class="icon-btn" title="{{ 'Deactivate' if user.is_active else 'Activate' }}" style="color: {{ '#ef4444' if user.is_active else '#10b981' }};">
                                 <span class="material-symbols-rounded">{{ 'person_off' if user.is_active else 'person' }}</span>
                             </button>

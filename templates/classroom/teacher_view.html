@@ -93,6 +93,7 @@
                                 
                                 {% if not is_pa and not is_dean and student.role != 'class_rep' %}
                                 <form action="{{ url_for('classroom.nominate_class_rep', course_id=course.id, student_id=student.id) }}" method="POST">
+    {{ csrf_token() }}
                                     <button type="submit" class="icon-btn" title="Nominate as Class Rep" style="color: var(--primary-color);">
                                         <span class="material-symbols-rounded">workspace_premium</span>
                                     </button>
@@ -130,6 +131,7 @@
             <h3>Create New</h3>
             <form action="{{ url_for('classroom.create_assignment', course_id=course.id) }}" method="POST"
                 style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+    {{ csrf_token() }}
                 <input type="text" name="title" class="glass-input" placeholder="Title" required>
                 <textarea name="description" class="glass-input" placeholder="Instructions..."
                     style="height: 100px;"></textarea>
@@ -145,6 +147,7 @@
 <div id="Attendance" class="tab-content">
     <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
         <form action="{{ url_for('classroom.mark_attendance', course_id=course.id) }}" method="POST">
+    {{ csrf_token() }}
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
                 <h3 style="margin: 0;">Mark Attendance for Today</h3>
                 <input type="date" name="date" class="glass-input" style="width: auto;" value="{{ today_date }}">
@@ -186,6 +189,7 @@
             <h3>Post Announcement</h3>
             <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST"
                 style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+    {{ csrf_token() }}
                 <input type="text" name="title" class="glass-input" placeholder="Subject" required>
                 <textarea name="body" class="glass-input" placeholder="Content..." required
                     style="height: 150px;"></textarea>
@@ -203,6 +207,7 @@
     <h3 style="margin-bottom: 1rem;">Set Video Class Link</h3>
     <form action="{{ url_for('dashboard.update_meet_link') }}" method="POST"
         style="display: flex; flex-direction: column; gap: 1.5rem;">
+    {{ csrf_token() }}
         <input type="hidden" name="course_id" value="{{ course.id }}">
         <input type="url" name="meet_link" class="glass-input" placeholder="Google Meet URL" required
             style="min-width: 400px;">
@@ -220,6 +225,7 @@
     <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Type the email of another teacher to assign them as an assistant for this course.</p>
     <form action="{{ url_for('classroom.assign_assistant_professor', course_id=course.id) }}" method="POST"
         style="display: flex; flex-direction: column; gap: 1.5rem;">
+    {{ csrf_token() }}
         <input type="email" name="email" class="glass-input" placeholder="teacher@university.edu" required
             style="min-width: 400px;">
         <div style="display: flex; gap: 1rem; justify-content: flex-end;">

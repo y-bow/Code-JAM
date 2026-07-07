@@ -91,6 +91,7 @@
             </div>
 
             <form method="POST" action="{{ url_for('dashboard.timetable') }}#find-slot-section" style="display: flex; gap: 0.75rem;">
+    {{ csrf_token() }}
                 <select name="compare_section_id" required style="padding: 0.6rem 1rem; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-glass); color: var(--text-main); font-family: var(--font-body); outline: none; transition: all var(--transition-fast);">
                     <option value="" disabled selected>Compare with Section...</option>
                     {% for sec in sections %}
