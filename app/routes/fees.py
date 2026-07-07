@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
-from app.models import db, Fee, FeePayment, User
+from app.models import db, Fee, FeePayment, User, get_setting
 from app.middleware import school_scoped, role_minimum
 import uuid
 
@@ -64,7 +64,8 @@ def process_payment():
         db.session.add(payment)
         db.session.commit()
         
-        flash(f"Payment of ₹{amount:,.0f} successful! Transaction ID: {txn_id}", "success")
+        _currency = get_setting('fees.currency_symbol', '₹')
+        flash(f"Payment of {_currency}{amount:,.0f} successful! Transaction ID: {txn_id}", "success")
         return redirect(url_for('fees.student_dashboard'))
         
     return render_template('fees/payment_gateway.html', fee=fee)
@@ -138,6 +139,7 @@ def record_offline_payment():
         )
         db.session.add(payment)
         db.session.commit()
-        flash(f"Offline payment of ₹{amount:,.0f} recorded for {fee.student.name}.", "success")
+        _currency = get_setting('fees.currency_symbol', '₹')
+        flash(f"Offline payment of {_currency}{amount:,.0f} recorded for {fee.student.name}.", "success")
         
     return redirect(url_for('fees.admin_dashboard'))

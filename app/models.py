@@ -631,6 +631,50 @@ class ProfessorAssistant(db.Model):
     assistant = db.relationship('User', foreign_keys=[assistant_teacher_id], 
                                 backref=db.backref('assistant_roles', lazy='dynamic'))
 
+# =============================================================================
+# SETTINGS MODEL
+# =============================================================================
+
+class SiteSetting(db.Model):
+    """Key-value configuration store for institution settings."""
+    __tablename__ = 'site_settings'
+
+    key = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, nullable=True)
+    value_type = db.Column(db.String(20), default='string')
+    category = db.Column(db.String(50), default='general')
+    description = db.Column(db.String(200))
+
+    def get_typed_value(self):
+        if self.value is None:
+            return None
+        if self.value_type == 'int':
+            return int(self.value)
+        if self.value_type == 'float':
+            return float(self.value)
+        if self.value_type == 'bool':
+            return self.value.lower() in ('true', '1', 'yes')
+        return self.value
+
+
+def get_setting(key, default=None):
+    """Retrieve a setting value by key."""
+    setting = SiteSetting.query.get(key)
+    if setting is None:
+        return default
+    return setting.get_typed_value()
+
+
+def set_setting(key, value, value_type='string', category='general', description=''):
+    """Create or update a setting."""
+    setting = SiteSetting.query.get(key)
+    if setting is None:
+        setting = SiteSetting(key=key, value_type=value_type, category=category, description=description)
+        db.session.add(setting)
+    setting.value = str(value) if value is not None else None
+    db.session.commit()
+
+
 class ClassRepNomination(db.Model):
     """Workflow for appointing a student as Class Rep (Section Rep)."""
     __tablename__ = 'class_rep_nominations'

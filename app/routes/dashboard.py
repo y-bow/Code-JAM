@@ -5,7 +5,7 @@ from ..models import (
     db, User, Student, Course, Enrollment, Assignment, Submission,
     Section, CustomTask, Announcement, TimetableEntry,
     TeacherTodo, TeacherRating, Attendance, Grade, School,
-    ProfessorAssistant, ClassRepNomination
+    ProfessorAssistant, ClassRepNomination, get_setting
 )
 import pandas as pd
 import plotly.express as px
@@ -1157,14 +1157,12 @@ def toggle_user(user_id):
 @school_scoped
 @role_minimum('dean')
 def early_warning():
-    # Identify students with low attendance (< 75%) or low CGPA (< 1.5)
+    cgpa_threshold = get_setting('early_warning.cgpa_threshold', 1.5)
     at_risk_students = []
     
-    # Check CGPA
-    # Note: Student model is already imported at the top of the file
     low_cgpa_students = Student.query.join(User).filter(
         User.school_id == g.school_id,
-        Student.cgpa < 1.5
+        Student.cgpa < cgpa_threshold
     ).all()
     
     for s in low_cgpa_students:
