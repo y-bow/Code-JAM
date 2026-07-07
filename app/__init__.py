@@ -62,7 +62,8 @@ def create_app():
         return response
 
     # Register blueprints
-    from .routes.auth import auth_bp
+    from .core.auth import init_module as init_auth
+    init_auth(app)
     from .routes.dashboard import dashboard_bp
     from .routes.classroom import classroom_bp
     from .routes.messages import messages_bp
@@ -71,7 +72,6 @@ def create_app():
     from .routes.lost_found import lost_found_bp
     from .routes.clubs import clubs_bp
 
-    app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
     app.register_blueprint(classroom_bp)
     app.register_blueprint(messages_bp)
