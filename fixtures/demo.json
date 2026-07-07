@@ -1,0 +1,15 @@
+{
+  "first_names": [
+    "John", "Jane", "Michael", "Sarah", "David", "Laura", "Robert", "Emily", "William", "Jessica",
+    "James", "Emma", "Joseph", "Olivia", "Charles", "Sophia", "Thomas", "Isabella", "Daniel", "Mia",
+    "Matthew", "Ava", "Anthony", "Charlotte", "Mark", "Amelia", "Paul", "Harper", "Steven", "Evelyn",
+    "Andrew", "Abigail", "Kenneth", "Elizabeth", "Joshua", "Sofia", "Kevin", "Avery", "Brian", "Ella"
+  ],
+  "last_names": [
+    "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis", "Rodriguez", "Martinez",
+    "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson", "Thomas", "Taylor", "Moore", "Jackson", "Martin",
+    "Lee", "Perez", "Thompson", "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson",
+    "Walker", "Young", "Allen", "King", "Wright", "Scott", "Torres", "Nguyen", "Hill", "Flores"
+  ],
+  "students_per_section": 30
+}
