@@ -147,8 +147,8 @@ def seed_all():
 
 if __name__ == "__main__":
     with app.app_context():
-        print("Dropping and recreating all tables for a fresh seed...")
-        db.metadata.drop_all(bind=db.engine)
-        db.create_all()
+        from flask_migrate import upgrade
+        print("Applying database migrations...")
+        upgrade()
         seed_all()
         print("Database initialized successfully.")
