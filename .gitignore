@@ -31,6 +31,7 @@ ENV/
 .DS_Store
 Thumbs.db
 desktop.ini
+agents.md
 
 # Logs
 *.log
