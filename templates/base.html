@@ -190,6 +190,10 @@
                     <span class="nav-icon material-symbols-rounded">settings</span>
                     <span class="nav-label">Settings</span>
                 </a>
+                <a href="{{ url_for('imports.index') }}" class="nav-item {{ 'active' if 'imports' in request.endpoint }}">
+                    <span class="nav-icon material-symbols-rounded">upload_file</span>
+                    <span class="nav-label">Import Data</span>
+                </a>
                 {% endif %}
 
                 <!-- CLUBS / INTERNSHIPS / LOST & FOUND (General) -->

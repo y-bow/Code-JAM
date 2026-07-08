@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Import Data{% endblock %}
+{% block page_title %}Import Data{% endblock %}
+{% block content %}
+<div class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 0 auto;">
+    <h2 style="margin-bottom: 1rem;">Bulk Import</h2>
+    <p style="margin-bottom: 1.5rem; color: var(--text-muted);">
+        Upload a CSV or Excel file to bulk-import data. The system will validate each row
+        and show a preview before committing.
+    </p>
+
+    <form method="POST" action="{{ url_for('imports.preview') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Import Type</label>
+            <select name="import_type" required
+                    style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+                <option value="">-- Select Type --</option>
+                {% for t in import_types %}
+                <option value="{{ t }}">{{ t|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="margin-bottom: 1.5rem;">
+            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Upload File</label>
+            <input type="file" name="file" accept=".csv,.tsv,.xls,.xlsx" required
+                   style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary);">
+            <small style="color: var(--text-muted);">Supported: CSV, TSV, XLS, XLSX</small>
+        </div>
+
+        <button type="submit" class="glass-button">
+            <span class="material-symbols-rounded">preview</span> Preview Import
+        </button>
+    </form>
+</div>
+
+{% if batches %}
+<div class="glass-panel" style="padding: 2rem; max-width: 800px; margin: 1.5rem auto 0;">
+    <h3 style="margin-bottom: 1rem;">Recent Imports</h3>
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Date</th>
+                    <th>Total</th>
+                    <th>Success</th>
+                    <th>Errors</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for b in batches %}
+                <tr>
+                    <td>{{ b.import_type|capitalize }}</td>
+                    <td>{{ b.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ b.total_rows }}</td>
+                    <td style="color: var(--success-color);">{{ b.success_count }}</td>
+                    <td style="color: var(--danger-color);">{{ b.error_count }}</td>
+                    <td>{{ b.status|capitalize }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}

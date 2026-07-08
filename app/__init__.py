@@ -75,6 +75,7 @@ def create_app():
     from .routes.internships import internships_bp
     from .routes.lost_found import lost_found_bp
     from .routes.clubs import clubs_bp
+    from .routes.imports import import_bp
 
     app.register_blueprint(academics_bp)
     app.register_blueprint(timetable_bp)
@@ -87,6 +88,7 @@ def create_app():
     app.register_blueprint(internships_bp)
     app.register_blueprint(lost_found_bp)
     app.register_blueprint(clubs_bp)
+    app.register_blueprint(import_bp)
 
     @app.route('/')
     def index():

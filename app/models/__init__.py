@@ -12,3 +12,4 @@ from .lost_found import LostFoundItem
 from .clubs import Club, ExternalEvent, ProfessorAssistant, ClassRepNomination
 from .settings import SiteSetting, get_setting, set_setting
 from .tasks import TeacherTodo, TeacherRating, CustomTask
+from .imports import ImportBatch

@@ -22,6 +22,10 @@ from .academics_service import (
     get_teacher_tasks,
     update_meet_link,
 )
+from .import_service import (
+    parse_upload, detect_import_type, validate_import, execute_import,
+    get_recent_batches, IMPORT_TYPES, COLUMN_MAPS,
+)
 from .analytics_service import (
     get_school_stats,
     get_at_risk_students,
