@@ -31,7 +31,7 @@
         {% endwith %}
 
         <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
-    {{ csrf_token() }}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="input-group">
                 <input type="email" id="email" name="email" required placeholder=" ">
                 <label for="email">College Email</label>

@@ -1,5 +1,5 @@
 import os
-from flask import Flask, redirect, url_for, session
+from flask import Flask, g, redirect, url_for, session
 from dotenv import load_dotenv
 from .models import db, bcrypt
 
@@ -90,6 +90,11 @@ def create_app():
     app.config['OPENAPI_SWAGGER_UI_URL'] = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/'
 
     from .services.setup_service import is_setup_complete
+
+    @app.before_request
+    def clear_stale_csrf():
+        if 'csrf_token' in g:
+            delattr(g, 'csrf_token')
 
     @app.before_request
     def check_setup():
