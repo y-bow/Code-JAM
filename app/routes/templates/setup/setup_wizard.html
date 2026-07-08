@@ -232,7 +232,7 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('setup.wizard', step=step) }}">
+        <form method="POST" action="{{ url_for('setup.wizard', step=step) }}" {% if step == 'import' %}enctype="multipart/form-data"{% endif %}>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             {% if step == 'admin' %}
@@ -352,7 +352,44 @@
             <button type="button" onclick="addSection()" style="background:none;border:1px dashed #6C63FF;color:#6C63FF;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Section</button>
 
             <input type="hidden" name="action" value="next">
-            <button type="submit" class="btn-primary">Next: Complete Setup</button>
+            <button type="submit" class="btn-primary">Next: Data Import</button>
+
+            {% elif step == 'import' %}
+            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem; font-size: 1.25rem;">Import Data</h2>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 1.5rem;">
+                Upload CSV files to populate your campus system. Supported types:
+                students, faculty, courses, timetable, enrollments, departments, sections, clubs, attendance, grades.
+            </p>
+
+            {% if import_results %}
+            <div style="margin-bottom: 1.5rem;">
+                {% for r in import_results %}
+                <div style="padding:0.75rem;border-radius:8px;margin-bottom:0.5rem;font-size:0.9rem;
+                    {% if r.status == 'success' %}background:#f0fff4;border:1px solid #28a745;color:#155724;
+                    {% elif r.status == 'warning' %}background:#fffbe6;border:1px solid #e5a500;color:#664d00;
+                    {% else %}background:#fff0f0;border:1px solid #ff6b6b;color:#d63031;{% endif %}">
+                    <strong>{{ r.file }}</strong>: {{ r.message }}
+                    {% if r.details %}
+                    <ul style="margin:0.3rem 0 0 1.2rem;font-size:0.85rem;">
+                        {% for d in r.details %}<li>{{ d }}</li>{% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <div class="form-group" style="border:2px dashed #ccc;border-radius:12px;padding:2rem;text-align:center;">
+                <span class="material-symbols-rounded" style="font-size:2.5rem;color:#999;margin-bottom:0.5rem;">upload_file</span>
+                <p style="font-size:0.9rem;color:#666;margin-bottom:0.75rem;">Select one or more CSV files</p>
+                <input type="file" name="import_files" accept=".csv,.tsv,.xls,.xlsx" multiple style="margin:0 auto;">
+            </div>
+
+            <input type="hidden" name="action" value="next">
+            <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+                <button type="submit" class="btn-primary" style="flex:1;">Upload & Import</button>
+                <a href="{{ url_for('setup.wizard', step='complete') }}" style="flex:0 0 auto;padding:0.85rem 1.5rem;border:1.5px solid #ddd;border-radius:10px;text-decoration:none;color:#666;text-align:center;font-weight:600;font-size:0.9rem;">Skip</a>
+            </div>
 
             {% elif step == 'complete' %}
             <div class="complete-icon">
@@ -376,6 +413,10 @@
                 <div class="summary-item">
                     <span class="summary-label">Academic Config</span>
                     <span class="summary-value">Configured</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Data Import</span>
+                    <span class="summary-value">Imported</span>
                 </div>
             </div>
 

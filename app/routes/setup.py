@@ -5,6 +5,7 @@ from ..services.setup_service import (
     create_admin_account, create_institution, create_academic_year,
     create_department, create_section, save_theme_settings, mark_setup_complete,
 )
+from ..services import import_service
 from ..models import db, School, Department
 
 setup_bp = Blueprint('setup', __name__, url_prefix='/setup',
@@ -17,8 +18,8 @@ def check_not_configured():
         return redirect(url_for('index'))
 
 
-STEPS = ['admin', 'institution', 'theme', 'academic', 'complete']
-STEP_LABELS = ['Admin Account', 'Institution', 'Theme', 'Academic Config', 'Complete']
+STEPS = ['admin', 'institution', 'theme', 'academic', 'import', 'complete']
+STEP_LABELS = ['Admin Account', 'Institution', 'Theme', 'Academic Config', 'Data Import', 'Complete']
 
 
 @setup_bp.route('/', methods=['GET', 'POST'])
@@ -130,7 +131,51 @@ def wizard():
                     if dept:
                         create_section(sn.strip(), sc.strip(), dept.id, sy or str(datetime.utcnow().year), school.id)
 
-            return redirect(url_for('setup.wizard', step='complete'))
+            return redirect(url_for('setup.wizard', step='import'))
+
+        elif step == 'import':
+            school = School.query.first()
+            if not school:
+                return redirect(url_for('setup.wizard', step='institution'))
+
+            files = request.files.getlist('import_files')
+            results = []
+            all_successful = True
+
+            for f in files:
+                if not f or not f.filename:
+                    continue
+                parsed, err = import_service.parse_upload(f)
+                if err:
+                    results.append({'file': f.filename, 'status': 'error', 'message': err})
+                    all_successful = False
+                    continue
+                import_type = import_service.detect_import_type(parsed['columns'])
+                if not import_type:
+                    results.append({'file': f.filename, 'status': 'warning', 'message': 'Could not detect import type from columns. Skipped.'})
+                    continue
+                validated, err = import_service.validate_import(parsed, import_type, school.id)
+                if err:
+                    results.append({'file': f.filename, 'status': 'error', 'message': err})
+                    all_successful = False
+                    continue
+                invalid = [r for r in validated if not r['valid']]
+                if invalid:
+                    errors_list = [f'Row {r["index"]+1}: {"; ".join(r["errors"])}' for r in invalid]
+                    results.append({'file': f.filename, 'status': 'error', 'message': f'{len(invalid)} row(s) invalid', 'details': errors_list})
+                    all_successful = False
+                    continue
+                batch, err = import_service.execute_import(validated, import_type, school.id, session.get('user_id') or 0)
+                if err:
+                    results.append({'file': f.filename, 'status': 'error', 'message': err})
+                    all_successful = False
+                else:
+                    results.append({'file': f.filename, 'status': 'success', 'message': f'Imported {batch.success_count} {import_type}'})
+
+            return render_template('setup_wizard.html', step=step, steps=STEPS,
+                                   step_labels=STEP_LABELS, errors=None,
+                                   import_results=results,
+                                   form_data=request.form)
 
         elif step == 'complete':
             mark_setup_complete()
@@ -145,9 +190,11 @@ def wizard():
         return redirect(url_for('setup.wizard', step='institution'))
     if step == 'academic' and not has_any_schools():
         return redirect(url_for('setup.wizard', step='institution'))
+    if step == 'import' and not has_any_schools():
+        return redirect(url_for('setup.wizard', step='institution'))
     if step == 'complete' and not has_any_schools():
         return redirect(url_for('setup.wizard', step='institution'))
 
     return render_template('setup_wizard.html', step=step, steps=STEPS,
                            step_labels=STEP_LABELS, errors=None,
-                           form_data=initial_data)
+                           import_results=None, form_data=initial_data)
