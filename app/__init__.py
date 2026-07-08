@@ -48,6 +48,19 @@ def create_app():
     def fix_time_filter(s):
         return s.replace(" ", "") if s else s
 
+    @app.template_filter('hex_to_rgb')
+    def hex_to_rgb_filter(hex_color):
+        hex_color = hex_color.lstrip('#')
+        if len(hex_color) != 6:
+            return '37, 99, 235'
+        try:
+            r = int(hex_color[0:2], 16)
+            g = int(hex_color[2:4], 16)
+            b = int(hex_color[4:6], 16)
+            return f'{r}, {g}, {b}'
+        except ValueError:
+            return '37, 99, 235'
+
     # Session Security
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,

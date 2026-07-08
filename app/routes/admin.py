@@ -155,10 +155,26 @@ def toggle_user(user_id):
     return redirect(url_for('admin.admin_accounts'))
 
 
-@admin_bp.route('/settings')
+@admin_bp.route('/settings', methods=['GET', 'POST'])
 @school_scoped
 @role_minimum('admin')
 def admin_settings():
+    from ..models import set_setting
+
+    if request.method == 'POST':
+        theme_mode = request.form.get('theme_mode', 'light')
+        primary_color = request.form.get('primary_color', '#2563eb')
+
+        import re
+        if not re.match(r'^#[0-9A-Fa-f]{6}$', primary_color):
+            flash('Invalid color format. Use a hex color like #2563eb.', 'danger')
+            return redirect(url_for('admin.admin_settings'))
+
+        set_setting('theme.active', theme_mode)
+        set_setting('theme.primary_color', primary_color)
+        flash('Theme settings saved!', 'success')
+        return redirect(url_for('admin.admin_settings'))
+
     return render_template('admin_settings.html')
 
 

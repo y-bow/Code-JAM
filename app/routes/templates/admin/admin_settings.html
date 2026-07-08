@@ -1,18 +1,66 @@
 {% extends "base.html" %}
-
 {% block title %}Hive | Settings{% endblock %}
-{% block page_title %}System Settings{% endblock %}
+{% block page_title %}Theme Settings{% endblock %}
 
 {% block content %}
-<div class="glass-panel" style="padding: 3rem; text-align: center; max-width: 800px; margin: 0 auto;">
-    <span class="material-symbols-rounded" style="font-size: 64px; color: var(--text-muted); margin-bottom: 2rem;">construction</span>
-    <h2 style="color: var(--text-main); margin-bottom: 1rem;">Coming Soon</h2>
-    <p style="color: var(--text-muted); line-height: 1.6; margin-bottom: 2rem;">
-        We are building a robust configurations panel to help you manage school-specific themes, grading scales, and API integrations. Stay tuned for updates!
+<div class="glass-panel" style="padding: 2rem; max-width: 700px; margin: 0 auto;">
+    <h2 style="margin-bottom: 1.5rem;">Theme Customization</h2>
+    <p style="color: var(--text-muted); margin-bottom: 2rem;">
+        Customize how Hive looks for all users. These settings override individual preferences.
     </p>
-    
-    <div style="display: flex; justify-content: center; gap: 1rem;">
-        <a href="{{ url_for('admin.admin_dashboard' if g.current_user.role == 'admin' else 'analytics.school_analytics') }}" class="glass-button" style="text-decoration: none; padding: 0.75rem 1.5rem;">Back to Dashboard</a>
+
+    <form method="POST" action="{{ url_for('admin.admin_settings') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">Default Theme Mode</label>
+            <select name="theme_mode" class="form-input">
+                <option value="light" {{ 'selected' if get_setting('theme.active', 'light') == 'light' }}>Light</option>
+                <option value="dark" {{ 'selected' if get_setting('theme.active', 'light') == 'dark' }}>Dark</option>
+            </select>
+            <small style="color: var(--text-muted); margin-top: 0.25rem;">
+                Users can still toggle themes individually; this sets the default.
+            </small>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.5rem;">
+            <label class="form-label">Primary Color</label>
+            <div style="display: flex; gap: 1rem; align-items: center;">
+                <input type="color" name="primary_color" value="{{ get_setting('theme.primary_color', '#2563eb') }}"
+                       style="width: 48px; height: 48px; border: none; border-radius: var(--radius-sm); cursor: pointer; background: none; padding: 0;">
+                <input type="text" name="primary_color_text" value="{{ get_setting('theme.primary_color', '#2563eb') }}"
+                       class="form-input" style="flex: 1;"
+                       placeholder="#2563eb" pattern="^#[0-9A-Fa-f]{6}$"
+                       oninput="document.querySelector('[name=primary_color]').value = this.value">
+            </div>
+            <small style="color: var(--text-muted); margin-top: 0.25rem;">
+                Enter a hex color code (e.g., #2563eb for blue).
+            </small>
+        </div>
+
+        <button type="submit" class="primary-btn">
+            <span class="material-symbols-rounded">save</span> Save Settings
+        </button>
+    </form>
+
+    <hr style="border: none; border-top: 1px solid var(--border-color); margin: 2rem 0;">
+
+    <h3 style="margin-bottom: 1rem;">Preview</h3>
+    <div style="display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <button class="btn-primary" style="pointer-events: none;">Primary Button</button>
+        <button class="btn-secondary" style="pointer-events: none;">Secondary Button</button>
+        <span class="avatar" style="width: 40px; height: 40px; display: inline-flex;">A</span>
     </div>
 </div>
+
+<script>
+    document.querySelector('[name=primary_color]').addEventListener('input', function() {
+        document.querySelector('[name=primary_color_text]').value = this.value;
+    });
+    document.querySelector('[name=primary_color_text]').addEventListener('input', function() {
+        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+            document.querySelector('[name=primary_color]').value = this.value;
+        }
+    });
+</script>
 {% endblock %}

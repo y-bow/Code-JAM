@@ -3,12 +3,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
     const themeIcon = themeToggleBtn.querySelector('.material-symbols-rounded');
 
-    // Check for saved theme
+    // Check for saved theme; fall back to server-set class (from theme setting)
     const savedTheme = localStorage.getItem('hive-theme');
     if (savedTheme) {
         body.className = savedTheme;
-        updateThemeIcon(savedTheme);
     }
+    updateThemeIcon(body.className);
 
     themeToggleBtn.addEventListener('click', () => {
         if (body.classList.contains('light-theme')) {

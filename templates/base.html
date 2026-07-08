@@ -25,14 +25,26 @@
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=2">
+    <style>
+        :root {
+            {% set pc = get_setting('theme.primary_color', '#2563eb') %}
+            --primary-color: {{ pc }};
+            --primary-rgb: {{ pc | hex_to_rgb }};
+            --primary-light: color-mix(in srgb, {{ pc }}, white 30%);
+            --primary-dark: color-mix(in srgb, {{ pc }}, black 20%);
+        }
+    </style>
 </head>
 
-<body class="light-theme">
+<body class="{{ get_setting('theme.active', 'light') | default('light', true) }}-theme">
     <script>
         (function () {
+            const serverTheme = '{{ get_setting("theme.active", "light") | default("light", true) }}';
             const savedTheme = localStorage.getItem('hive-theme');
             if (savedTheme) {
                 document.body.className = savedTheme;
+            } else {
+                document.body.className = serverTheme + '-theme';
             }
         })();
     </script>
