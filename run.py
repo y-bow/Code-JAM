@@ -5,6 +5,8 @@ from app import create_app, db
 from app.models import User
 
 app = create_app()
+print(f"[run.py] SQLALCHEMY_DATABASE_URI = {app.config.get('SQLALCHEMY_DATABASE_URI')}")
+print(f"[run.py] Instance path = {app.instance_path}")
 
 def database_needs_seeding():
     try:
@@ -23,6 +25,11 @@ def is_development():
     return os.environ.get('FLASK_ENV', 'development') == 'development'
 
 with app.app_context():
+    from app import db
+    for bind_key, engine in db.engines.items():
+        print(f"[run.py] Engine bind={bind_key!r} url={engine.url}")
+    if not db.engines:
+        print(f"[run.py] No engines registered yet. db.engine = {db.engine.url}")
     upgrade()
 
     force_reseed = '--reseed' in sys.argv
