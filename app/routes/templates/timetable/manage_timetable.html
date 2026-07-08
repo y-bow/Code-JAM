@@ -1,143 +1,124 @@
 {% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, btn_submit, card, table, alert, empty_state, form_group %}
 
 {% block title %}Hive | Manage Timetable{% endblock %}
 {% block page_title %}Timetable Administration{% endblock %}
 
 {% block content %}
-<div class="dashboard-grid" style="grid-template-columns: 1fr 350px;">
-    <!-- Main: Entry List -->
-    <div class="main-column">
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3 style="margin-bottom: 1.5rem;">Existing Schedule</h3>
-
-            <div class="table-container" style="overflow-x: auto;">
-                <table class="glass-table" style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr>
-                            <th>Section</th>
-                            <th>Day</th>
-                            <th>Time</th>
-                            <th>Subject</th>
-                            <th>Room</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for entry in entries %}
-                        <tr>
-                            <td>{{ entry.section.code }}</td>
-                            <td>{{ ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][entry.day] }}</td>
-                            <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
-                            <td>
-                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                    <div
-                                        style="width: 10px; height: 10px; border-radius: 50%; background: {{ entry.color }};">
-                                    </div>
-                                    {{ entry.title }}
-                                </div>
-                            </td>
-                            <td>{{ entry.room }}</td>
-                            <td>
-                                <form action="{{ url_for('timetable.manage_timetable') }}" method="POST"
-                                    onsubmit="return confirm('Delete this entry?')">
-    {{ csrf_token() }}
-                                    <input type="hidden" name="action" value="delete">
-                                    <input type="hidden" name="entry_id" value="{{ entry.id }}">
-                                    <button type="submit" class="icon-btn" style="color: var(--danger-color);">
-                                        <span class="material-symbols-rounded">delete</span>
-                                    </button>
-                                </form>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                        {% if not entries %}
-                        <tr>
-                            <td colspan="6" style="text-align: center; color: var(--text-muted); padding: 2rem;">No
-                                entries found.</td>
-                        </tr>
-                        {% endif %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+<div class="grid-sidebar">
+  <!-- Main: Entry List -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Existing Schedule</h3>
     </div>
-
-    <!-- Side: Add Entry Form -->
-    <div class="side-column">
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3 style="margin-bottom: 1.5rem;">Add Entry</h3>
-            <form action="{{ url_for('timetable.manage_timetable') }}" method="POST"
-                style="display: flex; flex-direction: column; gap: 1rem;">
-    {{ csrf_token() }}
-                <input type="hidden" name="action" value="add">
-
-                <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted);">Section</label>
-                    <select name="section_id" class="glass-input" required>
-                        {% for s in sections %}
-                        <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
-                        {% endfor %}
-                    </select>
+    <div class="card-body" style="padding-top:0;">
+      <div class="table-wrap">
+        <table class="h-table">
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>Day</th>
+              <th>Time</th>
+              <th>Subject</th>
+              <th>Room</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+            <tr>
+              <td>{{ entry.section.code }}</td>
+              <td>{{ ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][entry.day] }}</td>
+              <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:var(--space-1);">
+                  <div style="width:10px;height:10px;border-radius:50%;background:{{ entry.color }};flex-shrink:0;"></div>
+                  {{ entry.title }}
                 </div>
-
-                <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted);">Day</label>
-                    <select name="day" class="glass-input" required>
-                        <option value="0">Monday</option>
-                        <option value="1">Tuesday</option>
-                        <option value="2">Wednesday</option>
-                        <option value="3">Thursday</option>
-                        <option value="4">Friday</option>
-                    </select>
-                </div>
-
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
-                    <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted);">Start Time</label>
-                        <input type="text" name="start_time" class="glass-input" placeholder="09:00 AM" required>
-                    </div>
-                    <div>
-                        <label style="font-size: 0.8rem; color: var(--text-muted);">End Time</label>
-                        <input type="text" name="end_time" class="glass-input" placeholder="10:30 AM" required>
-                    </div>
-                </div>
-
-                <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted);">Course Title</label>
-                    <input type="text" name="title" class="glass-input" placeholder="e.g. Data Structures" required>
-                </div>
-
-                <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted);">Room</label>
-                    <input type="text" name="room" class="glass-input" placeholder="e.g. LAB 101" required>
-                </div>
-
-                <div>
-                    <label style="font-size: 0.8rem; color: var(--text-muted);">Accent Color</label>
-                    <input type="color" name="color" class="glass-input" value="#6366f1"
-                        style="height: 40px; padding: 2px;">
-                </div>
-
-                <button type="submit" class="primary-btn" style="margin-top: 1rem;">Create Entry</button>
-            </form>
-        </div>
+              </td>
+              <td>{{ entry.room }}</td>
+              <td>
+                <form action="{{ url_for('timetable.manage_timetable') }}" method="POST" onsubmit="return confirm('Delete this entry?')">
+                  {{ csrf_token() }}
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                  <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">
+                    <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not entries %}
+            <tr>
+              <td colspan="6" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6);">No entries found.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
     </div>
+  </div>
+
+  <!-- Side: Add Entry Form -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Add Entry</h3>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <form action="{{ url_for('timetable.manage_timetable') }}" method="POST">
+        {{ csrf_token() }}
+        <input type="hidden" name="action" value="add">
+
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select name="section_id" class="form-select" required>
+            {% for s in sections %}
+            <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Day</label>
+          <select name="day" class="form-select" required>
+            <option value="0">Monday</option>
+            <option value="1">Tuesday</option>
+            <option value="2">Wednesday</option>
+            <option value="3">Thursday</option>
+            <option value="4">Friday</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);">
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input type="text" name="start_time" class="form-input" placeholder="09:00 AM" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Time</label>
+            <input type="text" name="end_time" class="form-input" placeholder="10:30 AM" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Course Title</label>
+          <input type="text" name="title" class="form-input" placeholder="e.g. Data Structures" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Room</label>
+          <input type="text" name="room" class="form-input" placeholder="e.g. LAB 101" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Accent Color</label>
+          <input type="color" name="color" class="form-input" value="#6366f1" style="height:36px;padding:2px;">
+        </div>
+
+        {{ btn_submit('Create Entry', 'primary', attrs='style="width:100%;margin-top:var(--space-2);"') }}
+      </form>
+    </div>
+  </div>
 </div>
-
-<style>
-    .glass-table th {
-        text-align: left;
-        padding: 1rem;
-        color: var(--text-muted);
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        border-bottom: 1px solid var(--border-color);
-    }
-
-    .glass-table td {
-        padding: 1rem;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-        font-size: 0.9rem;
-    }
-</style>
 {% endblock %}

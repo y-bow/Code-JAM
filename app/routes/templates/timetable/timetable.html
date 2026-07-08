@@ -1,179 +1,144 @@
 {% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, btn_submit, card, table, alert, empty_state %}
 
 {% block title %}Hive | Timetable{% endblock %}
 {% block page_title %}My Timetable{% endblock %}
 
-
 {% block content %}
-<div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-        <h3 style="display: flex; align-items: center; gap: 0.5rem; margin: 0;">
-            <span class="material-symbols-rounded" style="color: var(--primary-color);">calendar_today</span>
-            Weekly View
-        </h3>
-        
-        <div style="display: flex; align-items: center; gap: 1.5rem;">
-            <!-- Hide Cancelled Toggle -->
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; color: var(--text-muted); padding: 0.4rem 0.8rem; background: var(--bg-hover); border-radius: 20px;">
-                <input type="checkbox" id="hideCancelled" onchange="toggleCancelled()" style="cursor: pointer;">
-                Hide cancelled classes
-            </label>
-
-            <div style="display: flex; gap: 1rem;">
-                <button class="icon-btn theme-toggle" style="background: var(--bg-main); border: 1px solid var(--border-color);"><span class="material-symbols-rounded">chevron_left</span></button>
-                <span style="display: flex; align-items: center; font-weight: 500;">March 2026</span>
-                <button class="icon-btn theme-toggle" style="background: var(--bg-main); border: 1px solid var(--border-color);"><span class="material-symbols-rounded">chevron_right</span></button>
-            </div>
-        </div>
+<div class="card">
+  <div class="card-header">
+    <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">calendar_today</span> Weekly View</h3>
+    <div style="display:flex;align-items:center;gap:var(--space-3);">
+      <label style="display:flex;align-items:center;gap:var(--space-1);cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary);">
+        <input type="checkbox" id="hideCancelled" onchange="toggleCancelled()" style="cursor:pointer;">
+        Hide cancelled classes
+      </label>
+      <div style="display:flex;align-items:center;gap:var(--space-2);">
+        <button class="btn btn-ghost btn-sm"><span class="material-symbols-rounded" style="font-size:16px">chevron_left</span></button>
+        <span style="font-weight:500;font-size:var(--font-size-sm);">March 2026</span>
+        <button class="btn btn-ghost btn-sm"><span class="material-symbols-rounded" style="font-size:16px">chevron_right</span></button>
+      </div>
     </div>
+  </div>
+  <div class="card-body" style="padding-top:0;">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-2);">
+      {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+      {% for i in range(5) %}
+      <div style="font-weight:600;padding:var(--space-2) var(--space-2);border-bottom:2px solid {% if i == current_day %}var(--primary){% else %}var(--border-primary){% endif %};{% if i == current_day %}color:var(--primary);background:var(--primary-bg);border-radius:var(--radius-md) var(--radius-md) 0 0;{% endif %}text-align:center;font-size:var(--font-size-sm);">
+        {{ days[i] }}
+      </div>
+      {% endfor %}
 
-    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; text-align: center;">
-        <!-- Column Headers -->
-        {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
-        {% for i in range(5) %}
-        <div style="font-weight: 600; padding: 1rem; border-bottom: 2px solid {% if i == current_day %}var(--primary-color){% else %}var(--border-color){% endif %}; {% if i == current_day %}color: var(--primary-color); background-color: rgba(var(--primary-rgb), 0.05); border-radius: var(--radius-md) var(--radius-md) 0 0;{% endif %}">
-            {{ days[i] }}
-        </div>
-        {% endfor %}
-
-        <!-- Day columns -->
-        {% for day_idx in range(5) %}
-        <div style="display: flex; flex-direction: column; gap: 1rem; {% if day_idx == current_day %}background-color: rgba(var(--primary-rgb), 0.05); border-radius: 0 0 var(--radius-md) var(--radius-md); padding-bottom: 1rem;{% endif %}">
-            {% if timetable_data and timetable_data.get(day_idx) %}
-            {% for entry in timetable_data[day_idx] %}
-            <div class="timetable-card {% if entry.status == 'cancelled' %}cancelled-row{% endif %}"
-                style="background: var(--bg-main); border: 1px solid var(--border-color); padding: 1rem; border-radius: var(--radius-md); text-align: left; position: relative; transition: all 0.3s;
-                {% if entry.status == 'cancelled' %}border-color: #ef444455;{% endif %}">
-                
-                <div style="position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background-color: {{ entry.color if entry.status == 'active' else '#ef4444' }}; border-top-left-radius: var(--radius-md); border-bottom-left-radius: var(--radius-md);"></div>
-                
-                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.5rem; padding-left: 0.5rem;">
-                    <div style="font-size: 0.7rem; color: var(--text-muted); font-weight: 700;">
-                        {{ entry.startTime | fix_time }} - {{ entry.endTime | fix_time }}
-                    </div>
-                    {% if entry.status == 'cancelled' %}
-                    <span class="cancelled-badge">CANCELLED</span>
-                    {% endif %}
-                </div>
-
-                <div style="font-weight: 600; font-size: 0.9rem; color: {{ entry.color if entry.status == 'active' else 'var(--text-muted)' }}; padding-left: 0.5rem; {% if entry.status == 'cancelled' %}text-decoration: line-through;{% endif %}">
-                    {{ entry.title }}
-                </div>
-                
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.4rem; padding-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
-                    <span class="material-symbols-rounded" style="font-size: 0.9rem;">person</span>
-                    {{ entry.teacher }}
-                </div>
-
-                <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.2rem; padding-left: 0.5rem; display: flex; align-items: center; gap: 0.3rem;">
-                    <span class="material-symbols-rounded" style="font-size: 0.9rem;">location_on</span>
-                    {{ entry.room }}
-                </div>
-            </div>
-            {% endfor %}
-            {% else %}
-            <div style="text-align: center; color: var(--text-muted); font-size: 0.8rem; padding: 2rem 0; border: 1px dashed var(--border-color); border-radius: var(--radius-md);">
-                No classes
-            </div>
+      {% for day_idx in range(5) %}
+      <div style="display:flex;flex-direction:column;gap:var(--space-2);{% if day_idx == current_day %}background:var(--primary-bg);border-radius:0 0 var(--radius-md) var(--radius-md);padding-bottom:var(--space-2);{% endif %}">
+        {% if timetable_data and timetable_data.get(day_idx) %}
+        {% for entry in timetable_data[day_idx] %}
+        <div class="{% if entry.status == 'cancelled' %}cancelled-row{% endif %}" style="border:1px solid {% if entry.status == 'cancelled' %}var(--danger){% else %}var(--border-primary){% endif %};padding:var(--space-2);border-radius:var(--radius-md);border-left:4px solid {{ entry.color if entry.status == 'active' else 'var(--danger)' }};{% if entry.status == 'cancelled' %}opacity:0.5;{% endif %}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-1);">
+            <span style="font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600;">{{ entry.startTime | fix_time }} - {{ entry.endTime | fix_time }}</span>
+            {% if entry.status == 'cancelled' %}
+            <span class="cancelled-badge">CANCELLED</span>
             {% endif %}
+          </div>
+          <div style="font-weight:600;font-size:var(--font-size-sm);color:{{ entry.color if entry.status == 'active' else 'var(--text-tertiary)' }};{% if entry.status == 'cancelled' %}text-decoration:line-through;{% endif %}">
+            {{ entry.title }}
+          </div>
+          <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);margin-top:var(--space-1);display:flex;align-items:center;gap:var(--space-1);">
+            <span class="material-symbols-rounded" style="font-size:14px;">person</span>
+            {{ entry.teacher }}
+          </div>
+          <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);display:flex;align-items:center;gap:var(--space-1);">
+            <span class="material-symbols-rounded" style="font-size:14px;">location_on</span>
+            {{ entry.room }}
+          </div>
         </div>
         {% endfor %}
+        {% else %}
+        <div style="text-align:center;color:var(--text-tertiary);font-size:var(--font-size-xs);padding:var(--space-4) 0;border:1px dashed var(--border-primary);border-radius:var(--radius-md);">
+          No classes
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
     </div>
 
     <!-- Find Common Free Slot -->
-    <div id="find-slot-section" style="margin-top: 6rem; border-top: 1px solid var(--border-color); padding-top: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <div>
-                <h3 style="display: flex; align-items: center; gap: 0.75rem; margin: 0;">
-                    <span class="material-symbols-rounded" style="color: var(--primary-color);">group_work</span>
-                    Common Free Slot Finder
-                </h3>
+    <div id="find-slot-section" style="margin-top:var(--space-6);border-top:1px solid var(--border-primary);padding-top:var(--space-4);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-4);">
+        <h3 style="display:flex;align-items:center;gap:var(--space-2);margin:0;font-size:var(--font-size-md);">
+          <span class="material-symbols-rounded" style="color:var(--primary);">group_work</span>
+          Common Free Slot Finder
+        </h3>
+        <form method="POST" action="{{ url_for('timetable.timetable') }}#find-slot-section" style="display:flex;gap:var(--space-2);align-items:center;">
+          {{ csrf_token() }}
+          <select name="compare_section_id" required class="form-select" style="min-width:200px;">
+            <option value="" disabled selected>Compare with Section...</option>
+            {% for sec in sections %}
+            {% if not my_section or sec.id != my_section.id %}
+            <option value="{{ sec.id }}" {% if selected_section and selected_section.id == sec.id %}selected{% endif %}>
+              {{ sec.name }} ({{ sec.code }})
+            </option>
+            {% endif %}
+            {% endfor %}
+          </select>
+          {{ btn_submit('Find Slots', 'primary', icon='search') }}
+        </form>
+      </div>
+
+      {% if free_slots_by_day is not none %}
+      <div class="card" style="background:var(--bg-secondary);">
+        <p style="font-weight:600;margin-bottom:var(--space-4);font-size:var(--font-size-sm);">Results for <span style="color:var(--primary);">{{ selected_section.name }}</span>:</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:var(--space-4);">
+          {% for day_data in free_slots_by_day %}
+          <div>
+            <div style="font-weight:700;font-size:var(--font-size-sm);margin-bottom:var(--space-2);color:var(--text-primary);border-bottom:1px solid var(--border-primary);padding-bottom:var(--space-1);">
+              {{ day_data.day_name }}
             </div>
-
-            <form method="POST" action="{{ url_for('timetable.timetable') }}#find-slot-section" style="display: flex; gap: 0.75rem;">
-    {{ csrf_token() }}
-                <select name="compare_section_id" required style="padding: 0.6rem 1rem; border-radius: var(--radius-md); border: 1.5px solid var(--border-color); background: var(--bg-glass); color: var(--text-main); font-family: var(--font-body); outline: none; transition: all var(--transition-fast);">
-                    <option value="" disabled selected>Compare with Section...</option>
-                    {% for sec in sections %}
-                    {% if not my_section or sec.id != my_section.id %}
-                    <option value="{{ sec.id }}" {% if selected_section and selected_section.id == sec.id %}selected{% endif %}>
-                        {{ sec.name }} ({{ sec.code }})
-                    </option>
-                    {% endif %}
-                    {% endfor %}
-                </select>
-                <button type="submit" class="login-btn" style="margin-top: 0; padding: 0.6rem 1.2rem; font-size: 0.95rem; box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.2);">Find Slots</button>
-            </form>
-        </div>
-
-        {% if free_slots_by_day is not none %}
-        <div class="glass-panel" style="padding: 1.5rem; background: rgba(var(--primary-rgb), 0.02); border: 1px solid var(--border-color);">
-            <p style="font-weight: 600; margin-bottom: 1.5rem; color: var(--text-muted);">Results for <span style="color: var(--primary-color);">{{ selected_section.name }}</span>:</p>
-            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1.5rem;">
-                {% for day_data in free_slots_by_day %}
-                <div>
-                    <div style="font-weight: 700; font-size: 0.9rem; margin-bottom: 0.75rem; color: var(--text-main); border-bottom: 1px solid var(--border-color); padding-bottom: 0.3rem;">
-                        {{ day_data.day_name }}
-                    </div>
-                    {% if day_data.classes %}
-                    <ul style="list-style: none; padding: 0; margin-bottom: 0.5rem;">
-                        {% for cls in day_data.classes %}
-                        <li style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                            {{ cls.title }} – {{ cls.teacher_name }}
-                        </li>
-                        {% endfor %}
-                    </ul>
-                    {% else %}
-                    <div style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.5rem;">
-                        No classes
-                    </div>
-                    {% endif %}
-                    
-                    <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.5rem;">
-                        {% if day_data.has_free %}
-                            {% for slot in day_data.slots %}
-                            <div style="font-size: 0.8rem; padding: 0.3rem 0.6rem; background: var(--bg-glass); border-radius: var(--radius-sm); margin-bottom: 0.5rem; border: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; font-weight: 500;">
-                                <span>{{ slot.text | fix_time }}</span>
-                                <span style="color: var(--text-muted); font-size: 0.65rem; font-weight: 600;">{{ slot.duration }}m</span>
-                            </div>
-                            {% endfor %}
-                        {% else %}
-                            <div style="font-size: 0.8rem; color: var(--text-muted); font-style: italic;">No common free time</div>
-                        {% endif %}
-                    </div>
+            {% if day_data.classes %}
+            <ul style="list-style:none;padding:0;margin-bottom:var(--space-2);">
+              {% for cls in day_data.classes %}
+              <li style="font-size:var(--font-size-xs);color:var(--text-tertiary);margin-bottom:var(--space-1);">
+                {{ cls.title }} – {{ cls.teacher_name }}
+              </li>
+              {% endfor %}
+            </ul>
+            {% else %}
+            <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);margin-bottom:var(--space-1);">
+              No classes
+            </div>
+            {% endif %}
+            <div style="border-top:1px solid var(--border-secondary);padding-top:var(--space-2);">
+              {% if day_data.has_free %}
+                {% for slot in day_data.slots %}
+                <div style="font-size:var(--font-size-xs);padding:var(--space-1) var(--space-2);border:1px solid var(--border-primary);border-radius:var(--radius-sm);margin-bottom:var(--space-1);display:flex;justify-content:space-between;align-items:center;font-weight:500;">
+                  <span>{{ slot.text | fix_time }}</span>
+                  <span style="color:var(--text-tertiary);font-size:var(--font-size-xs);font-weight:600;">{{ slot.duration }}m</span>
                 </div>
                 {% endfor %}
+              {% else %}
+              <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);font-style:italic;">No common free time</div>
+              {% endif %}
             </div>
+          </div>
+          {% endfor %}
         </div>
-        {% endif %}
+      </div>
+      {% endif %}
     </div>
+  </div>
 </div>
 
 <script>
 function toggleCancelled() {
-    const hide = document.getElementById('hideCancelled').checked;
-    document.querySelectorAll('.cancelled-row').forEach(row => {
-        row.style.display = hide ? 'none' : 'block';
-    });
+  const hide = document.getElementById('hideCancelled').checked;
+  document.querySelectorAll('.cancelled-row').forEach(row => {
+    row.style.display = hide ? 'none' : 'block';
+  });
 }
 </script>
 
 <style>
-:root { --primary-rgb: 37, 99, 235; }
-body.dark-theme { --primary-rgb: 220, 38, 38; }
-
-.cancelled-row {
-    opacity: 0.5;
-    background: rgba(239, 68, 68, 0.05) !important;
-}
-
-.cancelled-badge {
-    font-size: 0.6rem;
-    padding: 0.1rem 0.4rem;
-    border-radius: 4px;
-    background: #ef4444;
-    color: white;
-    font-weight: 800;
-}
+.cancelled-row { opacity:0.5; }
+.cancelled-badge { font-size:10px; padding:1px 6px; border-radius:4px; background:#ef4444; color:white; font-weight:800; }
 </style>
 {% endblock %}
