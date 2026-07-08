@@ -30,6 +30,8 @@ def create_app():
     csrf = CSRFProtect(app)
     
     from flask_migrate import Migrate
+    from .cli import hive_cli
+    app.cli.add_command(hive_cli)
     migrate = Migrate(app, db)
 
     from app.models import get_setting as _get_setting
