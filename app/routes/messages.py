@@ -4,7 +4,8 @@ from sqlalchemy import or_, and_
 from datetime import datetime, timedelta
 from markupsafe import escape
 
-messages_bp = Blueprint('messages', __name__, url_prefix='/messages')
+messages_bp = Blueprint('messages', __name__, url_prefix='/messages',
+                         template_folder='templates/messages')
 
 @messages_bp.before_request
 def load_user():
@@ -179,7 +180,7 @@ def index():
         ).all()
         allowed_recipients = students + other_profs
 
-    return render_template('messages/index.html', inbox_items=partner_data, allowed_recipients=allowed_recipients)
+    return render_template('index.html', inbox_items=partner_data, allowed_recipients=allowed_recipients)
 
 @messages_bp.route('/history/<string:user_id>')
 def history(user_id):

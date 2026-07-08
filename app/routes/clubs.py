@@ -3,7 +3,8 @@ from app.models import db, Club, ExternalEvent
 from app.middleware import school_scoped, role_minimum, owns_resource
 from datetime import datetime
 
-clubs_bp = Blueprint('clubs', __name__, url_prefix='/clubs')
+clubs_bp = Blueprint('clubs', __name__, url_prefix='/clubs',
+                      template_folder='templates/clubs')
 
 # =============================================================================
 # STUDENT ROUTES
@@ -23,7 +24,7 @@ def index():
             ExternalEvent.school_id == g.school_id,
             ExternalEvent.date >= datetime.utcnow()
         ).order_by(ExternalEvent.date).limit(5).all()
-    return render_template('clubs/student_clubs.html', clubs=clubs, events=events)
+    return render_template('student_clubs.html', clubs=clubs, events=events)
 
 @clubs_bp.route('/<string:club_id>')
 @school_scoped
@@ -32,7 +33,7 @@ def club_details(club_id):
         club = Club.query.get_or_404(club_id)
     else:
         club = Club.query.filter_by(id=club_id, school_id=g.school_id).first_or_404()
-    return render_template('clubs/club_details.html', club=club)
+    return render_template('club_details.html', club=club)
 
 @clubs_bp.route('/events')
 @school_scoped
@@ -46,7 +47,7 @@ def events():
             ExternalEvent.school_id == g.school_id,
             ExternalEvent.date >= datetime.utcnow()
         ).order_by(ExternalEvent.date).all()
-    return render_template('clubs/student_events.html', events=events)
+    return render_template('student_events.html', events=events)
 
 # =============================================================================
 # ADMIN ROUTES
@@ -78,7 +79,7 @@ def admin_clubs():
         clubs = Club.query.order_by(Club.name).all()
     else:
         clubs = Club.query.filter_by(school_id=g.school_id).order_by(Club.name).all()
-    return render_template('clubs/admin_clubs.html', clubs=clubs)
+    return render_template('admin_clubs.html', clubs=clubs)
 
 @clubs_bp.route('/admin/edit/<string:club_id>', methods=['POST'])
 @school_scoped
@@ -140,7 +141,7 @@ def admin_events():
         return redirect(url_for('clubs.admin_events'))
         
     events = ExternalEvent.query.filter_by(school_id=g.school_id).order_by(ExternalEvent.date.desc()).all()
-    return render_template('clubs/admin_events.html', events=events)
+    return render_template('admin_events.html', events=events)
 
 @clubs_bp.route('/admin/events/edit/<string:event_id>', methods=['POST'])
 @school_scoped

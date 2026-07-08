@@ -2,7 +2,7 @@ from flask import Blueprint
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-auth_bp = Blueprint('auth', __name__)
+auth_bp = Blueprint('auth', __name__, template_folder='templates')
 limiter = Limiter(key_func=get_remote_address, storage_uri="memory://")
 
 from . import routes

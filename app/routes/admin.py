@@ -6,7 +6,8 @@ from ..models import (
     Announcement, TimetableEntry
 )
 
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint('admin', __name__, url_prefix='/admin',
+                      template_folder='templates/admin')
 
 
 @admin_bp.route('/dashboard')
@@ -37,7 +38,7 @@ def admin_dashboard():
             'status': 'active' if s.is_active else 'inactive'
         })
 
-    return render_template('dashboard/admin_dashboard_global.html',
+    return render_template('admin_dashboard_global.html',
                            stats={
                                'schools': total_schools,
                                'students': total_students,
@@ -57,7 +58,7 @@ def admin_schools():
     if g.current_user.role != 'admin':
         abort(403)
     schools = School.query.all()
-    return render_template('dashboard/admin_schools.html', schools=schools)
+    return render_template('admin_schools.html', schools=schools)
 
 
 @admin_bp.route('/schools/add', methods=['POST'])
@@ -105,7 +106,7 @@ def admin_sections():
     else:
         sections = Section.query.filter_by(school_id=g.school_id).all()
         schools = [g.current_user.school]
-    return render_template('dashboard/admin_sections.html', sections=sections, schools=schools)
+    return render_template('admin_sections.html', sections=sections, schools=schools)
 
 
 @admin_bp.route('/sections/add', methods=['POST'])
@@ -137,7 +138,7 @@ def admin_accounts():
     else:
         users = User.query.filter_by(school_id=g.school_id).all()
         schools = [g.current_user.school]
-    return render_template('dashboard/admin_accounts.html', users=users, schools=schools)
+    return render_template('admin_accounts.html', users=users, schools=schools)
 
 
 @admin_bp.route('/accounts/toggle/<string:user_id>', methods=['POST'])
@@ -158,7 +159,7 @@ def toggle_user(user_id):
 @school_scoped
 @role_minimum('admin')
 def admin_settings():
-    return render_template('dashboard/admin_settings.html')
+    return render_template('admin_settings.html')
 
 
 @admin_bp.route('/announcements')
@@ -179,4 +180,4 @@ def announcements():
         )
 
     announcements_list = query.order_by(Announcement.posted_at.desc()).all()
-    return render_template('dashboard/announcements.html', announcements=announcements_list)
+    return render_template('announcements.html', announcements=announcements_list)

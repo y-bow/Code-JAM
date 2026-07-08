@@ -12,14 +12,15 @@ from ..services import (
     update_meet_link,
 )
 
-academics_bp = Blueprint('academics', __name__, url_prefix='/academics')
+academics_bp = Blueprint('academics', __name__, url_prefix='/academics',
+                          template_folder='templates/academics')
 
 
 @academics_bp.route('/student')
 @school_scoped
 def student_dashboard():
     today_classes = get_student_today_classes(g.current_user.student_profile)
-    return render_template('dashboard/student_dashboard.html', today_classes=today_classes)
+    return render_template('student_dashboard.html', today_classes=today_classes)
 
 
 @academics_bp.route('/teacher')
@@ -33,7 +34,7 @@ def teacher_dashboard():
     stats, recent_reviews = get_teacher_stats(user, assigned_courses)
     graphs_json = get_teacher_graphs(assigned_courses)
 
-    return render_template('dashboard/teacher_dashboard.html',
+    return render_template('teacher_dashboard.html',
                            today_classes=today_classes,
                            tasks=tasks,
                            stats=stats,
@@ -45,13 +46,13 @@ def teacher_dashboard():
 @school_scoped
 def my_courses():
     courses = get_user_courses(g.current_user, g.school_id)
-    return render_template('dashboard/courses.html', courses=courses)
+    return render_template('courses.html', courses=courses)
 
 
 @academics_bp.route('/grades')
 @school_scoped
 def grades():
-    return render_template('dashboard/grades.html')
+    return render_template('grades.html')
 
 
 @academics_bp.route('/update_meet', methods=['POST'])

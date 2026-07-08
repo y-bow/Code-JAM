@@ -6,7 +6,8 @@ from ..models import (
 )
 from datetime import datetime
 
-classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom')
+classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom',
+                          template_folder='templates/classroom')
 
 
 @classroom_bp.route('/<string:course_id>')
@@ -52,7 +53,7 @@ def view_classroom(course_id):
             ).first()
             is_cr = (nom is not None)
 
-        return render_template('classroom/student_view.html', 
+        return render_template('student_view.html', 
                                course=course, is_cr=is_cr, 
                                assignments=assignments, 
                                announcements=announcements,
@@ -67,7 +68,7 @@ def view_classroom(course_id):
         if not pa_record:
             flash('Access Denied: You are not an assistant for this course.', 'danger')
             return redirect(url_for('academics.teacher_dashboard'))
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_pa=True,
                                students=students_list,
                                assignments=assignments,
@@ -78,7 +79,7 @@ def view_classroom(course_id):
         if course.teacher_id != user.id:
             flash('Access Denied: This is not your course.', 'danger')
             return redirect(url_for('academics.teacher_dashboard'))
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_pa=False,
                                students=students_list,
                                assignments=assignments,
@@ -86,7 +87,7 @@ def view_classroom(course_id):
                                today_date=today_date)
 
     elif user.role == 'dean':
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_dean=True,
                                students=students_list,
                                assignments=assignments,
@@ -94,7 +95,7 @@ def view_classroom(course_id):
                                today_date=today_date)
     
     elif user.role == 'admin':
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_admin=True,
                                students=students_list,
                                assignments=assignments,

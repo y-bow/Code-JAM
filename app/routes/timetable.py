@@ -16,7 +16,8 @@ from ..services import (
     manage_delete_entry,
 )
 
-timetable_bp = Blueprint('timetable', __name__, url_prefix='/timetable')
+timetable_bp = Blueprint('timetable', __name__, url_prefix='/timetable',
+                          template_folder='templates/timetable')
 
 
 @timetable_bp.route('/admin')
@@ -47,7 +48,7 @@ def admin_timetable():
                 for i, d in enumerate(timetable[day_idx]):
                     d['id'] = entries[i].id
 
-    return render_template('dashboard/admin_timetable.html',
+    return render_template('admin_timetable.html',
                            sections=sections,
                            selected_section=selected_section,
                            timetable=timetable)
@@ -176,7 +177,7 @@ def timetable():
 
     if user.role in ['professor', 'assistant_professor']:
         result = get_teacher_timetable_data(user.id)
-        return render_template('dashboard/timetable_teacher.html',
+        return render_template('timetable_teacher.html',
                                timetable_data=result['timetable_data'],
                                current_day=current_day,
                                total_classes=result['total_classes'],
@@ -200,7 +201,7 @@ def timetable():
                     if selected_section:
                         free_slots_by_day = get_common_free_slots(my_section_id, selected_section_id)
 
-        return render_template('dashboard/timetable.html',
+        return render_template('timetable.html',
                              timetable_data=timetable_data,
                              current_day=current_day,
                              sections=sections,
@@ -210,7 +211,7 @@ def timetable():
 
     else:
         all_entries = get_system_timetable_data()
-        return render_template('dashboard/timetable_system.html', all_entries=all_entries)
+        return render_template('timetable_system.html', all_entries=all_entries)
 
 
 @timetable_bp.route('/manage', methods=['GET', 'POST'])
@@ -248,4 +249,4 @@ def manage_timetable():
         .order_by(Section.code, TimetableEntry.day, TimetableEntry.start_time)
         .all()
     )
-    return render_template('dashboard/manage_timetable.html', sections=sections, entries=entries)
+    return render_template('manage_timetable.html', sections=sections, entries=entries)

@@ -6,7 +6,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, flash,
 from app.models import db, LostFoundItem, Message
 from app.middleware import school_scoped
 
-lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found')
+lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found',
+                           template_folder='templates/lost_found')
 
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
@@ -38,7 +39,7 @@ def gallery():
     items = base_query.order_by(LostFoundItem.timestamp.desc()).all()
     categories = ['Electronics', 'ID Cards', 'Books', 'Clothing', 'Accessories', 'Other']
 
-    return render_template('lost_found/gallery.html', 
+    return render_template('gallery.html', 
                             items=items, 
                             query=query, 
                             selected_category=category,
@@ -53,7 +54,7 @@ def my_items():
         reporter_id=g.current_user.id
     ).order_by(LostFoundItem.timestamp.desc()).all()
     
-    return render_template('lost_found/my_items.html', items=items)
+    return render_template('my_items.html', items=items)
 
 @lost_found_bp.route('/report', methods=['GET', 'POST'])
 @school_scoped
@@ -134,7 +135,7 @@ def report():
         db.session.commit()
         return redirect(url_for('lost_found.gallery'))
 
-    return render_template('lost_found/report.html', categories=categories)
+    return render_template('report.html', categories=categories)
 
 @lost_found_bp.route('/resolve/<string:item_id>', methods=['POST'])
 @school_scoped

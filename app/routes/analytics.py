@@ -8,7 +8,8 @@ from ..services import (
     process_nomination,
 )
 
-analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics')
+analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics',
+                          template_folder='templates/analytics')
 
 
 @analytics_bp.route('/')
@@ -16,7 +17,7 @@ analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics')
 @role_minimum('dean')
 def school_analytics():
     stats = get_school_stats(g.school_id)
-    return render_template('dashboard/analytics.html', **stats)
+    return render_template('analytics.html', **stats)
 
 
 @analytics_bp.route('/early-warning')
@@ -24,7 +25,7 @@ def school_analytics():
 @role_minimum('dean')
 def early_warning():
     at_risk_students = get_at_risk_students(g.school_id)
-    return render_template('dashboard/early_warning.html', at_risk_students=at_risk_students)
+    return render_template('early_warning.html', at_risk_students=at_risk_students)
 
 
 @analytics_bp.route('/dean/ratings')
@@ -32,7 +33,7 @@ def early_warning():
 @role_minimum('dean')
 def dean_ratings():
     teacher_stats = get_teacher_ratings_data(g.school_id)
-    return render_template('dashboard/dean_ratings.html', teacher_stats=teacher_stats)
+    return render_template('dean_ratings.html', teacher_stats=teacher_stats)
 
 
 @analytics_bp.route('/dean/nominations')
@@ -40,7 +41,7 @@ def dean_ratings():
 @role_minimum('dean')
 def dean_nominations():
     nominations = get_pending_nominations(g.school_id)
-    return render_template('dashboard/dean_nominations.html', nominations=nominations)
+    return render_template('dean_nominations.html', nominations=nominations)
 
 
 @analytics_bp.route('/dean/nominations/<string:nom_id>/<action>', methods=['POST'])

@@ -3,7 +3,8 @@ from app.models import db, Fee, FeePayment, User, get_setting
 from app.middleware import school_scoped, role_minimum
 import uuid
 
-fees_bp = Blueprint('fees', __name__, url_prefix='/fees')
+fees_bp = Blueprint('fees', __name__, url_prefix='/fees',
+                     template_folder='templates/fees')
 
 @fees_bp.route('/student')
 @school_scoped
@@ -23,7 +24,7 @@ def student_dashboard():
         
     payments = FeePayment.query.filter_by(fee_id=fee.id).order_by(FeePayment.payment_date.desc()).all()
     
-    return render_template('fees/student_dashboard.html', fee=fee, payments=payments)
+    return render_template('student_dashboard.html', fee=fee, payments=payments)
 
 @fees_bp.route('/pay', methods=['GET', 'POST'])
 @school_scoped
@@ -68,7 +69,7 @@ def process_payment():
         flash(f"Payment of {_currency}{amount:,.0f} successful! Transaction ID: {txn_id}", "success")
         return redirect(url_for('fees.student_dashboard'))
         
-    return render_template('fees/payment_gateway.html', fee=fee)
+    return render_template('payment_gateway.html', fee=fee)
 
 @fees_bp.route('/receipt/<string:payment_id>')
 @school_scoped
@@ -82,7 +83,7 @@ def print_receipt(payment_id):
         flash("Unauthorized.", "error")
         return redirect(url_for('fees.student_dashboard'))
         
-    return render_template('fees/receipt.html', payment=payment, student=payment.fee.student)
+    return render_template('receipt.html', payment=payment, student=payment.fee.student)
 
 @fees_bp.route('/admin')
 @school_scoped
@@ -104,7 +105,7 @@ def admin_dashboard():
     total_expected = sum(f.total_amount for f in fees)
     total_collected = sum(f.amount_paid for f in fees)
     
-    return render_template('fees/admin_dashboard.html', 
+    return render_template('admin_dashboard.html', 
                           students=students, 
                           fees=fees,
                           total_expected=total_expected, 

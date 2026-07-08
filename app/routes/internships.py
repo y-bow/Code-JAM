@@ -3,7 +3,8 @@ from datetime import datetime
 from ..middleware import school_scoped, role_minimum
 from ..models import db, Internship
 
-internships_bp = Blueprint('internships', __name__, url_prefix='/internships')
+internships_bp = Blueprint('internships', __name__, url_prefix='/internships',
+                            template_folder='templates/internships')
 
 @internships_bp.route('/', methods=['GET'])
 @school_scoped

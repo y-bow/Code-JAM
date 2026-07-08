@@ -2,7 +2,8 @@ from flask import Blueprint, render_template, request, redirect, url_for, g, fla
 from ..middleware import school_scoped, role_minimum
 from ..models import db, CustomTask, TeacherTodo
 
-tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks')
+tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks',
+                      template_folder='templates/tasks')
 
 
 @tasks_bp.route('/', methods=['GET', 'POST'])
@@ -32,7 +33,7 @@ def tasks():
         .all()
     )
     custom_tasks.sort(key=lambda x: (x.is_completed, x.due_date is None, x.due_date))
-    return render_template('dashboard/tasks.html', custom_tasks=custom_tasks)
+    return render_template('tasks.html', custom_tasks=custom_tasks)
 
 
 @tasks_bp.route('/toggle/<string:task_id>', methods=['POST'])
