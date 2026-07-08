@@ -9,10 +9,14 @@ from app.middleware import school_scoped
 lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found',
                            template_folder='templates/lost_found')
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_MIMETYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def allowed_mimetype(mimetype):
+    return mimetype in ALLOWED_MIMETYPES
 
 @lost_found_bp.route('/gallery', methods=['GET'])
 @school_scoped
@@ -27,9 +31,10 @@ def gallery():
         base_query = LostFoundItem.query.filter_by(school_id=g.school_id, status='open')
     
     if query:
+        query_term = f'%{query}%'
         base_query = base_query.filter(
-            (LostFoundItem.title.ilike(f'%{query}%')) | 
-            (LostFoundItem.location.ilike(f'%{query}%'))
+            (LostFoundItem.title.ilike(query_term)) | 
+            (LostFoundItem.location.ilike(query_term))
         )
     if category:
         base_query = base_query.filter_by(category=category)
@@ -74,7 +79,7 @@ def report():
         image_path = None
         if 'image' in request.files:
             file = request.files['image']
-            if file and file.filename != '' and allowed_file(file.filename):
+            if file and file.filename != '' and allowed_file(file.filename) and allowed_mimetype(file.content_type):
                 filename = secure_filename(f"user_{g.current_user.id}_{datetime.utcnow().timestamp()}_{file.filename}")
                 upload_folder = os.path.join(current_app.static_folder, 'uploads', 'lost_found')
                 os.makedirs(upload_folder, exist_ok=True)

@@ -17,6 +17,9 @@ def create_app():
     if not db_path.startswith('/'):
         db_path = '/' + db_path
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
+    if app.config['SECRET_KEY'] == 'dev-secret-key-change-in-production':
+        import warnings
+        warnings.warn('SECRET_KEY is set to the insecure default. Set SECRET_KEY in your .env file for production.')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite://{db_path}')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -70,6 +73,7 @@ def create_app():
     app.config.update(
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE='Lax',
+        SESSION_COOKIE_SECURE=os.environ.get('SESSION_COOKIE_SECURE', 'False').lower() == 'true',
         PERMANENT_SESSION_LIFETIME=1800, # 30 minutes
     )
 

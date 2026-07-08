@@ -38,7 +38,7 @@
                 <h3 style="margin-top: 0; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">About Us</h3>
                 <div class="formatted-text" style="color: var(--text-main); line-height: 1.7;">
                     {% if club.description %}
-                        {{ club.description | replace('\n', '<br>') | safe }}
+                        {{ club.description | escape | replace('\n', '<br>') }}
                     {% else %}
                         <p class="text-muted">No description provided yet.</p>
                     {% endif %}

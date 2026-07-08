@@ -281,25 +281,27 @@ def search_allowed():
     user = g.current_user
     allowed_recipients = []
     
+    search_term = f'%{query}%'
+    
     if user.role == 'student':
         enrolled_course_ids = [e.course_id for e in user.enrollments]
         teachers = User.query.join(Course, Course.teacher_id == User.id).filter(
             Course.id.in_(enrolled_course_ids),
-            or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
+            or_(User.name.ilike(search_term), User.email.ilike(search_term))
         ).distinct().all()
         allowed_recipients = teachers
     elif user.role in ['professor', 'assistant_professor']:
         taught_course_ids = [c.id for c in user.taught_courses]
         students = User.query.join(Enrollment, Enrollment.student_id == User.id).filter(
             Enrollment.course_id.in_(taught_course_ids),
-            or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
+            or_(User.name.ilike(search_term), User.email.ilike(search_term))
         ).distinct().all()
         
         other_teachers = User.query.filter(
             User.school_id == user.school_id, 
             User.role.in_(['professor', 'assistant_professor', 'dean']),
             User.id != user.id,
-            or_(User.name.ilike(f'%{query}%'), User.email.ilike(f'%{query}%'))
+            or_(User.name.ilike(search_term), User.email.ilike(search_term))
         ).all()
         allowed_recipients = students + other_teachers
 

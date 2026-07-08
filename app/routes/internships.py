@@ -14,22 +14,25 @@ def index():
     # Search by role or company name
     search = request.args.get('search', '')
     if search:
+        search_term = f'%{search}%'
         query = query.filter(
             db.or_(
-                Internship.company_name.ilike(f'%{search}%'),
-                Internship.role.ilike(f'%{search}%')
+                Internship.company_name.ilike(search_term),
+                Internship.role.ilike(search_term)
             )
         )
 
     # Filter by location
     location = request.args.get('location', '')
     if location:
-        query = query.filter(Internship.location.ilike(f'%{location}%'))
+        location_term = f'%{location}%'
+        query = query.filter(Internship.location.ilike(location_term))
 
     # Filter by duration
     duration = request.args.get('duration', '')
     if duration:
-        query = query.filter(Internship.duration.ilike(f'%{duration}%'))
+        duration_term = f'%{duration}%'
+        query = query.filter(Internship.duration.ilike(duration_term))
 
     internships = query.order_by(Internship.created_at.desc()).all()
     
