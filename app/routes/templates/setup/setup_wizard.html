@@ -297,6 +297,61 @@
                 <input type="hidden" name="theme_mode" id="theme_mode" value="{{ form_data.get('theme_mode', 'light') }}">
             </div>
             <input type="hidden" name="action" value="next">
+            <button type="submit" class="btn-primary">Next: Academic Configuration</button>
+
+            {% elif step == 'academic' %}
+            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 1.5rem; font-size: 1.25rem;">Academic Configuration</h2>
+
+            <div class="form-group">
+                <label>Academic Year Name</label>
+                <input type="text" name="year_name" value="{{ form_data.get('year_name', '') }}" placeholder="e.g. 2026-2027" required>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Start Date</label>
+                    <input type="date" name="start_date" value="{{ form_data.get('start_date', '') }}" required>
+                </div>
+                <div class="form-group">
+                    <label>End Date</label>
+                    <input type="date" name="end_date" value="{{ form_data.get('end_date', '') }}" required>
+                </div>
+            </div>
+
+            <h3 style="font-family: 'Outfit', sans-serif; margin: 1.5rem 0 1rem; font-size: 1rem;">Departments</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">Add at least one department (e.g., Computer Science, Mathematics).</p>
+            <div id="departments-container">
+                <div class="form-row" style="margin-bottom: 0.5rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div class="form-group" style="flex: 0 0 120px;">
+                        <input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="addDepartment()" style="background:none;border:1px dashed #6C63FF;color:#6C63FF;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Department</button>
+
+            <h3 style="font-family: 'Outfit', sans-serif; margin: 1.5rem 0 1rem; font-size: 1rem;">Sections</h3>
+            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">Add sections (e.g., CS-A, CS-B) for each department.</p>
+            <div id="sections-container">
+                <div class="form-row" style="margin-bottom: 0.5rem;">
+                    <div class="form-group" style="flex: 1;">
+                        <input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div class="form-group" style="flex: 0 0 100px;">
+                        <input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div class="form-group" style="flex: 0 0 120px;">
+                        <input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                    <div class="form-group" style="flex: 0 0 100px;">
+                        <input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    </div>
+                </div>
+            </div>
+            <button type="button" onclick="addSection()" style="background:none;border:1px dashed #6C63FF;color:#6C63FF;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Section</button>
+
+            <input type="hidden" name="action" value="next">
             <button type="submit" class="btn-primary">Next: Complete Setup</button>
 
             {% elif step == 'complete' %}
@@ -317,6 +372,10 @@
                 <div class="summary-item">
                     <span class="summary-label">Theme</span>
                     <span class="summary-value">Selected</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Academic Config</span>
+                    <span class="summary-value">Configured</span>
                 </div>
             </div>
 
@@ -340,6 +399,22 @@
             document.querySelectorAll('.theme-option').forEach(t => t.classList.remove('selected'));
             el.classList.add('selected');
             document.getElementById('theme_mode').value = mode;
+        }
+        function addDepartment() {
+            var c = document.getElementById('departments-container');
+            var d = document.createElement('div');
+            d.className = 'form-row';
+            d.style.marginBottom = '0.5rem';
+            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:1.2rem;">&times;</button>';
+            c.appendChild(d);
+        }
+        function addSection() {
+            var c = document.getElementById('sections-container');
+            var d = document.createElement('div');
+            d.className = 'form-row';
+            d.style.marginBottom = '0.5rem';
+            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:1.2rem;">&times;</button>';
+            c.appendChild(d);
         }
     </script>
 </body>

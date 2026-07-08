@@ -1,8 +1,11 @@
+from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from ..services.setup_service import (
     is_setup_complete, has_admin_users, has_any_schools,
-    create_admin_account, create_institution, save_theme_settings, mark_setup_complete,
+    create_admin_account, create_institution, create_academic_year,
+    create_department, create_section, save_theme_settings, mark_setup_complete,
 )
+from ..models import db, School, Department
 
 setup_bp = Blueprint('setup', __name__, url_prefix='/setup',
                       template_folder='templates/setup')
@@ -14,8 +17,8 @@ def check_not_configured():
         return redirect(url_for('index'))
 
 
-STEPS = ['admin', 'institution', 'theme', 'complete']
-STEP_LABELS = ['Admin Account', 'Institution', 'Theme', 'Complete']
+STEPS = ['admin', 'institution', 'theme', 'academic', 'complete']
+STEP_LABELS = ['Admin Account', 'Institution', 'Theme', 'Academic Config', 'Complete']
 
 
 @setup_bp.route('/', methods=['GET', 'POST'])
@@ -81,6 +84,52 @@ def wizard():
             primary_color = request.form.get('primary_color', '#6C63FF')
             theme_mode = request.form.get('theme_mode', 'light')
             save_theme_settings(primary_color, theme_mode)
+            return redirect(url_for('setup.wizard', step='academic'))
+
+        elif step == 'academic':
+            school = School.query.first()
+            if not school:
+                return redirect(url_for('setup.wizard', step='institution'))
+
+            errors = []
+            year_name = request.form.get('year_name', '').strip()
+            start_date = request.form.get('start_date', '').strip()
+            end_date = request.form.get('end_date', '').strip()
+
+            if not year_name:
+                errors.append('Academic year name is required')
+            if not start_date:
+                errors.append('Start date is required')
+            if not end_date:
+                errors.append('End date is required')
+
+            if errors:
+                return render_template('setup_wizard.html', step=step, steps=STEPS,
+                                       step_labels=STEP_LABELS, errors=errors,
+                                       form_data=request.form)
+
+            year, err = create_academic_year(year_name, start_date, end_date, school.id)
+            if err:
+                return render_template('setup_wizard.html', step=step, steps=STEPS,
+                                       step_labels=STEP_LABELS, errors=[err],
+                                       form_data=request.form)
+
+            dept_names = request.form.getlist('dept_name[]')
+            dept_codes = request.form.getlist('dept_code[]')
+            for dn, dc in zip(dept_names, dept_codes):
+                if dn.strip() and dc.strip():
+                    create_department(dn.strip(), dc.strip(), school.id)
+
+            sec_names = request.form.getlist('sec_name[]')
+            sec_codes = request.form.getlist('sec_code[]')
+            sec_depts = request.form.getlist('sec_dept_code[]')
+            sec_years = request.form.getlist('sec_batch_year[]')
+            for sn, sc, sd, sy in zip(sec_names, sec_codes, sec_depts, sec_years):
+                if sn.strip() and sc.strip() and sd.strip():
+                    dept = Department.query.filter_by(school_id=school.id, code=sd.strip()).first()
+                    if dept:
+                        create_section(sn.strip(), sc.strip(), dept.id, sy or str(datetime.utcnow().year), school.id)
+
             return redirect(url_for('setup.wizard', step='complete'))
 
         elif step == 'complete':
@@ -93,6 +142,10 @@ def wizard():
     if step == 'institution' and not has_admin_users():
         return redirect(url_for('setup.wizard', step='admin'))
     if step == 'theme' and not has_any_schools():
+        return redirect(url_for('setup.wizard', step='institution'))
+    if step == 'academic' and not has_any_schools():
+        return redirect(url_for('setup.wizard', step='institution'))
+    if step == 'complete' and not has_any_schools():
         return redirect(url_for('setup.wizard', step='institution'))
 
     return render_template('setup_wizard.html', step=step, steps=STEPS,
