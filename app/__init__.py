@@ -68,12 +68,28 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=1800, # 30 minutes
     )
 
+    # JWT config
+    app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY', app.config['SECRET_KEY'])
+    app.config['JWT_ACCESS_TOKEN_EXPIRES'] = 3600 * 24
+
+    from flask_jwt_extended import JWTManager
+    jwt = JWTManager(app)
+
+    app.config['API_TITLE'] = 'Hive REST API'
+    app.config['API_VERSION'] = 'v1'
+    app.config['OPENAPI_VERSION'] = '3.1.0'
+    app.config['OPENAPI_URL_PREFIX'] = '/api/docs'
+    app.config['OPENAPI_SWAGGER_UI_PATH'] = '/'
+    app.config['OPENAPI_SWAGGER_UI_URL'] = 'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5/'
+
     from .services.setup_service import is_setup_complete
 
     @app.before_request
     def check_setup():
         from flask import request, redirect, url_for
-        if request.endpoint and 'static' not in request.endpoint and 'setup' not in request.endpoint:
+        ep = request.endpoint or ''
+        excluded = ('static', 'setup', 'auth_api', 'timetable_api', 'api-docs')
+        if ep and all(x not in ep for x in excluded):
             if not is_setup_complete():
                 return redirect(url_for('setup.wizard'))
 
@@ -121,6 +137,9 @@ def create_app():
     app.register_blueprint(import_bp)
     app.register_blueprint(setup_bp)
     app.register_blueprint(plugin_admin_bp)
+
+    from .api import init_api
+    init_api(app)
 
     @app.route('/')
     def index():
