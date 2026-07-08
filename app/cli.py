@@ -82,6 +82,7 @@ def backup_db(output):
 @hive_cli.command('import')
 @click.argument('import_type', type=click.Choice([
     'students', 'faculty', 'courses', 'timetable', 'enrollments',
+    'departments', 'sections', 'clubs', 'attendance', 'grades',
 ]))
 @click.option('--file', '-f', required=True, type=click.Path(exists=True), help='CSV/XLSX file path')
 @click.option('--school-id', required=True, help='School ID for scoping the import')

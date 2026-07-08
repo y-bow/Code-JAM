@@ -8,13 +8,17 @@ from datetime import datetime
 import pandas as pd
 
 from ..models import (
-    db, User, Student, Teacher, Course, Section, Enrollment,
-    TimetableEntry, ImportBatch, get_setting, bcrypt
+    db, User, Student, Teacher, Course, Section, Department, Enrollment,
+    TimetableEntry, Club, Attendance, Grade, ImportBatch, get_setting, bcrypt
 )
 from ..models.auth import generate_username
+from datetime import date
 
 
-IMPORT_TYPES = ['students', 'faculty', 'courses', 'timetable', 'enrollments']
+IMPORT_TYPES = [
+    'students', 'faculty', 'courses', 'timetable', 'enrollments',
+    'departments', 'sections', 'clubs', 'attendance', 'grades',
+]
 
 COLUMN_MAPS = {
     'students': {
@@ -36,6 +40,26 @@ COLUMN_MAPS = {
     'enrollments': {
         'required': ['student_email', 'course_code'],
         'optional': ['status'],
+    },
+    'departments': {
+        'required': ['name', 'code'],
+        'optional': [],
+    },
+    'sections': {
+        'required': ['name', 'code', 'department_code', 'batch_year'],
+        'optional': [],
+    },
+    'clubs': {
+        'required': ['name', 'category', 'contact_email'],
+        'optional': ['description'],
+    },
+    'attendance': {
+        'required': ['student_email', 'course_code', 'date', 'status'],
+        'optional': [],
+    },
+    'grades': {
+        'required': ['student_email', 'course_code', 'grade'],
+        'optional': [],
     },
 }
 
@@ -119,6 +143,16 @@ def validate_import(parsed, import_type, school_id):
             _validate_timetable_row(row_data, school_id, errors)
         elif import_type == 'enrollments':
             _validate_enrollment_row(row_data, school_id, errors)
+        elif import_type == 'departments':
+            _validate_department_row(row_data, school_id, errors)
+        elif import_type == 'sections':
+            _validate_section_row(row_data, school_id, errors)
+        elif import_type == 'clubs':
+            _validate_club_row(row_data, school_id, errors)
+        elif import_type == 'attendance':
+            _validate_attendance_row(row_data, school_id, errors)
+        elif import_type == 'grades':
+            _validate_grade_row(row_data, school_id, errors)
 
         validated.append({
             'index': idx,
@@ -205,6 +239,86 @@ def _validate_enrollment_row(row, school_id, errors):
         ).first()
         if not course:
             errors.append(f'Course not found with code: {course_code}')
+
+
+def _validate_department_row(row, school_id, errors):
+    code = row.get('code', '')
+    if code:
+        existing = Department.query.filter_by(school_id=school_id, code=code).first()
+        if existing:
+            errors.append(f'Department with code {code} already exists')
+
+
+def _validate_section_row(row, school_id, errors):
+    department_code = row.get('department_code', '')
+    if department_code:
+        dept = Department.query.filter_by(school_id=school_id, code=department_code).first()
+        if not dept:
+            errors.append(f'Department not found: {department_code}')
+    batch_year = row.get('batch_year', '')
+    if batch_year:
+        try:
+            int(batch_year)
+        except ValueError:
+            errors.append(f'Invalid batch_year: {batch_year}')
+
+
+def _validate_club_row(row, school_id, errors):
+    contact_email = row.get('contact_email', '')
+    if contact_email and not _valid_email(contact_email):
+        errors.append(f'Invalid contact email: {contact_email}')
+    name = row.get('name', '')
+    if name:
+        existing = Club.query.filter_by(school_id=school_id, name=name).first()
+        if existing:
+            errors.append(f'Club with name {name} already exists')
+
+
+def _validate_attendance_row(row, school_id, errors):
+    student_email = row.get('student_email', '')
+    if student_email:
+        student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+        if not student:
+            errors.append(f'Student not found: {student_email}')
+    course_code = row.get('course_code', '')
+    if course_code:
+        course = Course.query.join(Section).filter(
+            Section.school_id == school_id, Course.code == course_code
+        ).first()
+        if not course:
+            errors.append(f'Course not found with code: {course_code}')
+    status = row.get('status', '')
+    valid_statuses = ['present', 'absent', 'late', 'excused']
+    if status and status not in valid_statuses:
+        errors.append(f'Invalid status: {status}. Must be one of: {", ".join(valid_statuses)}')
+    date_val = row.get('date', '')
+    if date_val:
+        try:
+            from datetime import datetime as dt
+            dt.strptime(date_val, '%Y-%m-%d')
+        except ValueError:
+            errors.append(f'Invalid date format: {date_val}. Use YYYY-MM-DD')
+
+
+def _validate_grade_row(row, school_id, errors):
+    student_email = row.get('student_email', '')
+    if student_email:
+        student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+        if not student:
+            errors.append(f'Student not found: {student_email}')
+    course_code = row.get('course_code', '')
+    if course_code:
+        course = Course.query.join(Section).filter(
+            Section.school_id == school_id, Course.code == course_code
+        ).first()
+        if not course:
+            errors.append(f'Course not found with code: {course_code}')
+    grade = row.get('grade', '')
+    if grade:
+        try:
+            float(grade)
+        except ValueError:
+            errors.append(f'Invalid grade value: {grade}')
 
 
 def _valid_email(email):
@@ -421,12 +535,132 @@ def _import_enrollment(row, school_id, user_id):
     return True
 
 
+def _import_department(row, school_id, user_id):
+    code = row.get('code', '').strip()
+    existing = Department.query.filter_by(school_id=school_id, code=code).first()
+    if existing:
+        return True
+    dept = Department(
+        school_id=school_id,
+        name=row.get('name', '').strip(),
+        code=code,
+    )
+    db.session.add(dept)
+    return True
+
+
+def _import_section(row, school_id, user_id):
+    code = row.get('code', '').strip()
+    existing = Section.query.filter_by(school_id=school_id, code=code).first()
+    if existing:
+        return True
+    department_code = row.get('department_code', '').strip()
+    dept = Department.query.filter_by(school_id=school_id, code=department_code).first()
+    if not dept:
+        return False
+    try:
+        batch_year = int(row.get('batch_year', datetime.utcnow().year))
+    except ValueError:
+        batch_year = datetime.utcnow().year
+    section = Section(
+        school_id=school_id,
+        department_id=dept.id,
+        name=row.get('name', '').strip(),
+        code=code,
+        batch_year=batch_year,
+    )
+    db.session.add(section)
+    return True
+
+
+def _import_club(row, school_id, user_id):
+    name = row.get('name', '').strip()
+    existing = Club.query.filter_by(school_id=school_id, name=name).first()
+    if existing:
+        return True
+    club = Club(
+        school_id=school_id,
+        name=name,
+        category=row.get('category', '').strip(),
+        contact_email=row.get('contact_email', '').strip(),
+        description=row.get('description', '').strip() or None,
+    )
+    db.session.add(club)
+    return True
+
+
+def _import_attendance(row, school_id, user_id):
+    student_email = row.get('student_email', '').strip().lower()
+    student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+    if not student:
+        return False
+    course_code = row.get('course_code', '').strip()
+    course = Course.query.join(Section).filter(
+        Section.school_id == school_id, Course.code == course_code
+    ).first()
+    if not course:
+        return False
+    try:
+        att_date = datetime.strptime(row.get('date', '').strip(), '%Y-%m-%d').date()
+    except ValueError:
+        return False
+    existing = Attendance.query.filter_by(
+        course_id=course.id, student_id=student.id, date=att_date
+    ).first()
+    if existing:
+        existing.status = row.get('status', 'present').strip()
+        return True
+    record = Attendance(
+        course_id=course.id,
+        student_id=student.id,
+        date=att_date,
+        status=row.get('status', 'present').strip(),
+    )
+    db.session.add(record)
+    return True
+
+
+def _import_grade(row, school_id, user_id):
+    student_email = row.get('student_email', '').strip().lower()
+    student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+    if not student:
+        return False
+    course_code = row.get('course_code', '').strip()
+    course = Course.query.join(Section).filter(
+        Section.school_id == school_id, Course.code == course_code
+    ).first()
+    if not course:
+        return False
+    try:
+        grade_val = float(row.get('grade', 0))
+    except ValueError:
+        return False
+    existing = Grade.query.filter_by(student_id=student.id, course_id=course.id).first()
+    if existing:
+        existing.grade = grade_val
+        return True
+    grade = Grade(
+        student_id=student.id,
+        course_id=course.id,
+        grade=grade_val,
+    )
+    db.session.add(grade)
+    if student.student_profile:
+        student.student_profile.cgpa = grade_val
+    return True
+
+
 _IMPORTERS = {
     'students': _import_student,
     'faculty': _import_faculty,
     'courses': _import_course,
     'timetable': _import_timetable,
     'enrollments': _import_enrollment,
+    'departments': _import_department,
+    'sections': _import_section,
+    'clubs': _import_club,
+    'attendance': _import_attendance,
+    'grades': _import_grade,
 }
 
 
