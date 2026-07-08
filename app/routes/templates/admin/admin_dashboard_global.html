@@ -5,6 +5,24 @@
 
 {% block content %}
 
+{% if is_first_login %}
+<div style="background: linear-gradient(135deg, var(--primary-color), #764ba2); border-radius: var(--radius-md); padding: 2rem; margin-bottom: 2rem; color: white;">
+    <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+        <span class="material-symbols-rounded" style="font-size: 3rem;">celebration</span>
+        <div style="flex: 1;">
+            <h2 style="margin: 0 0 0.25rem; font-size: 1.5rem;">Welcome to Hive!</h2>
+            <p style="margin: 0; opacity: 0.9; font-size: 0.95rem;">
+                Your campus platform is ready. Use the Quick Actions to manage your institution,
+                or head to the Import section to bulk-add students and faculty.
+            </p>
+        </div>
+        <a href="{{ url_for('admin.admin_schools') }}" style="background: rgba(255,255,255,0.2); color: white; text-decoration: none; padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; white-space: nowrap;">
+            Manage Schools
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <div class="stats-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
     <div class="glass-panel" style="padding: 1.5rem; text-align: center; border-left: 4px solid var(--primary-color);">
         <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">Total Students</div>
@@ -24,6 +42,25 @@
     </div>
 </div>
 
+{% if stats.students == 0 and stats.courses == 0 %}
+<div class="glass-panel" style="padding: 2rem; margin-bottom: 2rem; text-align: center;">
+    <span class="material-symbols-rounded" style="font-size: 3rem; color: var(--text-muted); margin-bottom: 0.75rem;">database</span>
+    <h3 style="margin: 0 0 0.5rem; color: var(--text-main);">Get Started with Data</h3>
+    <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 400px; margin: 0 auto 1.25rem;">
+        Your institution is created but empty. Import students, faculty, courses, and more
+        from the Import section to bring your campus platform to life.
+    </p>
+    <div style="display: flex; gap: 0.75rem; justify-content: center; flex-wrap: wrap;">
+        <a href="{{ url_for('admin.admin_sections') }}" class="glass-button" style="padding: 0.6rem 1.25rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">group</span> Manage Sections
+        </a>
+        <a href="#" class="glass-button" style="padding: 0.6rem 1.25rem; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+            <span class="material-symbols-rounded" style="font-size: 18px;">upload</span> Import Data
+        </a>
+    </div>
+</div>
+{% endif %}
+
 <div style="display: grid; grid-template-columns: 1.6fr 1fr; gap: 2rem;">
     <!-- Schools Overview -->
     <div class="glass-panel" style="padding: 2rem;">
@@ -41,15 +78,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    {% for school in schools %}
+                    {% for sd in school_data %}
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                         <td style="padding: 1rem 0.5rem;">
-                            <div style="font-weight: 600;">{{ school.name }}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">ID: {{ school.id }}</div>
+                            <div style="font-weight: 600;">{{ sd.name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-muted);">
+                                {{ sd.students }} students &middot; {{ sd.professors }} faculty &middot; {{ sd.courses }} courses &middot; CGPA {{ sd.avg_cgpa }}
+                            </div>
                         </td>
-                        <td style="padding: 1rem 0.5rem; font-family: monospace; color: var(--primary-color);">{{ school.domain or 'N/A' }}</td>
+                        <td style="padding: 1rem 0.5rem; font-family: monospace; color: var(--primary-color);">{{ schools[loop.index0].domain or 'N/A' }}</td>
                         <td style="padding: 1rem 0.5rem; text-align: center;">
-                            {% if school.is_active %}
+                            {% if sd.status == 'active' %}
                             <span style="display: inline-flex; align-items: center; gap: 0.25rem; background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 2px 8px; border-radius: 99px; font-size: 0.75rem; font-weight: 600;">
                                 <span style="width: 6px; height: 6px; background: #10b981; border-radius: 50%;"></span> Active
                             </span>

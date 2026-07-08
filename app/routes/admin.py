@@ -1,5 +1,5 @@
+from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort
-from datetime import datetime
 from ..middleware import school_scoped, role_minimum
 from ..models import (
     db, User, Student, Section, Course, School,
@@ -38,6 +38,10 @@ def admin_dashboard():
             'status': 'active' if s.is_active else 'inactive'
         })
 
+    is_first_login = False
+    if g.current_user.created_at:
+        is_first_login = datetime.utcnow() - g.current_user.created_at < timedelta(minutes=30)
+
     return render_template('admin_dashboard_global.html',
                            stats={
                                'schools': total_schools,
@@ -48,7 +52,8 @@ def admin_dashboard():
                            },
                            school_data=school_data,
                            schools=schools,
-                           announcements=Announcement.query.filter_by(school_id=None).order_by(Announcement.posted_at.desc()).limit(5).all())
+                           announcements=Announcement.query.filter_by(school_id=None).order_by(Announcement.posted_at.desc()).limit(5).all(),
+                           is_first_login=is_first_login)
 
 
 @admin_bp.route('/schools')
