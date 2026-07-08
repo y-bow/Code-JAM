@@ -1,44 +1,42 @@
 {% extends "base.html" %}
+{% from "_components.html" import btn, badge, form_group, alert %}
 
 {% block title %}Hive | Manage {{ course.code }}{% endblock %}
 {% block page_title %}Manage: {{ course.code }} ({{ course.name }}){% endblock %}
 
-
 {% block content %}
-<div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); margin-bottom: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-        <div style="display: flex; gap: 2rem;">
+<div class="card" style="margin-bottom:var(--space-5);">
+    <div class="flex justify-between items-center" style="flex-wrap:wrap;gap:var(--space-3);">
+        <div class="flex gap-4">
             <div>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Enrolled</span>
-                <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">{{ students|length
-                    }}</div>
+                <span class="text-tertiary" style="font-size:0.8rem;text-transform:uppercase;">Enrolled</span>
+                <div style="font-size:1.3rem;font-weight:bold;">{{ students|length }}</div>
             </div>
             <div>
-                <span style="color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase;">Section</span>
-                <div style="font-size: 1.5rem; font-weight: bold; font-family: var(--font-heading);">{{
-                    course.section.code }}</div>
+                <span class="text-tertiary" style="font-size:0.8rem;text-transform:uppercase;">Section</span>
+                <div style="font-size:1.3rem;font-weight:bold;">{{ course.section.code }}</div>
             </div>
             {% if is_pa %}
             <div>
-                <span style="color: var(--primary-color); font-size: 0.85rem; text-transform: uppercase; font-weight: 600;">Role</span>
-                <div style="font-size: 1.2rem; font-weight: bold; font-family: var(--font-heading); color: var(--primary-color);">Assistant Professor</div>
+                <span class="text-tertiary" style="font-size:0.8rem;text-transform:uppercase;font-weight:600;color:var(--primary);">Role</span>
+                <div style="font-size:1.1rem;font-weight:bold;color:var(--primary);">Assistant Professor</div>
             </div>
             {% endif %}
         </div>
 
-        <div style="display: flex; gap: 1rem;">
+        <div class="flex gap-3">
             {% if not is_pa and not is_dean and not is_admin %}
-            <button class="glass-btn" onclick="document.getElementById('paModal').showModal()" style="border-color: var(--primary-color); color: var(--primary-color);">
-                <span class="material-symbols-rounded">person_add</span> Assign Assistant
+            <button class="btn btn-secondary" onclick="document.getElementById('paModal').classList.add('active')" style="border-color:var(--primary);color:var(--primary);">
+                <span class="material-symbols-rounded" style="font-size:16px;">person_add</span> Assign Assistant
             </button>
             {% endif %}
 
             {% if course.meet_link %}
-            <a href="{{ course.meet_link }}" target="_blank" class="primary-btn" style="background: var(--success-color);">
+            <a href="{{ course.meet_link }}" target="_blank" class="btn btn-primary" style="background:var(--success);">
                 <span class="material-symbols-rounded">videocam</span> Live Class Active
             </a>
             {% elif not is_pa and not is_dean %}
-            <button class="primary-btn" onclick="document.getElementById('meetModal').showModal()">
+            <button class="btn btn-primary" onclick="document.getElementById('meetModal').classList.add('active')">
                 <span class="material-symbols-rounded">videocam</span> Start Meeting
             </button>
             {% endif %}
@@ -48,54 +46,46 @@
 
 <!-- TAB: Students -->
 <div id="Students" class="tab-content active">
-    <div class="glass-panel" style="border-radius: var(--radius-lg); overflow: hidden;">
-        <div
-            style="padding: 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
-            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;">
-                <span class="material-symbols-rounded" style="color: var(--primary-color);">groups</span>
-                Student Roster
-            </h3>
-        </div>
-        <div style="overflow-x: auto;">
-            <table style="width: 100%; border-collapse: collapse; text-align: left;">
+    <div class="card" style="padding:0;">
+        <div class="card-header" style="padding:var(--space-4);"><h3><span class="material-symbols-rounded" style="font-size:18px;">groups</span> Student Roster</h3></div>
+        <div class="table-wrap" style="border:none;border-radius:0;">
+            <table class="h-table">
                 <thead>
-                    <tr style="background: var(--bg-main); border-bottom: 2px solid var(--border-color);">
-                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Name/ID</th>
-                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Attendance</th>
-                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Grade</th>
-                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Status</th>
-                        <th style="padding: 1rem 1.5rem; color: var(--text-muted);">Actions</th>
+                    <tr>
+                        <th>Name/ID</th>
+                        <th>Attendance</th>
+                        <th>Grade</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for student in students %}
-                    <tr style="border-bottom: 1px solid var(--border-color);">
-                        <td style="padding: 1rem 1.5rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                <div style="font-weight: 500;">{{ student.name }}</div>
+                    <tr>
+                        <td>
+                            <div class="flex items-center gap-1">
+                                <span style="font-weight:500;">{{ student.name }}</span>
                                 {% if student.role == 'class_rep' %}
-                                <span title="Class Representative" style="font-size: 1.1rem; filter: drop-shadow(0 0 2px rgba(255,215,0,0.5)); cursor: help;">👑</span>
+                                <span title="Class Representative" style="cursor:help;font-size:1rem;">👑</span>
                                 {% endif %}
                             </div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">{{ student.email }}</div>
+                            <div class="text-tertiary" style="font-size:0.8rem;">{{ student.email }}</div>
                         </td>
-                        <td style="padding: 1rem 1.5rem;">{{ student.attendance }}%</td>
-                        <td style="padding: 1rem 1.5rem;">{{ student.grade }}</td>
-                        <td style="padding: 1rem 1.5rem;">
-                            <span class="status-pill {{ student.risk }}">
+                        <td>{{ student.attendance }}%</td>
+                        <td>{{ student.grade }}</td>
+                        <td>
+                            <span class="badge" style="background:{% if student.risk == 'high' %}rgba(239,68,68,0.1){% else %}rgba(16,185,129,0.1){% endif %};color:{% if student.risk == 'high' %}var(--danger){% else %}var(--success){% endif %};">
                                 {{ "At Risk" if student.risk == 'high' else "Healthy" }}
                             </span>
                         </td>
-                        <td style="padding: 1rem 1.5rem;">
-                            <div style="display: flex; gap: 0.5rem;">
-                                <button class="icon-btn" title="View Progress"><span
-                                        class="material-symbols-rounded">analytics</span></button>
-                                
+                        <td>
+                            <div class="flex gap-1">
+                                <button class="btn btn-ghost btn-sm" title="View Progress"><span class="material-symbols-rounded" style="font-size:16px;">analytics</span></button>
                                 {% if not is_pa and not is_dean and student.role != 'class_rep' %}
                                 <form action="{{ url_for('classroom.nominate_class_rep', course_id=course.id, student_id=student.id) }}" method="POST">
     {{ csrf_token() }}
-                                    <button type="submit" class="icon-btn" title="Nominate as Class Rep" style="color: var(--primary-color);">
-                                        <span class="material-symbols-rounded">workspace_premium</span>
+                                    <button type="submit" class="btn btn-ghost btn-sm" title="Nominate as Class Rep" style="color:var(--primary);">
+                                        <span class="material-symbols-rounded" style="font-size:16px;">workspace_premium</span>
                                     </button>
                                 </form>
                                 {% endif %}
@@ -111,130 +101,141 @@
 
 <!-- TAB: Assignments -->
 <div id="Assignments" class="tab-content">
-    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3>Existing Assignments</h3>
-            <div class="card-grid" style="margin-top: 1rem;">
+    <div class="grid-sidebar">
+        <div class="card">
+            <div class="card-header"><h3>Existing Assignments</h3></div>
+            <div class="card-body">
                 {% for ass in assignments %}
-                <div class="glass-panel"
-                    style="padding: 1rem; margin-bottom: 1rem; border-left: 4px solid var(--primary-color);">
-                    <div style="display: flex; justify-content: space-between;">
-                        <h4>{{ ass.title }}</h4>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Due: {{ ass.due_date.strftime('%b
-                            %d') }}</span>
+                <div style="padding:var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);margin-bottom:var(--space-3);border-left:4px solid var(--primary);">
+                    <div class="flex justify-between">
+                        <h4 style="margin:0;">{{ ass.title }}</h4>
+                        <span class="text-tertiary" style="font-size:0.85rem;">Due: {{ ass.due_date.strftime('%b %d') }}</span>
                     </div>
                 </div>
                 {% endfor %}
             </div>
         </div>
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); height: fit-content;">
-            <h3>Create New</h3>
-            <form action="{{ url_for('classroom.create_assignment', course_id=course.id) }}" method="POST"
-                style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+        <div class="card" style="height:fit-content;">
+            <div class="card-header"><h3>Create New</h3></div>
+            <div class="card-body">
+                <form action="{{ url_for('classroom.create_assignment', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-3);">
     {{ csrf_token() }}
-                <input type="text" name="title" class="glass-input" placeholder="Title" required>
-                <textarea name="description" class="glass-input" placeholder="Instructions..."
-                    style="height: 100px;"></textarea>
-                <input type="datetime-local" name="due_date" class="glass-input" required>
-                <input type="number" name="points" class="glass-input" value="100">
-                <button type="submit" class="primary-btn">Post Assignment</button>
-            </form>
+                    <input type="text" name="title" class="form-input" placeholder="Title" required>
+                    <textarea name="description" class="form-textarea" placeholder="Instructions..." style="height:80px;"></textarea>
+                    <input type="datetime-local" name="due_date" class="form-input" required>
+                    <input type="number" name="points" class="form-input" value="100">
+                    <button type="submit" class="btn btn-primary">Post Assignment</button>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
 <!-- TAB: Attendance -->
 <div id="Attendance" class="tab-content">
-    <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
+    <div class="card">
         <form action="{{ url_for('classroom.mark_attendance', course_id=course.id) }}" method="POST">
     {{ csrf_token() }}
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0;">Mark Attendance for Today</h3>
-                <input type="date" name="date" class="glass-input" style="width: auto;" value="{{ today_date }}">
-                <button type="submit" class="primary-btn">Save Records</button>
+            <div class="flex justify-between items-center mb-4">
+                <h3 style="margin:0;">Mark Attendance for Today</h3>
+                <div class="flex items-center gap-3">
+                    <input type="date" name="date" class="form-input" style="width:auto;" value="{{ today_date }}">
+                    <button type="submit" class="btn btn-primary">Save Records</button>
+                </div>
             </div>
-            <table style="width: 100%; border-collapse: collapse;">
-                {% for student in students %}
-                <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 0.75rem;">{{ student.name }}</td>
-                    <td style="padding: 0.75rem; text-align: right;">
-                        <input type="radio" name="status" value="{{ student.id }}:present" checked> Present
-                        <input type="radio" name="status" value="{{ student.id }}:absent" style="margin-left: 1rem;">
-                        Absent
-                        <input type="radio" name="status" value="{{ student.id }}:late" style="margin-left: 1rem;"> Late
-                    </td>
-                </tr>
-                {% endfor %}
-            </table>
+            <div class="table-wrap" style="border:none;border-radius:0;">
+                <table class="h-table">
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td style="padding:var(--space-2);">{{ student.name }}</td>
+                            <td style="padding:var(--space-2);text-align:right;">
+                                <input type="radio" name="status" value="{{ student.id }}:present" checked> Present
+                                <input type="radio" name="status" value="{{ student.id }}:absent" style="margin-left:var(--space-3);"> Absent
+                                <input type="radio" name="status" value="{{ student.id }}:late" style="margin-left:var(--space-3);"> Late
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </form>
     </div>
 </div>
 
 <!-- TAB: Announcements -->
 <div id="Announcements" class="tab-content">
-    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 2rem;">
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg);">
-            <h3>Class History</h3>
-            <div style="margin-top: 1rem;">
+    <div class="grid-sidebar">
+        <div class="card">
+            <div class="card-header"><h3>Class History</h3></div>
+            <div class="card-body">
                 {% for ann in announcements %}
-                <div class="announcement-item glass-panel {{ 'urgent' if ann.urgent }}">
-                    <h4>{{ ann.title }}</h4>
-                    <p>{{ ann.body }}</p>
-                    <small>{{ ann.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                <div style="padding:var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);margin-bottom:var(--space-3);border-left:3px solid {% if ann.urgent %}var(--danger){% else %}var(--border-primary){% endif %};background:{% if ann.urgent %}rgba(239,68,68,0.03){% else %}transparent{% endif %};">
+                    <h4 style="margin:0 0 var(--space-1) 0;">{{ ann.title }}</h4>
+                    <p class="text-secondary" style="font-size:0.9rem;margin:0 0 var(--space-1) 0;">{{ ann.body }}</p>
+                    <small class="text-tertiary">{{ ann.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
                 </div>
                 {% endfor %}
             </div>
         </div>
-        <div class="glass-panel" style="padding: 1.5rem; border-radius: var(--radius-lg); height: fit-content;">
-            <h3>Post Announcement</h3>
-            <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST"
-                style="margin-top: 1rem; display: flex; flex-direction: column; gap: 1rem;">
+        <div class="card" style="height:fit-content;">
+            <div class="card-header"><h3>Post Announcement</h3></div>
+            <div class="card-body">
+                <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-3);">
     {{ csrf_token() }}
-                <input type="text" name="title" class="glass-input" placeholder="Subject" required>
-                <textarea name="body" class="glass-input" placeholder="Content..." required
-                    style="height: 150px;"></textarea>
-                <label style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;">
-                    <input type="checkbox" name="urgent"> Mark as Urgent
-                </label>
-                <button type="submit" class="primary-btn">Post to Class</button>
+                    <input type="text" name="title" class="form-input" placeholder="Subject" required>
+                    <textarea name="body" class="form-textarea" placeholder="Content..." required style="height:120px;"></textarea>
+                    <label class="flex items-center gap-1" style="font-size:0.85rem;">
+                        <input type="checkbox" name="urgent"> Mark as Urgent
+                    </label>
+                    <button type="submit" class="btn btn-primary">Post to Class</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Meet Modal -->
+<div id="meetModal" class="modal-overlay">
+    <div class="modal" style="max-width:500px;">
+        <div class="modal-header">
+            <h3>Set Video Class Link</h3>
+            <button type="button" class="modal-close" onclick="document.getElementById('meetModal').classList.remove('active')"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('academics.update_meet_link') }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-4);">
+    {{ csrf_token() }}
+                <input type="hidden" name="course_id" value="{{ course.id }}">
+                <input type="url" name="meet_link" class="form-input" placeholder="Google Meet URL" required>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('meetModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Link</button>
+                </div>
             </form>
         </div>
     </div>
 </div>
 
-<dialog id="meetModal" class="glass-panel"
-    style="margin: auto; border: 1px solid var(--primary-color); padding: 2rem; border-radius: var(--radius-lg); color: white;">
-    <h3 style="margin-bottom: 1rem;">Set Video Class Link</h3>
-    <form action="{{ url_for('academics.update_meet_link') }}" method="POST"
-        style="display: flex; flex-direction: column; gap: 1.5rem;">
-    {{ csrf_token() }}
-        <input type="hidden" name="course_id" value="{{ course.id }}">
-        <input type="url" name="meet_link" class="glass-input" placeholder="Google Meet URL" required
-            style="min-width: 400px;">
-        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <button type="button" onclick="document.getElementById('meetModal').close()"
-                class="glass-btn">Cancel</button>
-            <button type="submit" class="primary-btn">Save Link</button>
+<!-- Assign Assistant Modal -->
+<div id="paModal" class="modal-overlay">
+    <div class="modal" style="max-width:500px;">
+        <div class="modal-header">
+            <h3>Assign Assistant Professor</h3>
+            <button type="button" class="modal-close" onclick="document.getElementById('paModal').classList.remove('active')"><span class="material-symbols-rounded">close</span></button>
         </div>
-    </form>
-</dialog>
-
-<dialog id="paModal" class="glass-panel"
-    style="margin: auto; border: 1px solid var(--primary-color); padding: 2rem; border-radius: var(--radius-lg); color: white;">
-    <h3 style="margin-bottom: 0.5rem;">Assign Assistant Professor</h3>
-    <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1.5rem;">Type the email of another teacher to assign them as an assistant for this course.</p>
-    <form action="{{ url_for('classroom.assign_assistant_professor', course_id=course.id) }}" method="POST"
-        style="display: flex; flex-direction: column; gap: 1.5rem;">
+        <div class="modal-body">
+            <p class="text-secondary" style="font-size:0.9rem;margin-bottom:var(--space-4);">Type the email of another teacher to assign them as an assistant for this course.</p>
+            <form action="{{ url_for('classroom.assign_assistant_professor', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-4);">
     {{ csrf_token() }}
-        <input type="email" name="email" class="glass-input" placeholder="teacher@university.edu" required
-            style="min-width: 400px;">
-        <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-            <button type="button" onclick="document.getElementById('paModal').close()"
-                class="glass-btn">Cancel</button>
-            <button type="submit" class="primary-btn">Assign Assistant</button>
+                <input type="email" name="email" class="form-input" placeholder="teacher@university.edu" required>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="btn btn-secondary" onclick="document.getElementById('paModal').classList.remove('active')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Assign Assistant</button>
+                </div>
+            </form>
         </div>
-    </form>
-</dialog>
+    </div>
+</div>
 
 <script>
     function openTab(evt, tabName) {
@@ -250,61 +251,11 @@
         document.getElementById(tabName).style.display = "block";
         evt.currentTarget.className += " active";
     }
-
-    // Initial display
     document.getElementById('Students').style.display = "block";
 </script>
 
 <style>
-    .tab-content {
-        display: none;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
-
-    .status-pill {
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        display: inline-block;
-    }
-
-    .status-pill.low {
-        background: rgba(16, 185, 129, 0.1);
-        color: var(--success-color);
-    }
-
-    .status-pill.high {
-        background: rgba(239, 68, 68, 0.1);
-        color: var(--danger-color);
-    }
-
-    .announcement-item {
-        padding: 1rem;
-        margin-bottom: 1rem;
-        border-left: 3px solid var(--border-color);
-    }
-
-    .announcement-item.urgent {
-        border-left-color: var(--danger-color);
-        background: rgba(239, 68, 68, 0.05);
-    }
-
-    .announcement-item h4 {
-        margin: 0 0 0.5rem 0;
-    }
-
-    .announcement-item p {
-        margin: 0 0 0.5rem 0;
-        font-size: 0.9rem;
-        color: var(--text-main);
-    }
-
-    .announcement-item small {
-        color: var(--text-muted);
-    }
+    .tab-content { display:none; }
+    .tab-content.active { display:block; }
 </style>
 {% endblock %}

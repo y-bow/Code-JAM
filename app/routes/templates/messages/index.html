@@ -1,50 +1,49 @@
 {% extends "base.html" %}
 
 {% block title %}Hive | Inbox{% endblock %}
+{% block page_title %}Inbox{% endblock %}
 
 {% block content %}
-<div class="inbox-container glass-panel">
+<div class="card" style="display:flex;height:calc(100vh - 140px);overflow:hidden;padding:0;">
     <!-- LEFT PANEL: INBOX LIST -->
-    <div class="inbox-sidebar">
-        <div class="inbox-header">
-            <h2>Inbox</h2>
-            <button class="btn-primary new-msg-btn" onclick="openNewMessageModal()">
-                <span class="material-symbols-rounded">edit_square</span> New Message
+    <div class="inbox-sidebar" style="width:380px;border-right:1px solid var(--border-primary);display:flex;flex-direction:column;flex-shrink:0;">
+        <div class="flex justify-between items-center" style="padding:var(--space-4);border-bottom:1px solid var(--border-primary);">
+            <h2 style="margin:0;">Inbox</h2>
+            <button class="btn btn-primary" style="display:flex;align-items:center;gap:var(--space-1);" onclick="openNewMessageModal()">
+                <span class="material-symbols-rounded" style="font-size:16px;">edit_square</span> New Message
             </button>
         </div>
-        
-        <div class="inbox-search">
-            <span class="material-symbols-rounded">search</span>
-            <input type="text" id="inboxSearch" placeholder="Search inbox...">
+
+        <div style="padding:var(--space-3);position:relative;border-bottom:1px solid var(--border-primary);">
+            <span class="material-symbols-rounded" style="position:absolute;left:var(--space-5);top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:18px;pointer-events:none;">search</span>
+            <input type="text" id="inboxSearch" placeholder="Search inbox..." class="form-input" style="padding-left:36px;width:100%;">
         </div>
 
-        <div class="inbox-list" id="inboxList">
+        <div class="inbox-list" id="inboxList" style="flex:1;overflow-y:auto;">
             {% if inbox_items %}
                 {% for item in inbox_items %}
-                <div class="inbox-item {% if item.unread_count > 0 %}unread{% endif %}" data-user-id="{{ item.user.id }}" onclick="loadThread({{ item.user.id }})">
-                    <div class="item-avatar">
+                <div class="inbox-item {% if item.unread_count > 0 %}unread{% endif %}" data-user-id="{{ item.user.id }}" onclick="loadThread({{ item.user.id }})" style="display:flex;padding:var(--space-4);gap:var(--space-3);cursor:pointer;border-bottom:1px solid var(--border-secondary);transition:background 0.1s;">
+                    <div class="avatar" style="width:40px;height:40px;font-size:1rem;flex-shrink:0;position:relative;">
                         {{ item.user.name[0] | upper }}
                         {% if item.unread_count > 0 %}
-                        <span class="unread-dot"></span>
+                        <span style="position:absolute;top:0;right:0;width:10px;height:10px;background:#3b82f6;border-radius:50%;border:2px solid var(--bg-primary);"></span>
                         {% endif %}
                     </div>
-                    <div class="item-content">
-                        <div class="item-top">
-                            <span class="item-name">{{ item.user.name }}</span>
-                            <span class="item-role-badge {{ item.user.role }}">{{ item.user.role | title }}</span>
-                            <span class="item-time">
-                                {% set today = now | default(None) %}
+                    <div class="flex flex-col" style="flex:1;min-width:0;overflow:hidden;">
+                        <div class="flex items-center justify-between" style="margin-bottom:2px;">
+                            <span class="item-name" style="font-weight:500;">{{ item.user.name }}</span>
+                            <span class="text-tertiary" style="font-size:0.8rem;">
                                 {{ item.latest_msg.sent_at.strftime('%b %d') }}
                             </span>
                         </div>
-                        <div class="item-subject">{{ item.latest_msg.subject }}</div>
-                        <div class="item-preview">{{ item.latest_msg.body[:50] }}...</div>
+                        <div class="item-subject text-tertiary truncate" style="font-size:0.9rem;">{{ item.latest_msg.subject }}</div>
+                        <div class="text-tertiary truncate" style="font-size:0.85rem;opacity:0.8;">{{ item.latest_msg.body[:50] }}...</div>
                     </div>
                 </div>
                 {% endfor %}
             {% else %}
-                <div class="empty-state">
-                    <span class="material-symbols-rounded">inbox</span>
+                <div class="empty-state" style="padding:var(--space-6);">
+                    <span class="material-symbols-rounded empty-icon">inbox</span>
                     <p>Your inbox is empty.</p>
                 </div>
             {% endif %}
@@ -52,40 +51,37 @@
     </div>
 
     <!-- RIGHT PANEL: THREAD VIEW -->
-    <div class="inbox-thread">
-        <div class="thread-empty-state" id="threadEmptyState">
-            <span class="material-symbols-rounded">forum</span>
+    <div class="inbox-thread" style="flex:1;display:flex;flex-direction:column;">
+        <div class="thread-empty-state" id="threadEmptyState" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-tertiary);gap:var(--space-3);">
+            <span class="material-symbols-rounded" style="font-size:3rem;opacity:0.5;">forum</span>
             <p>Select a message to open the thread</p>
         </div>
 
-        <div class="thread-active-state hide" id="threadActiveState">
-            <div class="thread-header">
-                <div class="thread-partner-info">
-                    <div class="avatar" id="threadAvatar">U</div>
-                    <div class="info">
-                        <h3 id="threadName">Partner Name</h3>
-                        <span class="item-role-badge" id="threadRole">Role</span>
+        <div class="thread-active-state hide flex flex-col" id="threadActiveState" style="height:100%;">
+            <div style="padding:var(--space-4);border-bottom:1px solid var(--border-primary);">
+                <div class="flex items-center gap-3" style="margin-bottom:var(--space-2);">
+                    <div class="avatar" id="threadAvatar" style="width:48px;height:48px;font-size:1.3rem;">U</div>
+                    <div>
+                        <h3 id="threadName" style="margin:0 0 2px 0;">Partner Name</h3>
+                        <span id="threadRole" class="badge badge-primary">Role</span>
                     </div>
                 </div>
-                <div class="thread-actions">
-                    <h4 id="threadSubject">Subject</h4>
-                </div>
+                <h4 id="threadSubject" style="margin:0;font-size:1.1rem;">Subject</h4>
             </div>
 
-            <div class="thread-messages" id="threadMessages">
-                <!-- Messages injected via JS -->
+            <div class="thread-messages" id="threadMessages" style="flex:1;padding:var(--space-4);overflow-y:auto;display:flex;flex-direction:column;gap:var(--space-3);">
             </div>
 
-            <div class="thread-reply-box">
+            <div style="padding:var(--space-4);border-top:1px solid var(--border-primary);">
                 <form id="replyForm" onsubmit="sendReply(event)">
                     <input type="hidden" id="replyRecipientId">
                     <input type="hidden" id="replySubject">
-                    <textarea id="replyBody" placeholder="Type your formal reply here..." required maxlength="2000"></textarea>
-                    <div class="reply-footer">
-                        <span class="char-count" id="replyCharCount">0 / 2000</span>
-                        <button type="submit" class="btn-primary" id="replyBtn">
+                    <textarea id="replyBody" placeholder="Type your formal reply here..." required maxlength="2000" class="form-textarea" style="height:80px;margin-bottom:var(--space-2);"></textarea>
+                    <div class="flex justify-between items-center">
+                        <span class="text-tertiary" id="replyCharCount" style="font-size:0.85rem;">0 / 2000</span>
+                        <button type="submit" class="btn btn-primary" id="replyBtn" style="display:flex;align-items:center;gap:var(--space-1);">
                             <span>Send Reply</span>
-                            <span class="material-symbols-rounded">send</span>
+                            <span class="material-symbols-rounded" style="font-size:16px;">send</span>
                         </button>
                     </div>
                 </form>
@@ -96,364 +92,61 @@
 
 <!-- NEW MESSAGE MODAL -->
 <div id="newMsgModal" class="modal-overlay hide">
-    <div class="modal-content glass-panel new-msg-content">
+    <div class="modal" style="max-width:600px;">
         <div class="modal-header">
             <h2>New Official Message</h2>
-            <span class="close-modal" onclick="closeNewMessageModal()">&times;</span>
+            <button type="button" class="modal-close" onclick="closeNewMessageModal()"><span class="material-symbols-rounded">close</span></button>
         </div>
-        <form id="newMsgForm" onsubmit="sendNewMessage(event)">
-            <div class="form-group">
-                <label for="newMsgTo">To:</label>
-                <!-- Render allowed recipients natively for simplicity, or use JS search -->
-                <select id="newMsgTo" required class="form-select">
-                    <option value="" disabled selected>Search by name or course...</option>
-                    {% for rec in allowed_recipients %}
-                        <option value="{{ rec.id }}">{{ rec.name }} ({{ rec.role | title }})</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="newMsgSubject">Subject:</label>
-                <input type="text" id="newMsgSubject" required maxlength="100" placeholder="e.g. Question regarding CS101 Assignment">
-            </div>
-            <div class="form-group">
-                <label for="newMsgBody">Message:</label>
-                <textarea id="newMsgBody" required maxlength="2000" rows="6" placeholder="Dear Professor..."></textarea>
-            </div>
-            <div class="form-actions right">
-                <button type="button" class="btn-secondary" onclick="closeNewMessageModal()">Cancel</button>
-                <button type="submit" class="btn-primary" id="sendNewBtn">Send Message</button>
-            </div>
-        </form>
+        <div class="modal-body">
+            <form id="newMsgForm" onsubmit="sendNewMessage(event)">
+                <div class="form-group">
+                    <label class="form-label" for="newMsgTo">To:</label>
+                    <select id="newMsgTo" required class="form-select">
+                        <option value="" disabled selected>Search by name or course...</option>
+                        {% for rec in allowed_recipients %}
+                            <option value="{{ rec.id }}">{{ rec.name }} ({{ rec.role | title }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newMsgSubject">Subject:</label>
+                    <input type="text" id="newMsgSubject" required maxlength="100" placeholder="e.g. Question regarding CS101 Assignment" class="form-input">
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="newMsgBody">Message:</label>
+                    <textarea id="newMsgBody" required maxlength="2000" rows="6" placeholder="Dear Professor..." class="form-textarea"></textarea>
+                </div>
+                <div class="flex gap-3 justify-end">
+                    <button type="button" class="btn btn-secondary" onclick="closeNewMessageModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="sendNewBtn">Send Message</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 <style>
-/* Inbox Layout */
-.inbox-container {
-    display: flex;
-    height: calc(100vh - 120px);
-    overflow: hidden;
-    padding: 0;
-    gap: 0;
-}
+    .inbox-item:hover { background: var(--bg-secondary); }
+    .inbox-item.active { background: var(--primary-bg); }
+    .inbox-item.unread .item-name { font-weight:700;color:var(--text-primary); }
+    .inbox-item.unread .item-subject { font-weight:600;color:var(--text-primary); }
 
-/* Sidebar */
-.inbox-sidebar {
-    width: 380px;
-    border-right: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    background: rgba(var(--surface-rgb), 0.3);
-}
+    .msg-bubble { display:flex;flex-direction:column;max-width:75%; }
+    .msg-bubble.me { align-self:flex-end; }
+    .msg-bubble.them { align-self:flex-start; }
 
-.inbox-header {
-    padding: 1.5rem;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-}
+    .msg-header { display:flex;align-items:center;gap:var(--space-1);margin-bottom:var(--space-1);font-size:0.85rem; }
+    .msg-bubble.me .msg-header { flex-direction:row-reverse; }
+    .msg-name { font-weight:600;color:var(--text-primary); }
+    .msg-time { color:var(--text-tertiary); }
 
-.new-msg-btn {
-    padding: 0.5rem 1rem;
-    font-size: 0.9rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.inbox-search {
-    padding: 1rem;
-    position: relative;
-    border-bottom: 1px solid var(--border-color);
-}
-.inbox-search input {
-    width: 100%;
-    padding: 0.75rem 1rem 0.75rem 2.5rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background: var(--bg-main);
-    color: var(--text-main);
-}
-.inbox-search .material-symbols-rounded {
-    position: absolute;
-    left: 1.7rem;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-}
-
-.inbox-list {
-    flex: 1;
-    overflow-y: auto;
-}
-
-.inbox-item {
-    display: flex;
-    padding: 1.25rem;
-    gap: 1rem;
-    cursor: pointer;
-    border-bottom: 1px solid var(--border-color);
-    transition: background 0.2s;
-}
-.inbox-item:hover, .inbox-item.active {
-    background: rgba(var(--primary-rgb), 0.1);
-}
-
-.item-avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--primary-color);
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-weight: 600;
-    font-size: 1.2rem;
-    position: relative;
-    flex-shrink: 0;
-}
-
-/* Unread State */
-.inbox-item.unread .item-name {
-    font-weight: 700;
-    color: var(--text-main);
-}
-.inbox-item.unread .item-subject {
-    font-weight: 600;
-    color: var(--text-main);
-}
-.unread-dot {
-    position: absolute;
-    top: 0;
-    right: 0;
-    width: 12px;
-    height: 12px;
-    background: #3b82f6; /* Blue dot for unread */
-    border-radius: 50%;
-    border: 2px solid var(--surface-bg);
-}
-
-.item-content {
-    flex: 1;
-    overflow: hidden;
-}
-
-.item-top {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 0.25rem;
-}
-
-.item-name {
-    font-weight: 500;
-    font-size: 1rem;
-    color: var(--text-main);
-}
-
-.item-time {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-
-.item-subject {
-    font-size: 0.95rem;
-    margin-bottom: 0.25rem;
-    color: var(--text-muted);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.item-preview {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    opacity: 0.8;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-/* Thread View */
-.inbox-thread {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    background: var(--bg-main);
-}
-
-.thread-empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: var(--text-muted);
-    gap: 1rem;
-}
-.thread-empty-state .material-symbols-rounded {
-    font-size: 4rem;
-    opacity: 0.5;
-}
-
-.thread-active-state {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-}
-
-.thread-header {
-    padding: 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-.thread-partner-info {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-}
-.thread-partner-info .avatar {
-    width: 56px;
-    height: 56px;
-    font-size: 1.5rem;
-}
-.thread-partner-info h3 {
-    margin: 0 0 0.25rem 0;
-    color: var(--text-main);
-}
-
-.item-role-badge {
-    font-size: 0.75rem;
-    padding: 0.2rem 0.5rem;
-    border-radius: var(--radius-sm);
-    background: rgba(var(--primary-rgb), 0.15);
-    color: var(--primary-color);
-    font-weight: 600;
-}
-.item-role-badge.teacher { background: rgba(16, 185, 129, 0.15); color: #10b981; }
-.item-role-badge.admin { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
-
-#threadSubject {
-    margin: 0;
-    font-size: 1.25rem;
-    color: var(--text-main);
-    font-weight: 600;
-}
-
-.thread-messages {
-    flex: 1;
-    padding: 2rem;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-}
-
-.msg-bubble {
-    display: flex;
-    flex-direction: column;
-    max-width: 75%;
-}
-.msg-bubble.me {
-    align-self: flex-end;
-}
-.msg-bubble.them {
-    align-self: flex-start;
-}
-
-.msg-header {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    margin-bottom: 0.4rem;
-    font-size: 0.85rem;
-}
-.msg-bubble.me .msg-header {
-    flex-direction: row-reverse;
-}
-.msg-name { font-weight: 600; color: var(--text-main); }
-.msg-time { color: var(--text-muted); }
-
-.msg-body {
-    padding: 1rem 1.25rem;
-    border-radius: var(--radius-md);
-    line-height: 1.5;
-    word-break: break-word;
-    white-space: pre-wrap;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-}
-.msg-bubble.me .msg-body {
-    background: var(--primary-color);
-    color: white;
-    border-bottom-right-radius: 4px;
-}
-.msg-bubble.them .msg-body {
-    background: rgba(var(--surface-rgb), 0.7);
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    border-bottom-left-radius: 4px;
-}
-
-.thread-reply-box {
-    padding: 1.5rem;
-    border-top: 1px solid var(--border-color);
-    background: var(--surface-bg);
-}
-
-.thread-reply-box textarea {
-    width: 100%;
-    padding: 1rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background: var(--bg-main);
-    color: var(--text-main);
-    resize: none;
-    height: 100px;
-    font-family: inherit;
-    margin-bottom: 0.75rem;
-}
-.thread-reply-box textarea:focus {
-    border-color: var(--primary-color);
-    outline: none;
-}
-
-.reply-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-.char-count {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-}
-
-/* Modals */
-.new-msg-content {
-    max-width: 600px;
-    width: 90%;
-}
-.form-select {
-    width: 100%;
-    padding: 0.75rem 1rem;
-    border-radius: var(--radius-md);
-    border: 1px solid var(--border-color);
-    background: var(--bg-main);
-    color: var(--text-main);
-    font-size: 1rem;
-    cursor: pointer;
-}
-
-.hide { display: none !important; }
+    .msg-body { padding:var(--space-2) var(--space-3);border-radius:var(--radius-md);line-height:1.5;word-break:break-word;white-space:pre-wrap; }
+    .msg-bubble.me .msg-body { background:var(--primary);color:white;border-bottom-right-radius:4px; }
+    .msg-bubble.them .msg-body { background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border-primary);border-bottom-left-radius:4px; }
+    .hide { display:none !important; }
 </style>
 
 <script>
-// UI Control
 function openNewMessageModal() {
     document.getElementById('newMsgModal').classList.remove('hide');
 }
@@ -463,51 +156,41 @@ function closeNewMessageModal() {
     document.getElementById('newMsgForm').reset();
 }
 
-// Thread Loading
 function loadThread(userId) {
-    // UI states
     document.getElementById('threadEmptyState').classList.add('hide');
     document.getElementById('threadActiveState').classList.remove('hide');
-    
-    // Highlight list item
+
     document.querySelectorAll('.inbox-item').forEach(i => i.classList.remove('active'));
     const item = document.querySelector(`.inbox-item[data-user-id="${userId}"]`);
     if(item) {
         item.classList.add('active');
         item.classList.remove('unread');
-        const dot = item.querySelector('.unread-dot');
+        const dot = item.querySelector('span[style*="background:#3b82f6"]');
         if(dot) dot.remove();
     }
 
-    // Set recipients
     document.getElementById('replyRecipientId').value = userId;
-    
-    // Fetch History
+
     fetch(`/messages/history/${userId}`)
         .then(res => res.json())
         .then(data => {
-            // Update Header
             document.getElementById('threadName').textContent = data.partner.name;
             document.getElementById('threadAvatar').textContent = data.partner.name[0].toUpperCase();
             document.getElementById('threadRole').textContent = data.partner.role;
-            
-            // Assuming latest subject is thread subject (simplified)
+
             if(data.messages.length > 0) {
                 const latestSub = data.messages[data.messages.length - 1].subject;
                 document.getElementById('threadSubject').textContent = latestSub;
                 document.getElementById('replySubject').value = "Re: " + latestSub;
             }
 
-            // Map messages
             const container = document.getElementById('threadMessages');
             container.innerHTML = '';
-            
+
             data.messages.forEach(msg => {
                 const isMe = msg.sender_id != userId;
-                
                 const bubble = document.createElement('div');
                 bubble.className = `msg-bubble ${isMe ? 'me' : 'them'}`;
-                
                 bubble.innerHTML = `
                     <div class="msg-header">
                         <span class="msg-name">${isMe ? 'You' : escapeHtml(data.partner.name)}</span>
@@ -517,8 +200,7 @@ function loadThread(userId) {
                 `;
                 container.appendChild(bubble);
             });
-            
-            // Scroll to bottom
+
             container.scrollTop = container.scrollHeight;
         });
 }
@@ -527,12 +209,11 @@ function getCsrfToken() {
     return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 }
 
-// Sending Logic
 function sendNewMessage(e) {
     e.preventDefault();
     const btn = document.getElementById('sendNewBtn');
     btn.disabled = true;
-    
+
     const formData = new FormData();
     formData.append('recipient_id', document.getElementById('newMsgTo').value);
     formData.append('subject', document.getElementById('newMsgSubject').value);
@@ -551,7 +232,7 @@ function sendNewMessage(e) {
         btn.disabled = false;
         if(status === 200 && data.success) {
             closeNewMessageModal();
-            window.location.reload(); // Simple reload to refresh inbox list
+            window.location.reload();
         } else {
             alert(data.error || 'Failed to send message.');
         }
@@ -567,9 +248,9 @@ function sendReply(e) {
     const btn = document.getElementById('replyBtn');
     const bodyInput = document.getElementById('replyBody');
     const recipientId = document.getElementById('replyRecipientId').value;
-    
+
     btn.disabled = true;
-    
+
     const formData = new FormData();
     formData.append('recipient_id', recipientId);
     formData.append('subject', document.getElementById('replySubject').value);
@@ -588,7 +269,7 @@ function sendReply(e) {
         btn.disabled = false;
         if(status === 200 && data.success) {
             bodyInput.value = '';
-            loadThread(recipientId); // Reload thread to show new msg
+            loadThread(recipientId);
         } else {
             alert(data.error || 'Failed to send reply.');
         }
@@ -599,14 +280,10 @@ function sendReply(e) {
     });
 }
 
-// Textarea behavior
 const textarea = document.getElementById('replyBody');
-
 textarea.addEventListener('input', function() {
     document.getElementById('replyCharCount').textContent = `${this.value.length} / 2000`;
 });
-
-// Fix 2: Enter to Send (Shift+Enter for newline)
 textarea.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
@@ -614,14 +291,8 @@ textarea.addEventListener('keydown', function(e) {
     }
 });
 
-// Escape HTML securely
 function escapeHtml(unsafe) {
-
-    return (unsafe || '').replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
+    return (unsafe || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
 }
 </script>
 {% endblock %}

@@ -1,101 +1,101 @@
 {% extends "base.html" %}
+{% from "_components.html" import btn %}
+
 {% block title %}Import Preview{% endblock %}
 {% block page_title %}Import Preview{% endblock %}
+
 {% block content %}
-<div class="glass-panel" style="padding: 2rem; max-width: 1000px; margin: 0 auto;">
-    <h2 style="margin-bottom: 0.5rem;">Preview: {{ import_type|capitalize }} Import</h2>
-    <div style="margin-bottom: 1.5rem; display: flex; gap: 1rem; flex-wrap: wrap;">
-        <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); background: var(--bg-secondary);">
-            Total Rows: <strong>{{ total_rows }}</strong>
-        </span>
-        <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); background: var(--success-color); color: white;">
-            Valid: <strong>{{ valid_count }}</strong>
-        </span>
-        <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-sm); background: var(--danger-color); color: white;">
-            Errors: <strong>{{ error_count }}</strong>
-        </span>
-    </div>
-
-    {% if error_count > 0 %}
-    <div style="margin-bottom: 1.5rem; padding: 1rem; border-radius: var(--radius-md); background: rgba(220, 53, 69, 0.1); border: 1px solid var(--danger-color);">
-        <h4 style="color: var(--danger-color); margin-bottom: 0.5rem;">Validation Errors</h4>
-        <div style="max-height: 200px; overflow-y: auto;">
-            {% for v in validated %}
-                {% if not v.valid %}
-                <div style="padding: 0.25rem 0; font-size: 0.9rem;">
-                    <strong>Row {{ v.index + 1 }}:</strong>
-                    {% for e in v.errors %}
-                    <span style="color: var(--danger-color);">{{ e }}</span>{% if not loop.last %}; {% endif %}
-                    {% endfor %}
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-    </div>
-    {% endif %}
-
-    <div style="margin-bottom: 1.5rem;">
-        <h4>Detected Columns</h4>
-        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-            {% for col in columns %}
-            <span style="padding: 0.25rem 0.75rem; border-radius: var(--radius-sm);
-                         background: {% if col.lower() in column_spec.required %}#d4edda{% else %}#fff3cd{% endif %};
-                         border: 1px solid var(--border-color); font-size: 0.85rem;">
-                {{ col }}
-                {% if col.lower() in column_spec.required %}<strong>*</strong>{% endif %}
+<div class="card" style="max-width:1000px;margin:0 auto;">
+    <div class="card-header"><h3>Preview: {{ import_type|capitalize }} Import</h3></div>
+    <div class="card-body">
+        <div class="flex gap-3" style="margin-bottom:var(--space-4);flex-wrap:wrap;">
+            <span class="badge badge-default" style="font-size:0.85rem;height:auto;padding:var(--space-1) var(--space-3);">
+                Total Rows: <strong>{{ total_rows }}</strong>
             </span>
-            {% endfor %}
+            <span class="badge badge-success" style="font-size:0.85rem;height:auto;padding:var(--space-1) var(--space-3);">
+                Valid: <strong>{{ valid_count }}</strong>
+            </span>
+            <span class="badge badge-danger" style="font-size:0.85rem;height:auto;padding:var(--space-1) var(--space-3);">
+                Errors: <strong>{{ error_count }}</strong>
+            </span>
         </div>
-        <small style="color: var(--text-muted);">* = Required column</small>
-    </div>
 
-    <div class="table-container" style="margin-bottom: 1.5rem;">
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    {% for col in columns %}
-                    <th>{{ col }}</th>
-                    {% endfor %}
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
+        {% if error_count > 0 %}
+        <div class="alert alert-danger" style="margin-bottom:var(--space-4);flex-direction:column;align-items:flex-start;">
+            <strong style="color:var(--danger);margin-bottom:var(--space-2);">Validation Errors</strong>
+            <div style="max-height:200px;overflow-y:auto;width:100%;">
                 {% for v in validated %}
-                <tr style="{% if not v.valid %}opacity: 0.6;{% endif %}">
-                    <td>{{ v.index + 1 }}</td>
-                    {% for col in columns %}
-                    <td>{{ v.data.get(col, '') }}</td>
-                    {% endfor %}
-                    <td>
-                        {% if v.valid %}
-                        <span style="color: var(--success-color);">Valid</span>
-                        {% else %}
-                        <span style="color: var(--danger-color);" title="{{ v.errors|join('; ') }}">Error</span>
-                        {% endif %}
-                    </td>
-                </tr>
+                    {% if not v.valid %}
+                    <div style="padding:2px 0;font-size:0.9rem;">
+                        <strong>Row {{ v.index + 1 }}:</strong>
+                        {% for e in v.errors %}
+                        <span style="color:var(--danger);">{{ e }}</span>{% if not loop.last %}; {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
                 {% endfor %}
-            </tbody>
-        </table>
-    </div>
-
-    <form method="POST" action="{{ url_for('imports.confirm') }}" style="display: flex; gap: 1rem;">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <input type="hidden" name="import_type" value="{{ import_type }}">
-        <input type="hidden" name="file_content" value="{{ file_content }}">
-        <input type="hidden" name="validated_data" value='{{ validated | tojson | safe }}'>
-
-        <a href="{{ url_for('imports.index') }}" class="glass-button" style="text-decoration: none;">
-            <span class="material-symbols-rounded">arrow_back</span> Back
-        </a>
-
-        {% if valid_count > 0 %}
-        <button type="submit" class="glass-button" style="background: var(--success-color); color: white;">
-            <span class="material-symbols-rounded">check_circle</span>
-            Import {{ valid_count }} Valid Row{% if valid_count != 1 %}s{% endif %}
-        </button>
+            </div>
+        </div>
         {% endif %}
-    </form>
+
+        <div style="margin-bottom:var(--space-4);">
+            <h4 style="margin-bottom:var(--space-2);">Detected Columns</h4>
+            <div class="flex gap-2" style="flex-wrap:wrap;">
+                {% for col in columns %}
+                <span class="badge" style="background:{% if col.lower() in column_spec.required %}#d4edda{% else %}#fff3cd{% endif %};border:1px solid var(--border-primary);font-size:0.85rem;height:auto;padding:var(--space-1) var(--space-2);">
+                    {{ col }}{% if col.lower() in column_spec.required %} <strong>*</strong>{% endif %}
+                </span>
+                {% endfor %}
+            </div>
+            <span class="form-hint">* = Required column</span>
+        </div>
+
+        <div class="table-wrap" style="margin-bottom:var(--space-4);">
+            <table class="h-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        {% for col in columns %}
+                        <th>{{ col }}</th>
+                        {% endfor %}
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for v in validated %}
+                    <tr style="{% if not v.valid %}opacity:0.6;{% endif %}">
+                        <td>{{ v.index + 1 }}</td>
+                        {% for col in columns %}
+                        <td>{{ v.data.get(col, '') }}</td>
+                        {% endfor %}
+                        <td>
+                            {% if v.valid %}
+                            <span style="color:var(--success);">Valid</span>
+                            {% else %}
+                            <span style="color:var(--danger);" title="{{ v.errors|join('; ') }}">Error</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <form method="POST" action="{{ url_for('imports.confirm') }}" class="flex gap-3">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="import_type" value="{{ import_type }}">
+            <input type="hidden" name="file_content" value="{{ file_content }}">
+            <input type="hidden" name="validated_data" value='{{ validated | tojson | safe }}'>
+
+            {{ btn('Back', url_for('imports.index'), 'secondary', 'arrow_back') }}
+
+            {% if valid_count > 0 %}
+            <button type="submit" class="btn btn-primary">
+                <span class="material-symbols-rounded">check_circle</span>
+                Import {{ valid_count }} Valid Row{% if valid_count != 1 %}s{% endif %}
+            </button>
+            {% endif %}
+        </form>
+    </div>
 </div>
 {% endblock %}

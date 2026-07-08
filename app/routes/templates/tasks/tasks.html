@@ -1,69 +1,43 @@
 {% extends "base.html" %}
+{% import "_components.html" as components %}
 
 {% block title %}Hive | Tasks{% endblock %}
 {% block page_title %}Tasks{% endblock %}
 
-
 {% block content %}
-<div style="display: flex; gap: 2rem;">
+<div class="flex" style="gap:var(--space-5);">
     <!-- Main Task List -->
-    <div class="glass-panel" style="flex-grow: 1; padding: 2rem; border-radius: var(--radius-lg);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-            <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><span
-                    class="material-symbols-rounded">task_alt</span> Active Tasks</h3>
-            <button onclick="document.getElementById('newTaskModal').style.display='flex'"
-                style="background: var(--primary-color); color: white; border: none; padding: 0.5rem 1rem; border-radius: var(--radius-full); cursor: pointer; display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
-                <span class="material-symbols-rounded" style="font-size: 1rem;">add</span> New Custom Task
+    <div class="card" style="flex:1;">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="flex items-center gap-1" style="margin:0;">
+                <span class="material-symbols-rounded">task_alt</span> Active Tasks
+            </h3>
+            <button onclick="document.getElementById('newTaskModal').classList.add('active')" class="btn btn-primary" style="display:flex;align-items:center;gap:var(--space-1);">
+                <span class="material-symbols-rounded" style="font-size:16px;">add</span> New Custom Task
             </button>
         </div>
 
-        <div style="display: flex; flex-direction: column; gap: 1rem;">
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 4px solid var(--danger-color);">
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <input type="checkbox" style="width: 20px; height: 20px; accent-color: var(--primary-color);">
-                    <div>
-                        <h4 style="margin: 0 0 0.25rem 0;">Submit Python Assignment 1</h4>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Course: CS101 • Official
-                            Deadline</span>
-                    </div>
-                </div>
-                <div
-                    style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); padding: 0.25rem 0.75rem; border-radius: 20px; font-weight: 600; font-size: 0.85rem;">
-                    Due Tomorrow
-                </div>
-            </div>
-
+        <div class="flex flex-col" style="gap:var(--space-3);">
             {% for task in custom_tasks %}
-            <div
-                style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 4px solid {% if task.is_completed %}var(--success-color, #22c55e){% else %}var(--primary-color){% endif %}; opacity: {% if task.is_completed %}0.6{% else %}1{% endif %};">
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST"
-                        style="margin: 0; display: flex;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-4);border:1px solid var(--border-primary);border-radius:var(--radius-md);border-left:4px solid {% if task.is_completed %}var(--success){% else %}var(--primary){% endif %};opacity:{% if task.is_completed %}0.6{% else %}1{% endif %};">
+                <div class="flex gap-3 items-center">
+                    <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST" style="margin:0;display:flex;">
     {{ csrf_token() }}
-                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif
-                            %} style="width: 20px; height: 20px; accent-color: var(--primary-color); cursor: pointer;">
+                        <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;">
                     </form>
                     <div>
-                        <h4
-                            style="margin: 0 0 0.25rem 0; {% if task.is_completed %}text-decoration: line-through;{% endif %}">
-                            {{ task.title }}</h4>
-                        <span style="font-size: 0.8rem; color: var(--text-muted);">Personal Task</span>
+                        <h4 style="margin:0 0 2px 0;{% if task.is_completed %}text-decoration:line-through;{% endif %}">{{ task.title }}</h4>
+                        <span class="text-tertiary" style="font-size:0.85rem;">Personal Task</span>
                     </div>
                 </div>
-                <div style="display: flex; align-items: center; gap: 1rem;">
+                <div class="flex items-center gap-3">
                     {% if task.due_date %}
-                    <div style="color: var(--text-muted); font-size: 0.85rem;">
-                        {{ task.due_date.strftime('%b %d') }}
-                    </div>
+                    <div class="text-tertiary" style="font-size:0.85rem;">{{ task.due_date.strftime('%b %d') }}</div>
                     {% endif %}
-                    <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST"
-                        style="margin: 0; display: flex;">
+                    <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST" style="margin:0;display:flex;">
     {{ csrf_token() }}
-                        <button type="submit"
-                            style="background: none; border: none; color: var(--danger-color, #ef4444); cursor: pointer; display: flex; align-items: center; padding: 0;"
-                            title="Delete task">
-                            <span class="material-symbols-rounded">delete</span>
+                        <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);" title="Delete task">
+                            <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
                         </button>
                     </form>
                 </div>
@@ -73,41 +47,29 @@
     </div>
 
     <!-- New Task Modal -->
-    <div id="newTaskModal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; backdrop-filter: blur(4px);">
-        <div
-            style="background: var(--bg-main); padding: 2rem; border-radius: var(--radius-lg); width: 400px; max-width: 90%; border: 1px solid var(--border-color); box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.5rem;"><span
-                        class="material-symbols-rounded">add_task</span> New Custom Task</h3>
-                <button onclick="document.getElementById('newTaskModal').style.display='none'"
-                    style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
+    <div id="newTaskModal" class="modal-overlay">
+        <div class="modal" style="max-width:400px;">
+            <div class="modal-header">
+                <h3 class="flex items-center gap-1"><span class="material-symbols-rounded">add_task</span> New Custom Task</h3>
+                <button type="button" class="modal-close" onclick="document.getElementById('newTaskModal').classList.remove('active')"><span class="material-symbols-rounded">close</span></button>
             </div>
-            <form method="POST" action="{{ url_for('tasks.tasks') }}"
-                style="display: flex; flex-direction: column; gap: 1rem;">
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('tasks.tasks') }}" style="display:flex;flex-direction:column;gap:var(--space-4);">
     {{ csrf_token() }}
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Task
-                        Title</label>
-                    <input type="text" name="title" required placeholder="What needs to be done?"
-                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-color); font-family: inherit; box-sizing: border-box;">
-                </div>
-                <div>
-                    <label
-                        style="display: block; margin-bottom: 0.5rem; color: var(--text-color); font-weight: 500;">Due
-                        Date (Optional)</label>
-                    <input type="date" name="due_date"
-                        style="width: 100%; padding: 0.75rem; border-radius: var(--radius-md); border: 1px solid var(--border-color); background: var(--bg-secondary); color: var(--text-color); font-family: inherit; box-sizing: border-box;">
-                </div>
-                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
-                    <button type="button" onclick="document.getElementById('newTaskModal').style.display='none'"
-                        style="padding: 0.5rem 1rem; border-radius: var(--radius-md); background: transparent; border: 1px solid var(--border-color); color: var(--text-color); cursor: pointer; font-weight: 500;">Cancel</button>
-                    <button type="submit"
-                        style="padding: 0.5rem 1rem; border-radius: var(--radius-md); background: var(--primary-color); color: white; border: none; cursor: pointer; font-weight: 500;">Add
-                        Task</button>
-                </div>
-            </form>
+                    <div class="form-group">
+                        <label class="form-label">Task Title</label>
+                        <input type="text" name="title" required placeholder="What needs to be done?" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Due Date (Optional)</label>
+                        <input type="date" name="due_date" class="form-input">
+                    </div>
+                    <div class="flex gap-3 justify-end" style="margin-top:var(--space-2);">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('newTaskModal').classList.remove('active')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Task</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>

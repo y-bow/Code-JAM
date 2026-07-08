@@ -4,52 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Setup Hive</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=2">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=3">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: var(--font-sans);
+            background: var(--bg-secondary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 2rem;
+            padding: var(--space-5);
+            color: var(--text-primary);
         }
         .setup-card {
-            background: white;
-            border-radius: 16px;
-            padding: 2.5rem;
+            background: var(--bg-primary);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            padding: var(--space-8);
             max-width: 560px;
             width: 100%;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+            box-shadow: var(--shadow-md);
         }
-        .setup-header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
+        .setup-header { text-align: center; margin-bottom: var(--space-5); }
         .setup-header h1 {
-            font-family: 'Outfit', sans-serif;
             font-size: 1.75rem;
-            color: #1a1a2e;
-            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            margin-bottom: var(--space-1);
         }
-        .setup-header p {
-            color: #666;
-            font-size: 0.95rem;
-        }
-        .setup-header .logo {
-            font-size: 2.5rem;
-            margin-bottom: 0.5rem;
-        }
+        .setup-header p { color: var(--text-secondary); font-size: 0.95rem; }
+        .setup-header .logo { font-size: 2.5rem; margin-bottom: var(--space-1); }
         .steps-bar {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 2rem;
+            margin-bottom: var(--space-5);
             position: relative;
         }
         .steps-bar::before {
@@ -59,7 +48,7 @@
             left: 40px;
             right: 40px;
             height: 2px;
-            background: #e0e0e0;
+            background: var(--border-primary);
             z-index: 0;
         }
         .step-indicator {
@@ -69,131 +58,73 @@
             z-index: 1;
         }
         .step-dot {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: #e0e0e0;
-            color: #999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8rem;
-            font-weight: 600;
-            margin-bottom: 0.3rem;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--bg-tertiary); color: var(--text-tertiary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 600; margin-bottom: var(--space-1);
         }
-        .step-indicator.active .step-dot {
-            background: #6C63FF;
-            color: white;
-        }
-        .step-indicator.completed .step-dot {
-            background: #28a745;
-            color: white;
-        }
-        .step-label {
-            font-size: 0.7rem;
-            color: #999;
-            text-align: center;
-        }
-        .step-indicator.active .step-label {
-            color: #6C63FF;
-            font-weight: 600;
-        }
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
-        .form-group label {
-            display: block;
-            font-weight: 600;
-            margin-bottom: 0.4rem;
-            color: #333;
-            font-size: 0.9rem;
-        }
+        .step-indicator.active .step-dot { background: var(--primary); color: white; }
+        .step-indicator.completed .step-dot { background: var(--success); color: white; }
+        .step-label { font-size: 0.7rem; color: var(--text-tertiary); text-align: center; }
+        .step-indicator.active .step-label { color: var(--primary); font-weight: 600; }
+        .form-group { margin-bottom: var(--space-4); }
+        .form-group label { display: block; font-weight: 600; margin-bottom: var(--space-1); font-size: 0.9rem; }
         .form-group input, .form-group select {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1.5px solid #ddd;
-            border-radius: 10px;
-            font-size: 0.95rem;
-            transition: border-color 0.2s;
+            width: 100%; padding: var(--space-2) var(--space-3);
+            border: 1.5px solid var(--border-primary); border-radius: var(--radius-md);
+            font-size: 0.95rem; background: var(--bg-primary); color: var(--text-primary);
+            font-family: inherit;
         }
         .form-group input:focus, .form-group select:focus {
-            outline: none;
-            border-color: #6C63FF;
+            outline: none; border-color: var(--primary);
         }
-        .form-row {
-            display: flex;
-            gap: 1rem;
-        }
+        .form-row { display: flex; gap: var(--space-3); }
         .form-row .form-group { flex: 1; }
         .btn-primary {
-            background: #6C63FF;
-            color: white;
-            border: none;
-            padding: 0.85rem 2rem;
-            border-radius: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
+            background: var(--primary); color: white; border: none;
+            padding: var(--space-2) var(--space-5);
+            border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer;
             width: 100%;
-            transition: background 0.2s;
         }
-        .btn-primary:hover { background: #5a52d5; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-secondary {
+            background: transparent; color: var(--text-primary);
+            border: 1.5px solid var(--border-primary);
+            padding: var(--space-2) var(--space-4);
+            border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; cursor: pointer;
+            text-decoration: none; display: inline-block; text-align: center;
+        }
         .error-box {
-            background: #fff0f0;
-            border: 1px solid #ff6b6b;
-            border-radius: 10px;
-            padding: 0.75rem 1rem;
-            margin-bottom: 1rem;
-            color: #d63031;
-            font-size: 0.9rem;
+            background: #ffebe9;
+            border: 1px solid var(--danger); border-radius: var(--radius-md);
+            padding: var(--space-2) var(--space-3); margin-bottom: var(--space-3);
+            color: var(--red-600); font-size: 0.9rem;
         }
-        .error-box ul {
-            margin: 0.3rem 0 0 1.2rem;
-        }
+        .error-box ul { margin: var(--space-1) 0 0 var(--space-4); }
         .color-option {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            padding: 0.5rem 1rem;
-            border: 1.5px solid #ddd;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-right: 0.5rem;
-            margin-bottom: 0.5rem;
+            display: inline-flex; align-items: center; gap: var(--space-1);
+            padding: var(--space-1) var(--space-3);
+            border: 1.5px solid var(--border-primary); border-radius: var(--radius-md);
+            cursor: pointer; margin-right: var(--space-1); margin-bottom: var(--space-1);
         }
-        .color-option.selected { border-color: #6C63FF; }
-        .color-swatch {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-        }
+        .color-option.selected { border-color: var(--primary); }
+        .color-swatch { width: 20px; height: 20px; border-radius: 50%; }
         .theme-option {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.75rem 1rem;
-            border: 1.5px solid #ddd;
-            border-radius: 10px;
-            cursor: pointer;
-            margin-bottom: 0.5rem;
+            display: flex; align-items: center; gap: var(--space-2);
+            padding: var(--space-2) var(--space-3);
+            border: 1.5px solid var(--border-primary); border-radius: var(--radius-md);
+            cursor: pointer; margin-bottom: var(--space-1);
         }
-        .theme-option.selected { border-color: #6C63FF; background: #f0f0ff; }
-        .complete-icon {
-            font-size: 4rem;
-            text-align: center;
-            margin-bottom: 1rem;
-            color: #28a745;
-        }
+        .theme-option.selected { border-color: var(--primary); background: var(--primary-bg); }
+        .complete-icon { font-size: 4rem; text-align: center; margin-bottom: var(--space-3); color: var(--success); }
         .summary-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 0.75rem 0;
-            border-bottom: 1px solid #eee;
+            display: flex; justify-content: space-between;
+            padding: var(--space-2) 0; border-bottom: 1px solid var(--border-secondary);
             font-size: 0.95rem;
         }
         .summary-item:last-child { border-bottom: none; }
-        .summary-label { color: #666; }
-        .summary-value { font-weight: 600; color: #333; }
+        .summary-label { color: var(--text-secondary); }
+        .summary-value { font-weight: 600; color: var(--text-primary); }
     </style>
 </head>
 <body>
@@ -211,7 +142,7 @@
             <div class="step-indicator {% if s == step %}active{% elif idx < current_idx %}completed{% endif %}">
                 <div class="step-dot">
                     {% if idx < current_idx %}
-                    <span class="material-symbols-rounded" style="font-size: 16px;">check</span>
+                    <span class="material-symbols-rounded" style="font-size:16px;">check</span>
                     {% else %}
                     {{ idx + 1 }}
                     {% endif %}
@@ -236,7 +167,7 @@
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             {% if step == 'admin' %}
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 1.5rem; font-size: 1.25rem;">Create Admin Account</h2>
+            <h2 style="margin-bottom:var(--space-4);font-size:1.25rem;">Create Admin Account</h2>
             <div class="form-group">
                 <label>Full Name</label>
                 <input type="text" name="name" value="{{ form_data.get('name', '') }}" placeholder="e.g. Jane Doe" required>
@@ -259,7 +190,7 @@
             <button type="submit" class="btn-primary">Next: Institution Details</button>
 
             {% elif step == 'institution' %}
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 1.5rem; font-size: 1.25rem;">Institution Details</h2>
+            <h2 style="margin-bottom:var(--space-4);font-size:1.25rem;">Institution Details</h2>
             <div class="form-group">
                 <label>Institution Name</label>
                 <input type="text" name="name" value="{{ form_data.get('name', '') }}" placeholder="e.g. State University of Technology" required>
@@ -272,7 +203,7 @@
             <button type="submit" class="btn-primary">Next: Choose Theme</button>
 
             {% elif step == 'theme' %}
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 1.5rem; font-size: 1.25rem;">Choose Your Theme</h2>
+            <h2 style="margin-bottom:var(--space-4);font-size:1.25rem;">Choose Your Theme</h2>
             <div class="form-group">
                 <label>Primary Color</label>
                 <div id="color-picker">
@@ -300,7 +231,7 @@
             <button type="submit" class="btn-primary">Next: Academic Configuration</button>
 
             {% elif step == 'academic' %}
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 1.5rem; font-size: 1.25rem;">Academic Configuration</h2>
+            <h2 style="margin-bottom:var(--space-4);font-size:1.25rem;">Academic Configuration</h2>
 
             <div class="form-group">
                 <label>Academic Year Name</label>
@@ -317,60 +248,60 @@
                 </div>
             </div>
 
-            <h3 style="font-family: 'Outfit', sans-serif; margin: 1.5rem 0 1rem; font-size: 1rem;">Departments</h3>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">Add at least one department (e.g., Computer Science, Mathematics).</p>
+            <h3 style="margin:var(--space-5) 0 var(--space-3);font-size:1rem;">Departments</h3>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Add at least one department (e.g., Computer Science, Mathematics).</p>
             <div id="departments-container">
-                <div class="form-row" style="margin-bottom: 0.5rem;">
-                    <div class="form-group" style="flex: 1;">
-                        <input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                <div class="form-row" style="margin-bottom:var(--space-1);">
+                    <div class="form-group" style="flex:1;">
+                        <input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
-                    <div class="form-group" style="flex: 0 0 120px;">
-                        <input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    <div class="form-group" style="flex:0 0 120px;">
+                        <input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
                 </div>
             </div>
-            <button type="button" onclick="addDepartment()" style="background:none;border:1px dashed #6C63FF;color:#6C63FF;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Department</button>
+            <button type="button" onclick="addDepartment()" style="background:none;border:1px dashed var(--primary);color:var(--primary);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;margin-bottom:var(--space-4);font-family:inherit;">+ Add Department</button>
 
-            <h3 style="font-family: 'Outfit', sans-serif; margin: 1.5rem 0 1rem; font-size: 1rem;">Sections</h3>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 0.75rem;">Add sections (e.g., CS-A, CS-B) for each department.</p>
+            <h3 style="margin:var(--space-5) 0 var(--space-3);font-size:1rem;">Sections</h3>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Add sections (e.g., CS-A, CS-B) for each department.</p>
             <div id="sections-container">
-                <div class="form-row" style="margin-bottom: 0.5rem;">
-                    <div class="form-group" style="flex: 1;">
-                        <input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                <div class="form-row" style="margin-bottom:var(--space-1);">
+                    <div class="form-group" style="flex:1;">
+                        <input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
-                    <div class="form-group" style="flex: 0 0 100px;">
-                        <input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    <div class="form-group" style="flex:0 0 100px;">
+                        <input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
-                    <div class="form-group" style="flex: 0 0 120px;">
-                        <input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    <div class="form-group" style="flex:0 0 120px;">
+                        <input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
-                    <div class="form-group" style="flex: 0 0 100px;">
-                        <input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;">
+                    <div class="form-group" style="flex:0 0 100px;">
+                        <input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
                     </div>
                 </div>
             </div>
-            <button type="button" onclick="addSection()" style="background:none;border:1px dashed #6C63FF;color:#6C63FF;padding:0.5rem 1rem;border-radius:8px;cursor:pointer;font-size:0.85rem;margin-bottom:1.5rem;">+ Add Section</button>
+            <button type="button" onclick="addSection()" style="background:none;border:1px dashed var(--primary);color:var(--primary);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;margin-bottom:var(--space-4);font-family:inherit;">+ Add Section</button>
 
             <input type="hidden" name="action" value="next">
             <button type="submit" class="btn-primary">Next: Data Import</button>
 
             {% elif step == 'import' %}
-            <h2 style="font-family: 'Outfit', sans-serif; margin-bottom: 0.5rem; font-size: 1.25rem;">Import Data</h2>
-            <p style="font-size: 0.85rem; color: #666; margin-bottom: 1.5rem;">
+            <h2 style="margin-bottom:var(--space-1);font-size:1.25rem;">Import Data</h2>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-4);">
                 Upload CSV files to populate your campus system. Supported types:
                 students, faculty, courses, timetable, enrollments, departments, sections, clubs, attendance, grades.
             </p>
 
             {% if import_results %}
-            <div style="margin-bottom: 1.5rem;">
+            <div style="margin-bottom:var(--space-4);">
                 {% for r in import_results %}
-                <div style="padding:0.75rem;border-radius:8px;margin-bottom:0.5rem;font-size:0.9rem;
-                    {% if r.status == 'success' %}background:#f0fff4;border:1px solid #28a745;color:#155724;
-                    {% elif r.status == 'warning' %}background:#fffbe6;border:1px solid #e5a500;color:#664d00;
-                    {% else %}background:#fff0f0;border:1px solid #ff6b6b;color:#d63031;{% endif %}">
+                <div style="padding:var(--space-2);border-radius:var(--radius-sm);margin-bottom:var(--space-1);font-size:0.9rem;
+                    {% if r.status == 'success' %}background:#dafbe1;border:1px solid var(--success);color:var(--green-600);
+                    {% elif r.status == 'warning' %}background:#fff8c5;border:1px solid var(--warning);color:var(--yellow-500);
+                    {% else %}background:#ffebe9;border:1px solid var(--danger);color:var(--red-600);{% endif %}">
                     <strong>{{ r.file }}</strong>: {{ r.message }}
                     {% if r.details %}
-                    <ul style="margin:0.3rem 0 0 1.2rem;font-size:0.85rem;">
+                    <ul style="margin:var(--space-1) 0 0 var(--space-4);font-size:0.85rem;">
                         {% for d in r.details %}<li>{{ d }}</li>{% endfor %}
                     </ul>
                     {% endif %}
@@ -379,48 +310,33 @@
             </div>
             {% endif %}
 
-            <div class="form-group" style="border:2px dashed #ccc;border-radius:12px;padding:2rem;text-align:center;">
-                <span class="material-symbols-rounded" style="font-size:2.5rem;color:#999;margin-bottom:0.5rem;">upload_file</span>
-                <p style="font-size:0.9rem;color:#666;margin-bottom:0.75rem;">Select one or more CSV files</p>
+            <div class="form-group" style="border:2px dashed var(--border-primary);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;">
+                <span class="material-symbols-rounded" style="font-size:2.5rem;color:var(--text-tertiary);margin-bottom:var(--space-1);">upload_file</span>
+                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Select one or more CSV files</p>
                 <input type="file" name="import_files" accept=".csv,.tsv,.xls,.xlsx" multiple style="margin:0 auto;">
             </div>
 
             <input type="hidden" name="action" value="next">
-            <div style="display:flex;gap:1rem;margin-top:1.5rem;">
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4);">
                 <button type="submit" class="btn-primary" style="flex:1;">Upload & Import</button>
-                <a href="{{ url_for('setup.wizard', step='complete') }}" style="flex:0 0 auto;padding:0.85rem 1.5rem;border:1.5px solid #ddd;border-radius:10px;text-decoration:none;color:#666;text-align:center;font-weight:600;font-size:0.9rem;">Skip</a>
+                <a href="{{ url_for('setup.wizard', step='complete') }}" class="btn-secondary" style="padding:var(--space-2) var(--space-4);">Skip</a>
             </div>
 
             {% elif step == 'complete' %}
             <div class="complete-icon">
-                <span class="material-symbols-rounded" style="font-size: 4rem;">check_circle</span>
+                <span class="material-symbols-rounded" style="font-size:4rem;">check_circle</span>
             </div>
-            <h2 style="font-family: 'Outfit', sans-serif; text-align: center; margin-bottom: 1.5rem; font-size: 1.25rem;">You're All Set!</h2>
+            <h2 style="text-align:center;margin-bottom:var(--space-4);font-size:1.25rem;">You're All Set!</h2>
 
-            <div style="margin-bottom: 1.5rem;">
-                <div class="summary-item">
-                    <span class="summary-label">Admin Account</span>
-                    <span class="summary-value">Created</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Institution</span>
-                    <span class="summary-value">Configured</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Theme</span>
-                    <span class="summary-value">Selected</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Academic Config</span>
-                    <span class="summary-value">Configured</span>
-                </div>
-                <div class="summary-item">
-                    <span class="summary-label">Data Import</span>
-                    <span class="summary-value">Imported</span>
-                </div>
+            <div style="margin-bottom:var(--space-4);">
+                <div class="summary-item"><span class="summary-label">Admin Account</span><span class="summary-value">Created</span></div>
+                <div class="summary-item"><span class="summary-label">Institution</span><span class="summary-value">Configured</span></div>
+                <div class="summary-item"><span class="summary-label">Theme</span><span class="summary-value">Selected</span></div>
+                <div class="summary-item"><span class="summary-label">Academic Config</span><span class="summary-value">Configured</span></div>
+                <div class="summary-item"><span class="summary-label">Data Import</span><span class="summary-value">Imported</span></div>
             </div>
 
-            <p style="text-align: center; color: #666; margin-bottom: 1.5rem; font-size: 0.9rem;">
+            <p style="text-align:center;color:var(--text-secondary);margin-bottom:var(--space-4);font-size:0.9rem;">
                 You can always change these settings later from the admin panel.
             </p>
 
@@ -445,16 +361,16 @@
             var c = document.getElementById('departments-container');
             var d = document.createElement('div');
             d.className = 'form-row';
-            d.style.marginBottom = '0.5rem';
-            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:1.2rem;">&times;</button>';
+            d.style.marginBottom = 'var(--space-1)';
+            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.2rem;">&times;</button>';
             c.appendChild(d);
         }
         function addSection() {
             var c = document.getElementById('sections-container');
             var d = document.createElement('div');
             d.className = 'form-row';
-            d.style.marginBottom = '0.5rem';
-            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:0.6rem;border:1.5px solid #ddd;border-radius:10px;font-size:0.9rem;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:#d63031;cursor:pointer;font-size:1.2rem;">&times;</button>';
+            d.style.marginBottom = 'var(--space-1)';
+            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.2rem;">&times;</button>';
             c.appendChild(d);
         }
     </script>
