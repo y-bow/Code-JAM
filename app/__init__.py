@@ -49,6 +49,15 @@ def create_app():
         PERMANENT_SESSION_LIFETIME=1800, # 30 minutes
     )
 
+    from .services.setup_service import is_setup_complete
+
+    @app.before_request
+    def check_setup():
+        from flask import request, redirect, url_for
+        if request.endpoint and 'static' not in request.endpoint and 'setup' not in request.endpoint:
+            if not is_setup_complete():
+                return redirect(url_for('setup.wizard'))
+
     @app.after_request
     def add_header(response):
         """
@@ -76,6 +85,7 @@ def create_app():
     from .routes.lost_found import lost_found_bp
     from .routes.clubs import clubs_bp
     from .routes.imports import import_bp
+    from .routes.setup import setup_bp
 
     app.register_blueprint(academics_bp)
     app.register_blueprint(timetable_bp)
@@ -89,6 +99,7 @@ def create_app():
     app.register_blueprint(lost_found_bp)
     app.register_blueprint(clubs_bp)
     app.register_blueprint(import_bp)
+    app.register_blueprint(setup_bp)
 
     @app.route('/')
     def index():

@@ -22,6 +22,10 @@ from .academics_service import (
     get_teacher_tasks,
     update_meet_link,
 )
+from .setup_service import (
+    is_setup_complete, has_admin_users, has_any_schools,
+    create_admin_account, create_institution, save_theme_settings, mark_setup_complete,
+)
 from .import_service import (
     parse_upload, detect_import_type, validate_import, execute_import,
     get_recent_batches, IMPORT_TYPES, COLUMN_MAPS,
