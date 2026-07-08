@@ -1,108 +1,122 @@
-# 🛡️ Hive LMS Prototype - Code-JAM
+# Hive — Open-Source Campus Platform
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python: 3.10+](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Flask: 3.0.2](https://img.shields.io/badge/Flask-3.0.2-green.svg)](https://flask.palletsprojects.com/)
+[![Docker](https://img.shields.io/badge/Docker-ready-2496ED.svg)](https://docker.com)
 
-A modern, multi-tenant university Learning Management System (LMS) prototype designed for **FOSS Hack 2026**. This platform provides granular data isolation per school, role-based access control, and a rich, interactive dashboard for various stakeholders.
+A modern, self-hostable campus platform for colleges and universities. Hive provides multi-tenant data isolation, role-based access control, a plugin system, REST API, and theming — all in a clean, modular Flask application.
 
 ---
 
-## ✨ Key Features
+## Quick Start with Docker
 
-| Feature                | Description                                                                 |
-|------------------------|-----------------------------------------------------------------------------|
-| **Multi-tenancy**      | Full data isolation between different schools and departments.        |
-| **RBAC**               | Distinct dashboards for **Admins**, **Deans**, **Professors**, and **Students**. |
-| **Course Management**  | Integrated enrollment, assignment tracking, and resource management.        |
-| **Timetable System**   | Dynamic, section-specific schedules with color-coded course categories.    |
-| **Analytics**          | Real-time insights into student performance and teacher ratings.      |
-| **Early Warning**      | Automated flags for at-risk students based on attendance and performance. |
+```bash
+git clone https://github.com/y-bow/Code-JAM.git
+cd Code-JAM
+cp .env.example .env
+docker compose up -d
+docker compose exec web flask db upgrade
+docker compose exec web flask hive create-admin \
+    --email admin@example.com \
+    --password changeme \
+    --name "Admin User"
+```
 
-## 📁 Project Structure
+Open **http://localhost:8080** and complete the Setup Wizard.
+
+> See [docs/Setup Guide.md](docs/Setup%20Guide.md) for manual installation and production deployment.
+
+---
+
+## Key Features
+
+| Feature               | Description                                                                 |
+|-----------------------|-----------------------------------------------------------------------------|
+| **Multi-tenancy**     | Full data isolation between schools, departments, and sections               |
+| **RBAC**              | Distinct dashboards for Admins, Deans, Professors, Assistants, and Students |
+| **Course Management** | Enrollment, assignments, quizzes, grades, and resource management           |
+| **Timetable System**  | Dynamic section-specific schedules with color-coded categories              |
+| **Analytics**         | Real-time insights, teacher ratings, early warning for at-risk students     |
+| **Messaging**         | In-app messaging with read receipts and announcements                       |
+| **Fees & Payments**   | Fee structure management and payment tracking                               |
+| **Clubs & Events**    | Student clubs, external events, class representative nominations            |
+| **Internships**       | Internship opportunity listings and applications                            |
+| **Lost & Found**      | Lost item reporting and gallery                                             |
+| **CSV Import**        | Bulk import students, faculty, courses, and timetable via CSV/Excel         |
+| **Plugin System**     | Extend functionality via `plugin.json` manifests and blinker event hooks    |
+| **Theme Engine**      | Customize colors and light/dark mode from the admin panel                   |
+| **REST API v1**       | JWT-authenticated API with auto-generated Swagger docs at `/api/docs/`      |
+| **CLI Tools**         | `flask hive create-admin`, `flask hive backup`, `flask hive import`         |
+
+---
+
+## Project Structure
 
 ```text
 .
-├── app/                # Core Flask application package
-│   ├── routes/         # Feature-specific blueprints (auth, dashboard, classroom, etc.)
-│   ├── models.py       # SQLAlchemy database models & schemas
-│   ├── permissions.py  # Role-based access control decorators
-│   └── __init__.py     # Application factory and configuration
-├── static/             # Static assets (CSS frameworks, images, JS modules)
-├── templates/          # Jinja2 HTML templates
-├── instance/           # Default location for the SQLite database
-├── run.py              # Main entry point with auto-seeding logic
-├── init_db.py          # Standalone database initialization and seeding script
-├── .env.example        # Template for environment variables
-└── requirements.txt    # Python dependencies
-```
-
-## 🛠️ Installation & Setup
-
-Follow these steps to get Hive LMS running locally:
-
-### 1. Prerequisites
-- **Python 3.10+** (tested on 3.14 for development)
-- **pip** (Python package manager)
-
-### 2. Environment Setup
-```bash
-# Create a virtual environment
-python -m venv .venv
-
-# Activate the virtual environment
-# Windows:
-.venv\Scripts\activate
-# Linux/macOS:
-source .venv/bin/activate
-
-# Install dependencies
-pip install -r requirements.txt
-```
-
-### 3. Configuration
-```bash
-# Create your local .env file
-cp .env.example .env
-# Open .env and set your SECRET_KEY
-```
-
-### 4. Database Setup
-```bash
-# Initialize the database with fresh seed data
-python init_db.py
-```
-
-### 5. Running the App
-```bash
-# Start the development server
-python run.py
-
-# Optional: Force a fresh reseed on startup
-# python run.py --reseed
+├── app/                    # Flask application package
+│   ├── api/                # REST API v1 (flask-smorest, JWT auth)
+│   ├── core/               # Core modules (auth, tenant, plugins)
+│   ├── models/             # Domain models (15 modules, re-exported)
+│   ├── routes/             # Feature blueprints (12 modules)
+│   ├── services/           # Business logic layer
+│   ├── cli.py              # Flask CLI commands
+│   ├── events.py           # blinker signal definitions
+│   └── __init__.py         # Application factory
+├── plugins/                # Plugin packages (hello_world sample)
+├── static/                 # CSS, JS, images
+├── templates/              # Jinja2 base layout
+├── docs/                   # Architecture, Setup, Extension guides
+├── migrations/             # Alembic database migrations
+├── tests/                  # pytest test suite (21 tests)
+├── nginx/                  # Nginx reverse proxy config (Docker)
+├── Dockerfile              # Production container image
+├── docker-compose.yml      # PostgreSQL + Redis + Nginx + Hive
+├── .env.example            # Environment variable template
+└── requirements.txt        # Python dependencies
 ```
 
 ---
 
-## 🧪 Testing Credentials
+## Documentation
 
-To test the multi-tenant and role-based features, you can use the following default accounts. All accounts use the default password: **`hive@1234`**.
+| Guide                    | Description                                  |
+|--------------------------|----------------------------------------------|
+| [Setup Guide](docs/Setup%20Guide.md) | Installation, configuration, deployment     |
+| [Architecture](docs/Hive%20Architectural%20Analysis.md) | System design, modules, data flow |
+| [Plugin Development](docs/Plugin%20Development.md) | Creating and distributing plugins |
+| [Theme Development](docs/Theme%20Development.md) | Customizing appearance        |
+| [GitHub Roadmap](docs/GitHub%20Roadmap.md) | Project roadmap and milestones    |
+| [PRD](docs/PRD.md)         | Product requirements document                 |
 
-| Role           | Email                                    | Access Level                    |
-|----------------|------------------------------------------|---------------------------------|
-| **Global Admin**| `admin@saiuniversity.edu.in`             | Full system management        |
-| **Dean**        | `dean@scds.saiuniversity.edu.in`         | School-wide analytics view      |
-| **Professor**   | `professor@scds.saiuniversity.edu.in`    | Course & student management      |
-| **Student**     | `ruddhima.p-29@scds.saiuniversity.edu.in` | Personalized student dashboard |
+---
 
-> [!NOTE]
-> **CAPTCHA Bypass**: For development and testing environments, the backend CAPTCHA check is currently disabled. You can enter any character string in the CAPTCHA field on the login page to proceed.
+## API Endpoints
 
-## 🤝 Contribution
+| Method | Endpoint                    | Description                |
+|--------|-----------------------------|----------------------------|
+| POST   | `/api/v1/auth/login`        | Authenticate, get JWT token|
+| GET    | `/api/v1/auth/me`           | Current user info          |
+| GET    | `/api/v1/timetable/me`      | Current user's timetable   |
 
-Contributions are welcome! Please check our [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct and the process for submitting pull requests.
+Swagger UI: `/api/docs/`
 
-## 📜 License
+---
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## Default Credentials
 
+After running the setup wizard or seeding the database:
+
+| Role             | Email                           | Password     |
+|------------------|---------------------------------|--------------|
+| Superadmin       | (set during setup/CLI)          | (user-set)   |
+| Admin            | (set during setup/CLI)          | (user-set)   |
+
+> Create an admin user with `flask hive create-admin --email admin@example.com --password <secure> --name "Admin"`
+
+---
+
+## License
+
+MIT License — see [LICENSE](LICENSE).
