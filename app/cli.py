@@ -28,8 +28,11 @@ def create_admin(name, email, password, role):
             click.echo('Multiple schools exist. Use --school-id to specify.')
             return
 
+    from .models.auth import generate_username
+    cleaned_email = email.strip().lower()
     user = User(
-        email=email.strip().lower(),
+        email=cleaned_email,
+        username=generate_username(cleaned_email, school_id),
         password_hash=bcrypt.generate_password_hash(password).decode('utf-8'),
         role=role,
         name=name.strip(),

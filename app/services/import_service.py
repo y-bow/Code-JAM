@@ -11,6 +11,7 @@ from ..models import (
     db, User, Student, Teacher, Course, Section, Enrollment,
     TimetableEntry, ImportBatch, get_setting, bcrypt
 )
+from ..models.auth import generate_username
 
 
 IMPORT_TYPES = ['students', 'faculty', 'courses', 'timetable', 'enrollments']
@@ -217,38 +218,43 @@ def execute_import(validated_rows, import_type, school_id, user_id):
     valid_rows = [r for r in validated_rows if r['valid']]
     error_rows = [r for r in validated_rows if not r['valid']]
 
+    if error_rows:
+        error_details = [{'index': r['index'], 'errors': r['errors']} for r in error_rows]
+        return None, f'Validation failed for {len(error_rows)} row(s). All rows must be valid.'
+
     if not valid_rows:
-        return None, 'No valid rows to import'
+        return None, 'No rows to import'
 
     importer = _IMPORTERS.get(import_type)
     if not importer:
         return None, f'No importer for type: {import_type}'
 
-    success_count = 0
-    error_details = [{'index': r['index'], 'errors': r['errors']} for r in error_rows]
+    try:
+        success_count = 0
+        for row_data in valid_rows:
+            success = importer(row_data['data'], school_id, user_id)
+            if success:
+                success_count += 1
+            else:
+                raise ValueError(f'Insertion failed for row {row_data["index"] + 1}')
 
-    for row_data in valid_rows:
-        success = importer(row_data['data'], school_id, user_id)
-        if success:
-            success_count += 1
-        else:
-            error_details.append({'index': row_data['index'], 'errors': ['Insertion failed']})
-
-    batch = ImportBatch(
-        school_id=school_id,
-        import_type=import_type,
-        file_name=f'import_{import_type}_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}',
-        total_rows=len(validated_rows),
-        success_count=success_count,
-        error_count=len(validated_rows) - success_count,
-        errors_json=json.dumps(error_details) if error_details else None,
-        status='completed',
-        created_by=user_id,
-    )
-    db.session.add(batch)
-    db.session.commit()
-
-    return batch, None
+        batch = ImportBatch(
+            school_id=school_id,
+            import_type=import_type,
+            file_name=f'import_{import_type}_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}',
+            total_rows=len(validated_rows),
+            success_count=success_count,
+            error_count=0,
+            errors_json=None,
+            status='completed',
+            created_by=user_id,
+        )
+        db.session.add(batch)
+        db.session.commit()
+        return batch, None
+    except Exception as e:
+        db.session.rollback()
+        return None, f'Import failed: {e}'
 
 
 def _import_student(row, school_id, user_id):
@@ -262,11 +268,12 @@ def _import_student(row, school_id, user_id):
     if not section:
         return False
 
-    default_password = get_setting('import.default_password', 'password123')
+    default_password = get_setting('import.default_password', 'hive@1234')
     pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
         school_id=school_id,
         email=email,
+        username=generate_username(email, school_id),
         password_hash=pw_hash,
         role='student',
         name=row.get('name', '').strip(),
@@ -297,11 +304,12 @@ def _import_faculty(row, school_id, user_id):
     if existing:
         return True
 
-    default_password = get_setting('import.default_password', 'password123')
+    default_password = get_setting('import.default_password', 'hive@1234')
     pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
         school_id=school_id,
         email=email,
+        username=generate_username(email, school_id),
         password_hash=pw_hash,
         role=row.get('role', 'professor').strip(),
         name=row.get('name', '').strip(),

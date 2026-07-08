@@ -1,5 +1,6 @@
 from ..models import db, User, School, SiteSetting, get_setting, set_setting
 from ..models._ext import bcrypt
+from ..models.auth import generate_username
 
 
 SETUP_COMPLETE_KEY = 'system.setup_complete'
@@ -25,8 +26,10 @@ def create_admin_account(name, email, password):
     if User.query.filter_by(email=email).first():
         return None, 'Email already in use'
 
+    cleaned_email = email.strip().lower()
     user = User(
-        email=email.strip().lower(),
+        email=cleaned_email,
+        username=generate_username(cleaned_email),
         password_hash=bcrypt.generate_password_hash(password).decode('utf-8'),
         role='admin',
         name=name.strip(),

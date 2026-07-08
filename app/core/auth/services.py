@@ -2,8 +2,11 @@ import re
 from app.models import User, bcrypt
 
 
-def authenticate(email, password):
-    user = User.query.filter_by(email=email.strip().lower()).first()
+def authenticate(login, password):
+    login = login.strip().lower()
+    user = User.query.filter_by(email=login).first()
+    if not user:
+        user = User.query.filter_by(username=login).first()
     if user and bcrypt.check_password_hash(user.password_hash, password):
         return user
     return None
