@@ -34,6 +34,10 @@ def create_app():
     app.cli.add_command(hive_cli)
     migrate = Migrate(app, db)
 
+    from .core.plugins import PluginManager
+    plugin_manager = PluginManager(app)
+    app.extensions['plugin_manager'] = plugin_manager
+
     from app.models import get_setting as _get_setting
 
     @app.context_processor
@@ -88,6 +92,7 @@ def create_app():
     from .routes.clubs import clubs_bp
     from .routes.imports import import_bp
     from .routes.setup import setup_bp
+    from .routes.plugins import plugin_admin_bp
 
     app.register_blueprint(academics_bp)
     app.register_blueprint(timetable_bp)
@@ -102,6 +107,7 @@ def create_app():
     app.register_blueprint(clubs_bp)
     app.register_blueprint(import_bp)
     app.register_blueprint(setup_bp)
+    app.register_blueprint(plugin_admin_bp)
 
     @app.route('/')
     def index():

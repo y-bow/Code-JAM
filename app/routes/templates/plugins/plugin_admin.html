@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Plugin Manager{% endblock %}
+{% block page_title %}Plugin Manager{% endblock %}
+{% block content %}
+<div class="glass-panel" style="padding: 2rem;">
+    <h2 style="margin-bottom: 1rem;">Installed Plugins</h2>
+    {% if not plugins %}
+    <p style="color: var(--text-muted);">No plugins found. Place a plugin folder with a <code>plugin.json</code> manifest in the <code>plugins/</code> directory.</p>
+    {% else %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Plugin</th>
+                    <th>Version</th>
+                    <th>Author</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in plugins %}
+                <tr>
+                    <td>
+                        <strong>{{ p.name }}</strong><br>
+                        <small style="color: var(--text-muted);">{{ p.description }}</small>
+                    </td>
+                    <td>{{ p.version }}</td>
+                    <td>{{ p.author or '—' }}</td>
+                    <td>
+                        {% if p.is_active %}
+                        <span style="color: var(--success-color); font-weight: 600;">Active</span>
+                        {% elif p.is_installed %}
+                        <span style="color: var(--text-muted);">Disabled</span>
+                        {% else %}
+                        <span style="color: var(--text-muted);">Not Installed</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <form method="POST" action="{{ url_for('plugin_admin.install', slug=p.slug) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if not p.is_installed %}
+                            <button type="submit" class="glass-button" style="padding: 0.3rem 0.75rem; font-size: 0.85rem;">
+                                Install
+                            </button>
+                            {% endif %}
+                        </form>
+                        <form method="POST" action="{{ url_for('plugin_admin.toggle', slug=p.slug) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if p.is_installed %}
+                            <button type="submit" class="glass-button" style="padding: 0.3rem 0.75rem; font-size: 0.85rem;
+                                background: {% if p.is_active %}var(--danger-color){% else %}var(--success-color){% endif %}; color: white;">
+                                {{ 'Disable' if p.is_active else 'Enable' }}
+                            </button>
+                            {% endif %}
+                        </form>
+                        <form method="POST" action="{{ url_for('plugin_admin.uninstall', slug=p.slug) }}" style="display: inline;">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            {% if p.is_installed %}
+                            <button type="submit" class="glass-button" style="padding: 0.3rem 0.75rem; font-size: 0.85rem;
+                                background: #6c757d; color: white;" onclick="return confirm('Uninstall {{ p.name }}?')">
+                                Uninstall
+                            </button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

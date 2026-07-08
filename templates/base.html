@@ -194,6 +194,10 @@
                     <span class="nav-icon material-symbols-rounded">upload_file</span>
                     <span class="nav-label">Import Data</span>
                 </a>
+                <a href="{{ url_for('plugin_admin.index') }}" class="nav-item {{ 'active' if 'plugin_admin' in request.endpoint }}">
+                    <span class="nav-icon material-symbols-rounded">extension</span>
+                    <span class="nav-label">Plugins</span>
+                </a>
                 {% endif %}
 
                 <!-- CLUBS / INTERNSHIPS / LOST & FOUND (General) -->

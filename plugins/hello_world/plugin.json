@@ -1,0 +1,8 @@
+{
+    "name": "Hello World",
+    "version": "1.0.0",
+    "description": "A sample plugin that demonstrates the Hive plugin system.",
+    "author": "Hive Team",
+    "entry_point": "plugin:HelloWorldPlugin",
+    "min_hive_version": "0.1.0"
+}
