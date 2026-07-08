@@ -1,0 +1,159 @@
+{% macro stat_card(label, value, detail=None, color=None) %}
+<div class="stat-card">
+  <div class="stat-label">{{ label }}</div>
+  <div class="stat-value"{% if color %} style="color:{{ color }}"{% endif %}>{{ value }}</div>
+  {% if detail %}<div class="stat-detail">{{ detail }}</div>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro badge(text, type='default') %}
+<span class="badge badge-{{ type }}">{{ text }}</span>
+{% endmacro %}
+
+{% macro btn(text, url='#', type='primary', icon=None, size=None, attrs='') %}
+<a href="{{ url }}" class="btn btn-{{ type }}{% if size %} btn-{{ size }}{% endif %}" {{ attrs | safe }}>
+  {% if icon %}<span class="material-symbols-rounded">{{ icon }}</span>{% endif %}
+  {{ text }}
+</a>
+{% endmacro %}
+
+{% macro btn_submit(text, type='primary', icon=None, size=None, attrs='') %}
+<button type="submit" class="btn btn-{{ type }}{% if size %} btn-{{ size }}{% endif %}" {{ attrs | safe }}>
+  {% if icon %}<span class="material-symbols-rounded">{{ icon }}</span>{% endif %}
+  {{ text }}
+</button>
+{% endmacro %}
+
+{% macro btn_button(text, type='primary', icon=None, size=None, attrs='') %}
+<button type="button" class="btn btn-{{ type }}{% if size %} btn-{{ size }}{% endif %}" {{ attrs | safe }}>
+  {% if icon %}<span class="material-symbols-rounded">{{ icon }}</span>{% endif %}
+  {{ text }}
+</button>
+{% endmacro %}
+
+{% macro table(headers, rows, empty_msg='No data') %}
+<div class="table-wrap">
+  <table class="h-table">
+    <thead>
+      <tr>
+        {% for h in headers %}
+        <th>{{ h }}</th>
+        {% endfor %}
+      </tr>
+    </thead>
+    <tbody>
+      {% if rows %}
+        {% for row in rows %}
+        <tr>
+          {% for cell in row %}
+          <td>{{ cell }}</td>
+          {% endfor %}
+        </tr>
+        {% endfor %}
+      {% else %}
+        <tr><td colspan="{{ headers | length }}" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">{{ empty_msg }}</td></tr>
+      {% endif %}
+    </tbody>
+  </table>
+</div>
+{% endmacro %}
+
+{% macro card(title=None, class='') %}
+<div class="card {{ class }}">
+  {% if title %}
+  <div class="card-header">
+    <h3>{{ title }}</h3>
+    {{ caller() if caller is defined else '' }}
+  </div>
+  {% endif %}
+  <div class="card-body">
+    {{ caller() if caller is defined else '' }}
+  </div>
+</div>
+{% endmacro %}
+
+{% macro modal(id, title) %}
+<div class="modal-overlay" id="{{ id }}">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>{{ title }}</h3>
+      <button type="button" class="modal-close" onclick="closeModal('{{ id }}')"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="modal-body">
+      {{ caller() }}
+    </div>
+  </div>
+</div>
+{% endmacro %}
+
+{% macro form_group(label, name, type='text', value='', placeholder='', hint='', error='', required=False, class='') %}
+<div class="form-group {{ class }}">
+  {% if label %}
+  <label class="form-label" for="{{ name }}">{{ label }}{% if required %}<span style="color:var(--danger)"> *</span>{% endif %}</label>
+  {% endif %}
+  {% if type == 'textarea' %}
+  <textarea class="form-textarea" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %}>{{ value }}</textarea>
+  {% elif type == 'select' %}
+  <select class="form-select" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %}>
+    {{ caller() }}
+  </select>
+  {% else %}
+  <input class="form-input" type="{{ type }}" id="{{ name }}" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %}>
+  {% endif %}
+  {% if hint %}<span class="form-hint">{{ hint }}</span>{% endif %}
+  {% if error %}<span class="form-error">{{ error }}</span>{% endif %}
+</div>
+{% endmacro %}
+
+{% macro alert(message, type='info') %}
+<div class="alert alert-{{ type }}">
+  <span class="material-symbols-rounded" style="font-size:18px">
+    {% if type == 'success' %}check_circle{% elif type == 'danger' %}error{% elif type == 'warning' %}warning{% else %}info{% endif %}
+  </span>
+  {{ message }}
+</div>
+{% endmacro %}
+
+{% macro empty_state(title, message, icon='database') %}
+<div class="empty-state">
+  <span class="material-symbols-rounded empty-icon">{{ icon }}</span>
+  <h3>{{ title }}</h3>
+  <p>{{ message }}</p>
+</div>
+{% endmacro %}
+
+{% macro search_input(name='q', value='', placeholder='Search...') %}
+<div class="search-wrap">
+  <span class="material-symbols-rounded search-icon">search</span>
+  <input class="form-input" type="search" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}" style="padding-left:36px;">
+</div>
+{% endmacro %}
+
+{% macro toolbar() %}
+<div class="toolbar">
+  {{ caller() }}
+</div>
+{% endmacro %}
+
+{% macro tabs(tab_list, active_tab) %}
+<div class="tabs">
+  {% for tab_id, tab_label in tab_list %}
+  <button class="tab{% if tab_id == active_tab %} active{% endif %}" onclick="switchTab('{{ tab_id }}', this)">{{ tab_label }}</button>
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro breadcrumb(items) %}
+<div class="breadcrumbs">
+  {% for item in items %}
+  {% if loop.first %}{% else %}<span class="sep">/</span>{% endif %}
+  {% if item.url %}<a href="{{ item.url }}">{{ item.label }}</a>{% else %}<span>{{ item.label }}</span>{% endif %}
+  {% endfor %}
+</div>
+{% endmacro %}
+
+{% macro progress_bar(pct) %}
+<div class="progress">
+  <div class="progress-bar" style="width:{{ pct }}%"></div>
+</div>
+{% endmacro %}

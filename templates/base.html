@@ -1,606 +1,242 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Hive Dashboard{% endblock %}</title>
-    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
-
-    <!-- Material Symbols/Icons -->
-    <link rel="stylesheet"
-        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
-
-    <!-- Modern Typography: Outfit & Inter -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@400;600;700&display=swap"
-        rel="stylesheet">
-
-    <!-- Plotly for Data Visualizations -->
-    <script src="https://cdn.plot.ly/plotly-2.35.2.min.js" charset="utf-8"></script>
-
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=2">
-    <style>
-        :root {
-            {% set pc = get_setting('theme.primary_color', '#2563eb') %}
-            --primary-color: {{ pc }};
-            --primary-rgb: {{ pc | hex_to_rgb }};
-            --primary-light: color-mix(in srgb, {{ pc }}, white 30%);
-            --primary-dark: color-mix(in srgb, {{ pc }}, black 20%);
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Hive{% endblock %}</title>
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}?v=3">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <style>
+    :root {
+      {% set pc = get_setting('theme.primary_color', '#0969da') %}
+      --primary: {{ pc }};
+      --primary-hover: color-mix(in srgb, {{ pc }}, black 15%);
+      --primary-bg: color-mix(in srgb, {{ pc }}, white 85%);
+    }
+    body.dark-theme {
+      --primary-bg: color-mix(in srgb, var(--primary), transparent 85%);
+    }
+  </style>
 </head>
-
 <body class="{{ get_setting('theme.active', 'light') | default('light', true) }}-theme">
-    <script>
-        (function () {
-            const serverTheme = '{{ get_setting("theme.active", "light") | default("light", true) }}';
-            const savedTheme = localStorage.getItem('hive-theme');
-            if (savedTheme) {
-                document.body.className = savedTheme;
-            } else {
-                document.body.className = serverTheme + '-theme';
-            }
-        })();
-    </script>
-    <div class="app-container">
-        {% if g.get('current_user') %}
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar glass-panel">
-            <div class="sidebar-header">
-                <div class="logo">
-                    <img src="{{ url_for('static', filename='images/light_theme.png') }}" alt="Hive Logo"
-                        class="logo-light">
-                    <img src="{{ url_for('static', filename='images/dark_theme.png') }}" alt="Hive Logo"
-                        class="logo-dark">
-                </div>
-            </div>
+<script>
+(function(){var t=localStorage.getItem('hive-theme');if(t)document.body.className=t})();
+</script>
 
-            <nav class="sidebar-nav">
-                {% if request.endpoint in ['classroom.student_view', 'classroom.teacher_view'] %}
-                <!-- Classroom Specific Navigation -->
-                <a href="{{ url_for('academics.student_dashboard' if g.current_user.role in ['student', 'class_rep'] else 'academics.teacher_dashboard') }}" class="nav-item">
-                    <span class="nav-icon material-symbols-rounded">arrow_back</span>
-                    <span class="nav-label">Back to Hub</span>
-                </a>
-                
-                {% if request.endpoint == 'classroom.student_view' %}
-                <a href="#" class="nav-item tab-link active" onclick="openTab(event, 'Home')">
-                    <span class="nav-icon material-symbols-rounded">class</span>
-                    <span class="nav-label">Class Home</span>
-                </a>
-                <a href="#" class="nav-item tab-link" onclick="openTab(event, 'Assignments')">
-                    <span class="nav-icon material-symbols-rounded">assignment</span>
-                    <span class="nav-label">Assignments</span>
-                </a>
-                <a href="#" class="nav-item tab-link" onclick="openTab(event, 'Performance')">
-                    <span class="nav-icon material-symbols-rounded">fact_check</span>
-                    <span class="nav-label">My Progress</span>
-                </a>
-                {% else %}
-                <a href="#" class="nav-item tab-link active" onclick="openTab(event, 'Students')">
-                    <span class="nav-icon material-symbols-rounded">manage_accounts</span>
-                    <span class="nav-label">Students</span>
-                </a>
-                <a href="#" class="nav-item tab-link" onclick="openTab(event, 'Assignments')">
-                    <span class="nav-icon material-symbols-rounded">assignment</span>
-                    <span class="nav-label">Assignments</span>
-                </a>
-                <a href="#" class="nav-item tab-link" onclick="openTab(event, 'Attendance')">
-                    <span class="nav-icon material-symbols-rounded">checklist</span>
-                    <span class="nav-label">Attendance</span>
-                </a>
-                <a href="#" class="nav-item tab-link" onclick="openTab(event, 'Announcements')">
-                    <span class="nav-icon material-symbols-rounded">campaign</span>
-                    <span class="nav-label">Announcements</span>
-                </a>
-                {% endif %}
+<div class="app-shell">
+  {% if g.get('current_user') %}
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <span class="logo-mark">H</span>
+      Hive
+    </div>
 
-                {% else %}
-                <!-- Standard Navigation -->
-                
-                <!-- DASHBOARD -->
-                {% if g.current_user.role == 'admin' %}
-                <a href="{{ url_for('admin.admin_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.admin_dashboard' }}">
-                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
-                    <span class="nav-label">Global Dashboard</span>
-                </a>
-                <a href="{{ url_for('admin.admin_schools') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.admin_schools' }}">
-                    <span class="nav-icon material-symbols-rounded">apartment</span>
-                    <span class="nav-label">Schools</span>
-                </a>
-                <a href="{{ url_for('admin.admin_sections') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.admin_sections' }}">
-                    <span class="nav-icon material-symbols-rounded">meeting_room</span>
-                    <span class="nav-label">Sections</span>
-                </a>
-                <a href="{{ url_for('academics.my_courses') }}" class="nav-item">
-                    <span class="nav-icon material-symbols-rounded">book</span>
-                    <span class="nav-label">Courses</span>
-                </a>
-                {% elif g.current_user.role == 'dean' %}
-                <a href="{{ url_for('analytics.school_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'analytics.school_analytics' }}">
-                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
-                    <span class="nav-label">Dean Dashboard</span>
-                </a>
-                {% elif g.current_user.role in ['professor', 'assistant_professor'] %}
-                <a href="{{ url_for('academics.teacher_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'academics.teacher_dashboard' }}">
-                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
-                    <span class="nav-label">Faculty Dashboard</span>
-                </a>
-                {% else %}
-                <a href="{{ url_for('academics.student_dashboard') }}" class="nav-item {{ 'active' if request.endpoint == 'academics.student_dashboard' }}">
-                    <span class="nav-icon material-symbols-rounded">space_dashboard</span>
-                    <span class="nav-label">Student Hub</span>
-                </a>
-                {% endif %}
+    <nav class="sidebar-nav">
+      {% set role = g.current_user.role %}
+      {% set ep = request.endpoint or '' %}
 
-                <!-- MY COURSES (Professor/Assistant only) -->
-                {% if g.current_user.role in ['professor', 'assistant_professor'] %}
-                <a href="{{ url_for('academics.my_courses') }}" class="nav-item {{ 'active' if request.endpoint == 'academics.my_courses' }}">
-                    <span class="nav-icon material-symbols-rounded">school</span>
-                    <span class="nav-label">My Courses</span>
-                </a>
-                {% endif %}
+      {% set nav_items = [] %}
 
-                <!-- TIMETABLE -->
-                {% if g.current_user.role == 'admin' %}
-                <a href="{{ url_for('timetable.admin_timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'timetable.admin_timetable' }}">
-                    <span class="nav-icon material-symbols-rounded">calendar_view_week</span>
-                    <span class="nav-label">Timetable</span>
-                </a>
-                {% else %}
-                <a href="{{ url_for('timetable.timetable') }}" class="nav-item {{ 'active' if request.endpoint == 'timetable.timetable' }}">
-                    <span class="nav-icon material-symbols-rounded">calendar_today</span>
-                    <span class="nav-label">Timetable</span>
-                </a>
-                {% endif %}
+      {# Dashboard #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_dashboard', 'space_dashboard', 'Dashboard')) %}
+      {% elif role == 'dean' %}
+        {% set _ = nav_items.append(('analytics.school_analytics', 'space_dashboard', 'Dashboard')) %}
+      {% elif role in ('professor', 'assistant_professor') %}
+        {% set _ = nav_items.append(('academics.teacher_dashboard', 'space_dashboard', 'Dashboard')) %}
+      {% elif role in ('student', 'class_rep') %}
+        {% set _ = nav_items.append(('academics.student_dashboard', 'space_dashboard', 'Dashboard')) %}
+      {% endif %}
 
-                <!-- TASKS / GRADES / FEES (Student/CR only) -->
-                {% if g.current_user.role in ['student', 'class_rep'] %}
-                <a href="{{ url_for('tasks.tasks') }}" class="nav-item {{ 'active' if request.endpoint == 'tasks.tasks' }}">
-                    <span class="nav-icon material-symbols-rounded">task_alt</span>
-                    <span class="nav-label">Tasks</span>
-                </a>
-                <a href="{{ url_for('academics.grades') }}" class="nav-item {{ 'active' if request.endpoint == 'academics.grades' }}">
-                    <span class="nav-icon material-symbols-rounded">bar_chart</span>
-                    <span class="nav-label">Grades</span>
-                </a>
-                <a href="{{ url_for('fees.student_dashboard') }}" class="nav-item {{ 'active' if 'fees.student_dashboard' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">account_balance_wallet</span>
-                    <span class="nav-label">Fees</span>
-                </a>
-                {% endif %}
+      {# Institution (admin only) #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_schools', 'apartment', 'Institution')) %}
+      {% endif %}
 
-                <!-- ANALYTICS / RATINGS / WARNINGS (Dean/Admin) -->
-                {% if g.current_user.role in ['dean', 'admin'] %}
-                <a href="{{ url_for('analytics.school_analytics') }}" class="nav-item {{ 'active' if request.endpoint == 'analytics.school_analytics' }}">
-                    <span class="nav-icon material-symbols-rounded">analytics</span>
-                    <span class="nav-label">Analytics</span>
-                </a>
-                <a href="{{ url_for('analytics.dean_ratings') }}" class="nav-item {{ 'active' if request.endpoint == 'analytics.dean_ratings' }}">
-                    <span class="nav-icon material-symbols-rounded">star_half</span>
-                    <span class="nav-label">Teacher Ratings</span>
-                </a>
-                <a href="{{ url_for('analytics.early_warning') }}" class="nav-item {{ 'active' if request.endpoint == 'analytics.early_warning' }}">
-                    <span class="nav-icon material-symbols-rounded">warning</span>
-                    <span class="nav-label">Early Warning</span>
-                </a>
-                {% endif %}
+      {# People #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_accounts', 'people', 'People')) %}
+      {% endif %}
 
-                <!-- ACCOUNTS / SETTINGS (Admin only) -->
-                {% if g.current_user.role == 'admin' %}
-                <a href="{{ url_for('admin.admin_accounts') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.admin_accounts' }}">
-                    <span class="nav-icon material-symbols-rounded">person_add</span>
-                    <span class="nav-label">Accounts</span>
-                </a>
-                <a href="{{ url_for('admin.admin_settings') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.admin_settings' }}">
-                    <span class="nav-icon material-symbols-rounded">settings</span>
-                    <span class="nav-label">Settings</span>
-                </a>
-                <a href="{{ url_for('imports.index') }}" class="nav-item {{ 'active' if 'imports' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">upload_file</span>
-                    <span class="nav-label">Import Data</span>
-                </a>
-                <a href="{{ url_for('plugin_admin.index') }}" class="nav-item {{ 'active' if 'plugin_admin' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">extension</span>
-                    <span class="nav-label">Plugins</span>
-                </a>
-                {% endif %}
+      {# Academics #}
+      {% if role in ('admin', 'professor', 'assistant_professor') %}
+        {% set _ = nav_items.append(('academics.my_courses', 'school', 'Academics')) %}
+      {% endif %}
 
-                <!-- CLUBS / INTERNSHIPS / LOST & FOUND (General) -->
-                {% if g.current_user.role in ['student', 'class_rep', 'professor', 'assistant_professor', 'admin'] %}
-                <a href="{{ url_for('clubs.index') }}" class="nav-item {{ 'active' if 'clubs' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">groups</span>
-                    <span class="nav-label">Clubs</span>
-                </a>
-                <a href="{{ url_for('internships.index') }}" class="nav-item {{ 'active' if request.endpoint == 'internships.index' }}">
-                    <span class="nav-icon material-symbols-rounded">work</span>
-                    <span class="nav-label">Internships</span>
-                </a>
-                <a href="{{ url_for('lost_found.gallery') }}" class="nav-item {{ 'active' if 'lost_found' in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">search_check</span>
-                    <span class="nav-label">Lost & Found</span>
-                </a>
-                {% endif %}
+      {# Campus (general) #}
+      {% if role in ('student', 'class_rep', 'professor', 'assistant_professor', 'admin') %}
+        {% set _ = nav_items.append(('clubs.index', 'groups', 'Campus')) %}
+      {% endif %}
 
-                <!-- INBOX -->
-                <a href="{{ url_for('messages.index') }}" class="nav-item {{ 'active' if 'messages' in request.endpoint and 'fees' not in request.endpoint }}">
-                    <span class="nav-icon material-symbols-rounded">inbox</span>
-                    <span class="nav-label">Inbox</span>
-                </a>
-
-                <!-- ANNOUNCEMENTS -->
-                <a href="{{ url_for('admin.announcements') }}" class="nav-item {{ 'active' if request.endpoint == 'admin.announcements' }}">
-                    <span class="nav-icon material-symbols-rounded">campaign</span>
-                    <span class="nav-label">Announcements</span>
-                </a>
-                
-                {% if g.current_user.role == 'dean' %}
-                <a href="{{ url_for('analytics.dean_nominations') }}" class="nav-item {{ 'active' if request.endpoint == 'analytics.dean_nominations' }}">
-                    <span class="nav-icon material-symbols-rounded">how_to_reg</span>
-                    <span class="nav-label">CR Nominations</span>
-                </a>
-                {% endif %}
-
-                {% endif %}
-            </nav>
-
-            <div class="sidebar-footer">
-                <a href="#" class="nav-item user-profile" id="userProfileBtn">
-                    <div class="avatar" style="position: relative;">
-                        {% if g.current_user %}{{ g.current_user.name[0] | upper }}{% else %}U{% endif %}
-                        {% if g.current_user and g.current_user.role == 'class_rep' %}
-                        <span class="rep-badge-mini" title="Class Representative">👑</span>
-                        {% endif %}
-                    </div>
-                    <div class="user-info">
-                        <span class="user-name" style="display: flex; align-items: center; gap: 0.4rem;">
-                            {% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{% endif %}
-                            {% if g.current_user and g.current_user.must_change_password %}
-                            <span class="pw-dot-wrapper">
-                                <span class="pw-dot"></span>
-                                <span class="pw-dot-tooltip">Default password in use</span>
-                            </span>
-                            {% endif %}
-                        </span>
-                        <span class="user-role">
-                            {% if g.current_user %}
-                                {% if g.current_user.role == 'assistant_professor' %}
-                                    <span style="color: var(--primary-color); font-weight: 600; font-size: 0.75rem;">Assistant</span>
-                                {% else %}
-                                    {{ g.current_user.role | replace('_', ' ') | title }}
-                                {% endif %}
-                            {% else %}
-                            Student
-                            {% endif %}
-                        </span>
-                    </div>
-                </a>
-            </div>
-
-            <style>
-                .pw-dot-wrapper {
-                    position: relative;
-                    display: inline-flex;
-                    align-items: center;
-                    flex-shrink: 0;
-                }
-                .pw-dot {
-                    display: inline-block;
-                    width: 8px;
-                    height: 8px;
-                    background: #f59e0b;
-                    border-radius: 50%;
-                    flex-shrink: 0;
-                    animation: pw-pulse 2s ease-in-out infinite;
-                    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5);
-                }
-                @keyframes pw-pulse {
-                    0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.5); }
-                    50% { box-shadow: 0 0 0 5px rgba(245, 158, 11, 0); }
-                }
-                .pw-dot-tooltip {
-                    position: absolute;
-                    left: 110%;
-                    top: 50%;
-                    transform: translateY(-50%);
-                    white-space: nowrap;
-                    background: rgba(245, 158, 11, 0.15);
-                    border: 1px solid rgba(245, 158, 11, 0.4);
-                    color: #f59e0b;
-                    font-size: 0.7rem;
-                    padding: 4px 8px;
-                    border-radius: 6px;
-                    pointer-events: none;
-                    opacity: 0;
-                    transition: opacity 0.2s ease;
-                    z-index: 9999;
-                    margin-left: 6px;
-                }
-                .pw-dot-wrapper:hover .pw-dot-tooltip {
-                    opacity: 1;
-                }
-                /* Fix 3: amber left-border accent on the Change Password link in profile modal */
-                .pw-change-accent {
-                    box-shadow: inset 3px 0 0 #f59e0b !important;
-                    border-left: none !important;
-                }
-            </style>
-        </aside>
+      {# Analytics #}
+      {% if role in ('dean', 'admin') %}
+        {% set _ = nav_items.append(('analytics.school_analytics', 'analytics', 'Analytics')) %}
+        {% if role == 'dean' %}
+          {% set _ = nav_items.append(('analytics.dean_ratings', 'star_half', 'Teacher Ratings')) %}
         {% endif %}
+      {% endif %}
 
-        <!-- Main Content Area -->
-        <main class="main-content {{ 'no-sidebar' if not g.get('current_user') }}">
-            {% if g.get('current_user') %}
-            <header class="topbar glass-panel">
-                <div class="page-title">
-                    <h2>{% block page_title %}Dashboard{% endblock %}</h2>
-                </div>
+      {# Administration #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_sections', 'meeting_room', 'Sections')) %}
+        {% set _ = nav_items.append(('timetable.admin_timetable', 'calendar_view_week', 'Timetable')) %}
+        {% set _ = nav_items.append(('admin.announcements', 'campaign', 'Announcements')) %}
+        {% set _ = nav_items.append(('imports.index', 'upload_file', 'Import')) %}
+      {% endif %}
 
-                <div class="topbar-actions">
-                    <button class="icon-btn theme-toggle" title="Toggle Theme">
-                        <span class="material-symbols-rounded">dark_mode</span>
-                    </button>
+      {# Plugins #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('plugin_admin.index', 'extension', 'Plugins')) %}
+      {% endif %}
 
-                    <div class="notification-wrapper">
-                        <button class="icon-btn notifications" id="notificationBtn">
-                            <span class="material-symbols-rounded">notifications</span>
-                            {% if g.unread_count and g.unread_count > 0 %}
-                            <span class="badge">{{ g.unread_count }}</span>
-                            {% endif %}
-                        </button>
+      {# Settings #}
+      {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_settings', 'settings', 'Settings')) %}
+      {% endif %}
 
-                        <div class="notifications-dropdown glass-panel" id="notificationsDropdown">
-                            <div class="dropdown-header">
-                                <h3>Notifications</h3>
-                                {% if g.unread_count and g.unread_count > 0 %}
-                                <span class="badge-new">{{ g.unread_count }} New</span>
-                                {% endif %}
-                            </div>
+      {# Student/CR specific #}
+      {% if role in ('student', 'class_rep') %}
+        {% set _ = nav_items.append(('tasks.tasks', 'task_alt', 'Tasks')) %}
+        {% set _ = nav_items.append(('academics.grades', 'bar_chart', 'Grades')) %}
+        {% set _ = nav_items.append(('fees.student_dashboard', 'account_balance_wallet', 'Fees')) %}
+        {% set _ = nav_items.append(('timetable.timetable', 'calendar_today', 'Timetable')) %}
+      {% endif %}
 
-                            <div class="dropdown-body">
-                                {% if g.unread_messages or g.recent_announcements %}
-                                <!-- Messages Section -->
-                                {% if g.unread_messages %}
-                                <div class="notification-section">
-                                    <label>Recent Messages</label>
-                                    {% for msg in g.unread_messages %}
-                                    <a href="{{ url_for('messages.index') }}" class="dropdown-item message-item">
-                                        <div class="item-avatar">{{ msg.sender.name[0] | upper }}</div>
-                                        <div class="item-content">
-                                            <p class="item-title">{{ msg.sender.name }}</p>
-                                            <p class="item-desc">{{ msg.body[:40] }}{% if msg.body|length > 40 %}...{%
-                                                endif %}</p>
-                                            <span class="item-time">{{ msg.sent_at.strftime('%I:%M %p') }}</span>
-                                        </div>
-                                    </a>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
+      {# Faculty specific #}
+      {% if role in ('professor', 'assistant_professor') %}
+        {% set _ = nav_items.append(('timetable.timetable', 'calendar_today', 'Timetable')) %}
+      {% endif %}
 
-                                <!-- Announcements Section -->
-                                {% if g.recent_announcements %}
-                                <div class="notification-section">
-                                    <label>Recent Announcements</label>
-                                    {% for ann in g.recent_announcements %}
-                                    <a href="{{ url_for('admin.announcements') }}"
-                                        class="dropdown-item announcement-item">
-                                        <div class="item-icon"><span class="material-symbols-rounded">campaign</span>
-                                        </div>
-                                        <div class="item-content">
-                                            <p class="item-title">{{ ann.title }}</p>
-                                            <span class="item-time">{{ ann.posted_at.strftime('%b %d') }}</span>
-                                        </div>
-                                    </a>
-                                    {% endfor %}
-                                </div>
-                                {% endif %}
-                                {% else %}
-                                <div class="empty-notifications">
-                                    <span class="material-symbols-rounded">notifications_none</span>
-                                    <p>All caught up!</p>
-                                </div>
-                                {% endif %}
-                            </div>
+      {# Inbox - everyone #}
+      {% set _ = nav_items.append(('messages.index', 'inbox', 'Inbox')) %}
 
-                            <div class="dropdown-footer">
-                                <a href="{{ url_for('admin.announcements') }}">View All</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-            {% endif %}
+      {% for route, icon, label in nav_items %}
+      <a href="{{ url_for(route) }}" class="nav-item{% if ep == route %} active{% endif %}">
+        <span class="material-symbols-rounded nav-icon">{{ icon }}</span>
+        {{ label }}
+      </a>
+      {% endfor %}
+    </nav>
 
-            <div class="content-wrapper">
-                {% block content %}
-                <!-- Main Page Content Goes Here -->
-                <div class="welcome-card glass-panel gradient-border">
-                    <h3>Welcome to Hive Dashboard</h3>
-                    <p>Your personalized educational hub.</p>
-                </div>
-                {% endblock %}
-            </div>
-        </main>
+    <div class="sidebar-footer">
+      <button class="user-btn" id="userProfileBtn">
+        <span class="avatar">{{ g.current_user.name[0] | upper }}</span>
+        <span class="user-info">
+          <div>{{ g.current_user.name }}</div>
+          <div class="user-role">{{ g.current_user.role | replace('_', ' ') | title }}</div>
+        </span>
+      </button>
     </div>
+  </aside>
+  {% endif %}
 
+  <div class="main-area">
     {% if g.get('current_user') %}
-    <!-- Profile Modal -->
-    <div id="profileModal" class="modal-overlay">
-        <div class="modal-content glass-panel">
-            <span class="close-modal" id="closeProfileBtn">&times;</span>
-            <div class="profile-header">
-                <div class="avatar large-avatar">{% if g.current_user %}{{ g.current_user.name[0] | upper }}{% else
-                    %}U{% endif %}</div>
-                <h2>{% if g.current_user %}{{ g.current_user.name }}{% else %}User Name{% endif %}</h2>
-                <p class="user-role">{% if g.current_user %}{{ g.current_user.role | title }}{% else %}Student{% endif
-                    %}</p>
+    <header class="topbar">
+      <h2>{% block page_title %}{% endblock %}</h2>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="themeToggle" title="Toggle theme">
+          <span class="material-symbols-rounded">dark_mode</span>
+        </button>
+        <div class="dropdown-wrapper">
+          <button class="icon-btn" id="notificationBtn">
+            <span class="material-symbols-rounded">notifications</span>
+            {% if g.unread_count and g.unread_count > 0 %}
+            <span class="badge badge-danger" style="position:absolute;top:0;right:0;min-width:16px;height:16px;padding:0 4px;font-size:10px;border-radius:50%;">{{ g.unread_count }}</span>
+            {% endif %}
+          </button>
+          <div class="dropdown-menu" id="notificationsDropdown">
+            {% if g.unread_messages or g.recent_announcements %}
+              {% if g.unread_messages %}
+              <div style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600">Messages</div>
+              {% for msg in g.unread_messages %}
+              <a href="{{ url_for('messages.index') }}" class="dropdown-item">
+                <span class="avatar" style="width:24px;height:24px;font-size:10px;flex-shrink:0">{{ msg.sender.name[0] | upper }}</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:var(--font-size-sm);font-weight:500;truncate">{{ msg.sender.name }}</div>
+                  <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);truncate">{{ msg.body[:50] }}{% if msg.body|length > 50 %}...{% endif %}</div>
+                </div>
+              </a>
+              {% endfor %}
+              {% endif %}
+              {% if g.recent_announcements %}
+              <div style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600;border-top:1px solid var(--border-secondary)">Announcements</div>
+              {% for ann in g.recent_announcements %}
+              <a href="{{ url_for('admin.announcements') }}" class="dropdown-item">
+                <span class="material-symbols-rounded" style="font-size:18px;color:var(--text-tertiary)">campaign</span>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:var(--font-size-sm);font-weight:500;truncate">{{ ann.title }}</div>
+                </div>
+              </a>
+              {% endfor %}
+              {% endif %}
+            {% else %}
+            <div class="empty-state" style="padding:var(--space-6) var(--space-4)">
+              <span class="material-symbols-rounded" style="font-size:28px;color:var(--text-tertiary);margin-bottom:var(--space-2)">notifications_none</span>
+              <p style="font-size:var(--font-size-sm);color:var(--text-tertiary)">All caught up!</p>
             </div>
-
-            <div class="profile-details">
-                {% if g.current_user %}
-                <div class="info-group">
-                    <span class="info-label">Email</span>
-                    <span class="info-value">{{ g.current_user.email }}</span>
-                </div>
-
-                {% if g.current_user.role == 'student' and g.current_user.student_profile %}
-                <div class="info-group">
-                    <span class="info-label">Cumulative GPA (CGPA)</span>
-                    <span class="info-value">{{ g.current_user.student_profile.cgpa }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Semester GPA (SGPA)</span>
-                    <span class="info-value">{{ g.current_user.student_profile.sgpa }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Major</span>
-                    <span class="info-value">{{ g.current_user.student_profile.major or 'N/A' }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Year</span>
-                    <span class="info-value">{{ g.current_user.student_profile.enrollment_year }}</span>
-                </div>
-                {% elif g.current_user.role == 'teacher' and g.current_user.teacher_profile %}
-                <div class="info-group">
-                    <span class="info-label">Department</span>
-                    <span class="info-value">{{ g.current_user.teacher_profile.department }}</span>
-                </div>
-                <div class="info-group">
-                    <span class="info-label">Office Hours</span>
-                    <span class="info-value">{{ g.current_user.teacher_profile.office_hours }}</span>
-                </div>
-                {% endif %}
-
-                <div class="info-group">
-                    <span class="info-label">Joined</span>
-                    <span class="info-value">{{ g.current_user.created_at.strftime('%B %Y') if g.current_user.created_at
-                        else 'N/A' }}</span>
-                </div>
-                {% endif %}
-            </div>
-
-            <div class="profile-actions">
-                <a href="{{ url_for('auth.change_password') }}"
-                   class="btn-secondary{% if g.current_user and g.current_user.must_change_password %} pw-change-accent{% endif %}"
-                   style="margin-bottom: 0.5rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; border-radius: var(--radius-md); background: rgba(var(--primary-rgb), 0.1); color: var(--text-main); text-decoration: none; font-weight: 500; transition: all 0.2s ease;">
-                    <span class="material-symbols-rounded" style="font-size: 18px;">lock</span> Change Password
-                    {% if g.current_user and g.current_user.must_change_password %}
-                    <span style="margin-left: auto; font-size: 0.7rem; color: #f59e0b; font-weight: 600; background: rgba(245,158,11,0.12); padding: 2px 6px; border-radius: 4px;">Action needed</span>
-                    {% endif %}
-                </a>
-                <a href="{{ url_for('auth.logout') }}" class="btn-logout">Log Out</a>
-            </div>
+            {% endif %}
+          </div>
         </div>
-    </div>
+      </div>
+    </header>
     {% endif %}
 
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2"></script>
-    {% block extra_js %}{% endblock %}
+    <div class="content">
+      {% if g.current_user and g.current_user.must_change_password %}
+      <div class="alert alert-warning" style="cursor:pointer" onclick="this.style.display='none'">
+        <span class="material-symbols-rounded" style="font-size:18px">warning</span>
+        You're using a default password. <a href="{{ url_for('auth.change_password') }}" style="font-weight:600;margin-left:var(--space-1)">Change it now</a>.
+      </div>
+      {% endif %}
 
-    <!-- Password Suggestion Banner: styles + dismiss logic -->
-    <style>
-        .pw-suggest-banner {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.9rem 1.25rem;
-            margin-bottom: 1.5rem;
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(245, 158, 11, 0.35);
-            background: rgba(245, 158, 11, 0.08);
-            backdrop-filter: blur(8px);
-            box-shadow: 0 2px 12px rgba(245, 158, 11, 0.12);
-            animation: bannerSlideIn 0.4s ease;
-        }
-        @keyframes bannerSlideIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to   { opacity: 1; transform: translateY(0); }
-        }
-        .pw-banner-icon {
-            color: #f59e0b;
-            font-size: 22px;
-            flex-shrink: 0;
-        }
-        .pw-banner-text {
-            flex: 1;
-            font-size: 0.9rem;
-            color: var(--text-main);
-            line-height: 1.4;
-        }
-        .pw-banner-text strong {
-            color: #d97706;
-        }
-        .pw-banner-btn {
-            flex-shrink: 0;
-            padding: 0.45rem 1rem;
-            border-radius: var(--radius-sm);
-            background: rgba(245, 158, 11, 0.18);
-            border: 1px solid rgba(245, 158, 11, 0.45);
-            color: #d97706;
-            font-weight: 600;
-            font-size: 0.85rem;
-            text-decoration: none;
-            transition: all 0.2s ease;
-            white-space: nowrap;
-        }
-        .pw-banner-btn:hover {
-            background: rgba(245, 158, 11, 0.32);
-            border-color: #f59e0b;
-            color: #b45309;
-        }
-        .pw-banner-dismiss {
-            flex-shrink: 0;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0.2rem;
-            display: flex;
-            align-items: center;
-            color: var(--text-muted);
-            border-radius: 50%;
-            transition: all 0.15s ease;
-        }
-        .pw-banner-dismiss:hover {
-            background: rgba(245, 158, 11, 0.15);
-            color: #d97706;
-        }
-        .pw-banner-dismiss .material-symbols-rounded {
-            font-size: 18px;
-        }
-    </style>
+      {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category in ('success','danger','warning','info') else 'info' }}">
+          {{ message }}
+        </div>
+        {% endfor %}
+      {% endif %}
+      {% endwith %}
 
-    <script>
-        (function () {
-            // On every page load, check if the banner was dismissed this session
-            var banner = document.getElementById('pw-suggest-banner');
-            if (banner) {
-                if (sessionStorage.getItem('hive_pw_banner_dismissed') === '1') {
-                    banner.style.display = 'none';
-                }
-                var dismissBtn = document.getElementById('pwDismissBtn');
-                if (dismissBtn) {
-                    dismissBtn.addEventListener('click', function () {
-                        sessionStorage.setItem('hive_pw_banner_dismissed', '1');
-                        banner.style.transition = 'opacity 0.25s ease, max-height 0.35s ease, margin 0.35s ease, padding 0.35s ease';
-                        banner.style.opacity = '0';
-                        banner.style.maxHeight = '0';
-                        banner.style.marginBottom = '0';
-                        banner.style.paddingTop = '0';
-                        banner.style.paddingBottom = '0';
-                        banner.style.overflow = 'hidden';
-                        setTimeout(function () { banner.style.display = 'none'; }, 380);
-                    });
-                }
-            }
-        })();
-    </script>
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+{% if g.get('current_user') %}
+<div class="modal-overlay" id="profileModal">
+  <div class="modal" style="width:380px">
+    <div class="modal-header">
+      <h3>Profile</h3>
+      <button type="button" class="modal-close" id="closeProfileBtn"><span class="material-symbols-rounded">close</span></button>
+    </div>
+    <div class="modal-body" style="text-align:center">
+      <span class="avatar" style="width:64px;height:64px;font-size:28px;margin:0 auto var(--space-3);display:flex">{{ g.current_user.name[0] | upper }}</span>
+      <h3 style="margin-bottom:var(--space-1)">{{ g.current_user.name }}</h3>
+      <div style="font-size:var(--font-size-sm);color:var(--text-tertiary);margin-bottom:var(--space-4)">{{ g.current_user.role | replace('_', ' ') | title }}</div>
+      <div style="text-align:left">
+        <div class="form-group"><label class="form-label">Email</label><div style="font-size:var(--font-size-sm);color:var(--text-primary)">{{ g.current_user.email }}</div></div>
+        {% if g.current_user.role in ('student', 'class_rep') and g.current_user.student_profile %}
+        <div class="form-group"><label class="form-label">CGPA</label><div style="font-size:var(--font-size-sm)">{{ g.current_user.student_profile.cgpa }}</div></div>
+        {% endif %}
+        {% if g.current_user.created_at %}
+        <div class="form-group"><label class="form-label">Joined</label><div style="font-size:var(--font-size-sm)">{{ g.current_user.created_at.strftime('%B %Y') }}</div></div>
+        {% endif %}
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-direction:column;gap:var(--space-2)">
+      <a href="{{ url_for('auth.change_password') }}" class="btn btn-secondary w-full" style="justify-content:center"><span class="material-symbols-rounded" style="font-size:16px">lock</span> Change Password</a>
+      <a href="{{ url_for('auth.logout') }}" class="btn btn-ghost w-full" style="justify-content:center;color:var(--danger)">Log Out</a>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/app.js') }}?v=3"></script>
+{% block extra_js %}{% endblock %}
 </body>
-
 </html>
