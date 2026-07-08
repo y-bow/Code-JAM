@@ -1,62 +1,62 @@
 {% extends "base.html" %}
+{% from "_components.html" import badge %}
 
 {% block title %}Hive | Announcements{% endblock %}
 {% block page_title %}Announcements{% endblock %}
 
-
 {% block content %}
-<div class="glass-panel" style="padding: 2rem; border-radius: var(--radius-lg); max-width: 800px; margin: 0 auto;">
-    <h3 style="margin: 0 0 2rem 0; display: flex; align-items: center; gap: 0.5rem;"><span
-            class="material-symbols-rounded">campaign</span> Department & Class Announcements</h3>
-
-    <div style="display: flex; flex-direction: column; gap: 1.5rem;">
-        {% for a in announcements %}
-        <div style="background: var(--bg-main); border: 1px solid {% if a.urgent %}var(--danger-color){% else %}var(--border-color){% endif %}; padding: 1.5rem; border-radius: var(--radius-md); position: relative; overflow: hidden;">
-            {% if a.urgent %}
-            <div style="position: absolute; top: 0; left: 0; width: 4px; height: 100%; background: var(--danger-color);"></div>
+<div class="card" style="max-width:800px;margin:0 auto">
+  <div class="card-header">
+    <h3>Department & Class Announcements</h3>
+  </div>
+  <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-4)">
+    {% for a in announcements %}
+    <div style="border:1px solid {% if a.urgent %}var(--danger){% else %}var(--border-primary){% endif %};border-radius:var(--radius-md);position:relative;overflow:hidden">
+      {% if a.urgent %}
+      <div style="position:absolute;top:0;left:0;width:4px;height:100%;background:var(--danger)"></div>
+      {% endif %}
+      <div style="padding:var(--space-4)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-2);flex-wrap:wrap;gap:var(--space-2)">
+          <h4 style="margin:0;font-size:var(--font-size-md);display:flex;align-items:center;gap:var(--space-2);color:{% if a.urgent %}var(--danger){% elif a.category == 'timetable' %}var(--primary){% else %}var(--text-primary){% endif %}">
+            {% if a.category == 'timetable' %}
+            <span class="material-symbols-rounded" style="font-size:18px">calendar_month</span>
+            {% elif a.urgent %}
+            <span class="material-symbols-rounded" style="font-size:18px">warning</span>
+            {% else %}
+            <span class="material-symbols-rounded" style="font-size:18px">info</span>
             {% endif %}
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-                <h4 style="margin: 0; color: {% if a.urgent %}var(--danger-color){% elif a.category == 'timetable' %}var(--primary-color){% else %}var(--text-main){% endif %}; display: flex; align-items: center; gap: 0.5rem;">
-                    {% if a.category == 'timetable' %}
-                    <span class="material-symbols-rounded" style="font-size: 1.2rem;">calendar_month</span>
-                    {% elif a.urgent %}
-                    <span class="material-symbols-rounded" style="font-size: 1.2rem;">warning</span>
-                    {% else %}
-                    <span class="material-symbols-rounded" style="font-size: 1.2rem;">info</span>
-                    {% endif %}
-                    {{ a.title }}
-                </h4>
-                <div style="text-align: right;">
-                    <div style="font-size: 0.8rem; color: var(--text-muted);">{{ a.posted_at.strftime('%Y-%m-%d %H:%M') }}</div>
-                    {% if a.section %}<div style="font-size: 0.7rem; color: var(--accent-color); font-weight: 600;">{{ a.section.name }}</div>{% endif %}
-                </div>
-            </div>
-            
-            <p style="margin: 0 0 1rem 0; color: var(--text-main); line-height: 1.5;">{{ a.body }}</p>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.75rem; margin-top: 0.5rem;">
-                <div style="font-size: 0.8rem; font-weight: 500; color: var(--text-muted); display: flex; align-items: center; gap: 0.4rem;">
-                    <span class="material-symbols-rounded" style="font-size: 1rem;">person_edit</span>
-                    Posted by: {{ a.author.name if a.author else 'System' }}
-                </div>
-                {% if a.category == 'timetable' %}
-                <span style="font-size: 0.75rem; background: var(--bg-hover); color: var(--primary-color); padding: 0.2rem 0.6rem; border-radius: 10px; font-weight: 600; display: flex; align-items: center; gap: 0.3rem;">
-                    <span class="material-symbols-rounded" style="font-size: 0.9rem;">event_repeat</span> Timetable Update
-                </span>
-                {% elif a.course %}
-                <span style="font-size: 0.75rem; background: var(--bg-hover); padding: 0.2rem 0.6rem; border-radius: 10px; color: var(--text-muted);">
-                    {{ a.course.code }}
-                </span>
-                {% endif %}
-            </div>
+            {{ a.title }}
+          </h4>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ a.posted_at.strftime('%Y-%m-%d %H:%M') }}</div>
+            {% if a.section %}<div style="font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600">{{ a.section.name }}</div>{% endif %}
+          </div>
         </div>
-        {% else %}
-        <div style="text-align: center; padding: 4rem; color: var(--text-muted);">
-            <span class="material-symbols-rounded" style="font-size: 3rem; margin-bottom: 1rem;">inbox</span>
-            <p>No announcements found for your institution.</p>
+
+        <p style="margin:0 0 var(--space-3);color:var(--text-primary);line-height:1.6;font-size:var(--font-size-sm)">{{ a.body }}</p>
+
+        <div style="display:flex;justify-content:space-between;align-items:center;border-top:1px solid var(--border-secondary);padding-top:var(--space-3)">
+          <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);display:flex;align-items:center;gap:var(--space-1)">
+            <span class="material-symbols-rounded" style="font-size:14px">person_edit</span>
+            Posted by: {{ a.author.name if a.author else 'System' }}
+          </div>
+          <div style="display:flex;gap:var(--space-1)">
+            {% if a.category == 'timetable' %}
+            {{ badge('Timetable Update', 'primary') }}
+            {% elif a.course %}
+            <span class="badge badge-default">{{ a.course.code }}</span>
+            {% endif %}
+          </div>
         </div>
-        {% endfor %}
+      </div>
     </div>
+    {% else %}
+    <div class="empty-state">
+      <span class="material-symbols-rounded empty-icon">inbox</span>
+      <h3>No announcements</h3>
+      <p>No announcements found for your institution.</p>
+    </div>
+    {% endfor %}
+  </div>
 </div>
 {% endblock %}

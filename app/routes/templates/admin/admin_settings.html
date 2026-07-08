@@ -1,147 +1,96 @@
 {% extends "base.html" %}
+{% from "_components.html" import form_group, btn_submit, card %}
+
 {% block title %}Hive | Settings{% endblock %}
 {% block page_title %}Global Settings{% endblock %}
 
 {% block content %}
-<div style="display: grid; gap: 2rem; max-width: 900px; margin: 0 auto;">
+<form method="POST" action="{{ url_for('admin.admin_settings') }}" style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;gap:var(--space-6)">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
-    <form method="POST" action="{{ url_for('admin.admin_settings') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <div class="card">
+    <div class="card-header">
+      <h3>Theme</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Customize how Hive looks for all users.</p>
 
-        <!-- Theme -->
-        <div class="glass-panel" style="padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 0.25rem;">Theme</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Customize how Hive looks for all users.
-            </p>
+      {% call form_group('Default Theme Mode', 'theme_mode', type='select') %}
+        <option value="light" {{ 'selected' if get_setting('theme.active', 'light') == 'light' }}>Light</option>
+        <option value="dark" {{ 'selected' if get_setting('theme.active', 'light') == 'dark' }}>Dark</option>
+      {% endcall %}
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Default Theme Mode</label>
-                <select name="theme_mode" class="form-input">
-                    <option value="light" {{ 'selected' if get_setting('theme.active', 'light') == 'light' }}>Light</option>
-                    <option value="dark" {{ 'selected' if get_setting('theme.active', 'light') == 'dark' }}>Dark</option>
-                </select>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Primary Color</label>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <input type="color" name="primary_color" value="{{ get_setting('theme.primary_color', '#2563eb') }}"
-                           style="width: 48px; height: 48px; border: none; border-radius: var(--radius-sm); cursor: pointer; background: none; padding: 0;">
-                    <input type="text" name="primary_color_text" value="{{ get_setting('theme.primary_color', '#2563eb') }}"
-                           class="form-input" style="flex: 1;"
-                           placeholder="#2563eb" pattern="^#[0-9A-Fa-f]{6}$"
-                           oninput="document.querySelector('[name=primary_color]').value = this.value">
-                </div>
-            </div>
+      <div class="form-group">
+        <label class="form-label" for="primary_color">Primary Color</label>
+        <div style="display:flex;gap:var(--space-3);align-items:center">
+          <input type="color" name="primary_color" value="{{ get_setting('theme.primary_color', '#0969da') }}" style="width:48px;height:48px;border:none;border-radius:var(--radius-sm);cursor:pointer;background:none;padding:0">
+          <input type="text" name="primary_color_text" value="{{ get_setting('theme.primary_color', '#0969da') }}" class="form-input" style="flex:1" placeholder="#0969da" pattern="^#[0-9A-Fa-f]{6}$" oninput="document.querySelector('[name=primary_color]').value = this.value">
         </div>
+      </div>
+    </div>
+  </div>
 
-        <!-- Institution Info -->
-        <div class="glass-panel" style="padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 0.25rem;">Institution Info</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Displayed on official documents like fee receipts.
-            </p>
+  <div class="card">
+    <div class="card-header">
+      <h3>Institution Info</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Displayed on official documents like fee receipts.</p>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Institution Name</label>
-                <input type="text" name="school_name" class="form-input"
-                       value="{{ get_setting('school.name', '') }}" placeholder="e.g. University of Example">
-            </div>
+      {{ form_group('Institution Name', 'school_name', value=get_setting('school.name', ''), placeholder='e.g. University of Example') }}
+      {{ form_group('Department', 'school_department', value=get_setting('school.department', ''), placeholder='e.g. School of Engineering') }}
+      {{ form_group('Address', 'school_address', value=get_setting('school.address', ''), placeholder='e.g. 123 College St, City') }}
+      {{ form_group('Finance Email', 'school_finance_email', type='email', value=get_setting('school.finance_email', ''), placeholder='finance@institution.edu') }}
+    </div>
+  </div>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Department</label>
-                <input type="text" name="school_department" class="form-input"
-                       value="{{ get_setting('school.department', '') }}" placeholder="e.g. School of Engineering">
-            </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>Fees</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Currency symbol used on payment pages and receipts.</p>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Address</label>
-                <input type="text" name="school_address" class="form-input"
-                       value="{{ get_setting('school.address', '') }}" placeholder="e.g. 123 College St, City">
-            </div>
+      {{ form_group('Currency Symbol', 'fees_currency_symbol', value=get_setting('fees.currency_symbol', '₹'), placeholder='₹', class='' ) }}
+    </div>
+  </div>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Finance Email</label>
-                <input type="email" name="school_finance_email" class="form-input"
-                       value="{{ get_setting('school.finance_email', '') }}" placeholder="finance@institution.edu">
-            </div>
-        </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>Early Warning Thresholds</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Criteria used to flag at-risk students.</p>
 
-        <!-- Fees -->
-        <div class="glass-panel" style="padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 0.25rem;">Fees</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Currency symbol used on payment pages and receipts.
-            </p>
+      {{ form_group('CGPA Threshold', 'early_warning_cgpa_threshold', type='number', value=get_setting('early_warning.cgpa_threshold', 1.5), hint='Students with CGPA below this value are flagged.', class='') }}
+      {{ form_group('Attendance Threshold (%)', 'early_warning_attendance_threshold', type='number', value=get_setting('early_warning.attendance_threshold', 75), hint='Students with attendance below this percentage are flagged.', class='') }}
+    </div>
+  </div>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Currency Symbol</label>
-                <input type="text" name="fees_currency_symbol" class="form-input"
-                       value="{{ get_setting('fees.currency_symbol', '₹') }}"
-                       placeholder="₹" style="max-width: 100px;">
-            </div>
-        </div>
+  <div class="card">
+    <div class="card-header">
+      <h3>CSV Import</h3>
+    </div>
+    <div class="card-body">
+      <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Default password assigned to users created via CSV import. They will be asked to change it on first login.</p>
 
-        <!-- Early Warning -->
-        <div class="glass-panel" style="padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 0.25rem;">Early Warning Thresholds</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Criteria used to flag at-risk students.
-            </p>
+      {{ form_group('Default Password', 'import_default_password', value=get_setting('import.default_password', 'password123')) }}
+    </div>
+  </div>
 
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">CGPA Threshold</label>
-                <input type="number" name="early_warning_cgpa_threshold" class="form-input"
-                       value="{{ get_setting('early_warning.cgpa_threshold', 1.5) }}"
-                       step="0.1" min="0" max="10" style="max-width: 120px;">
-                <small style="color: var(--text-muted); margin-top: 0.25rem;">
-                    Students with CGPA below this value are flagged.
-                </small>
-            </div>
-
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Attendance Threshold (%)</label>
-                <input type="number" name="early_warning_attendance_threshold" class="form-input"
-                       value="{{ get_setting('early_warning.attendance_threshold', 75) }}"
-                       min="0" max="100" style="max-width: 120px;">
-                <small style="color: var(--text-muted); margin-top: 0.25rem;">
-                    Students with attendance below this percentage are flagged.
-                </small>
-            </div>
-        </div>
-
-        <!-- Import -->
-        <div class="glass-panel" style="padding: 2rem; border-radius: 12px; margin-bottom: 2rem;">
-            <h2 style="margin-bottom: 0.25rem;">CSV Import</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.9rem;">
-                Default password assigned to users created via CSV import. They will be asked to change it on first login.
-            </p>
-
-            <div class="form-group" style="margin-bottom: 1.5rem;">
-                <label class="form-label">Default Password</label>
-                <input type="text" name="import_default_password" class="form-input"
-                       value="{{ get_setting('import.default_password', 'password123') }}"
-                       style="max-width: 250px;">
-            </div>
-        </div>
-
-        <div style="text-align: center; margin-bottom: 3rem;">
-            <button type="submit" class="primary-btn" style="padding: 1rem 3rem; font-size: 1rem;">
-                <span class="material-symbols-rounded">save</span> Save All Settings
-            </button>
-        </div>
-    </form>
-</div>
+  <div style="text-align:center">
+    {{ btn_submit('Save All Settings', type='primary', size='lg', icon='save', attrs='style="padding-left:var(--space-6);padding-right:var(--space-6)"') }}
+  </div>
+</form>
 
 <script>
-    document.querySelector('[name=primary_color]').addEventListener('input', function() {
-        document.querySelector('[name=primary_color_text]').value = this.value;
-    });
-    document.querySelector('[name=primary_color_text]').addEventListener('input', function() {
-        if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
-            document.querySelector('[name=primary_color]').value = this.value;
-        }
-    });
+  document.querySelector('[name=primary_color]').addEventListener('input', function() {
+    document.querySelector('[name=primary_color_text]').value = this.value;
+  });
+  document.querySelector('[name=primary_color_text]').addEventListener('input', function() {
+    if (/^#[0-9A-Fa-f]{6}$/.test(this.value)) {
+      document.querySelector('[name=primary_color]').value = this.value;
+    }
+  });
 </script>
 {% endblock %}
