@@ -100,7 +100,7 @@ Key variables:
 | Variable       | Description                          | Default                          |
 |----------------|--------------------------------------|----------------------------------|
 | `SECRET_KEY`   | Flask secret key (change in prod)    | `dev-secret-key-change-in-production` |
-| `DATABASE_URL` | Database connection string           | `sqlite:///instance/app.db`      |
+| `DATABASE_URL` | Database connection string           | `sqlite:///app.db`               |
 | `REDIS_URL`    | Redis connection (production only)   | `redis://localhost:6379/0`       |
 | `JWT_SECRET_KEY` | JWT signing key (defaults to SECRET_KEY) | same as SECRET_KEY          |
 

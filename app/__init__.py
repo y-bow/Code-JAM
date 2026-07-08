@@ -11,16 +11,14 @@ def create_app():
                 static_folder='../static')
     
     # Configuration
-    # Safe absolute pathing for SQLite on Windows (uses 4 slashes)
     os.makedirs(app.instance_path, exist_ok=True)
-    db_path = os.path.join(app.instance_path, 'app.db').replace('\\', '/')
-    if not db_path.startswith('/'):
-        db_path = '/' + db_path
     app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'dev-secret-key-change-in-production')
     if app.config['SECRET_KEY'] == 'dev-secret-key-change-in-production':
         import warnings
         warnings.warn('SECRET_KEY is set to the insecure default. Set SECRET_KEY in your .env file for production.')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', f'sqlite://{db_path}')
+    # Canonical Flask pattern: sqlite:///app.db is resolved relative to app.instance_path
+    # by Flask-SQLAlchemy's _apply_driver_defaults (see flask_sqlalchemy/extension.py:626)
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get('DATABASE_URL', 'sqlite:///app.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config['TEMPLATES_AUTO_RELOAD'] = True
     app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
