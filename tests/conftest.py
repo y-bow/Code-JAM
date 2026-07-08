@@ -20,6 +20,8 @@ def app():
         from flask_migrate import upgrade
         upgrade()
         _seed_test_data()
+        from app.services.setup_service import mark_setup_complete
+        mark_setup_complete()
 
     yield _app
 

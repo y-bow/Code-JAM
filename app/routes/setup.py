@@ -85,8 +85,9 @@ def wizard():
 
         elif step == 'complete':
             mark_setup_complete()
-            flash('Setup complete! Welcome to Hive.', 'success')
-            return redirect(url_for('index'))
+            session.clear()
+            flash('Setup complete! Please log in with your admin credentials.', 'success')
+            return redirect(url_for('auth.login'))
 
     initial_data = {}
     if step == 'institution' and not has_admin_users():

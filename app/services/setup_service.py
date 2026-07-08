@@ -6,11 +6,7 @@ SETUP_COMPLETE_KEY = 'system.setup_complete'
 
 
 def is_setup_complete():
-    if get_setting(SETUP_COMPLETE_KEY, False):
-        return True
-    if has_admin_users() and has_any_schools():
-        return True
-    return False
+    return get_setting(SETUP_COMPLETE_KEY, False) is True
 
 
 def has_admin_users():
