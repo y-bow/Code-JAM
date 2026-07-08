@@ -64,7 +64,11 @@ def create_app():
     # Register blueprints
     from .core.auth import init_module as init_auth
     init_auth(app)
-    from .routes.dashboard import dashboard_bp
+    from .routes.academics import academics_bp
+    from .routes.timetable import timetable_bp
+    from .routes.tasks import tasks_bp
+    from .routes.analytics import analytics_bp
+    from .routes.admin import admin_bp
     from .routes.classroom import classroom_bp
     from .routes.messages import messages_bp
     from .routes.fees import fees_bp
@@ -72,7 +76,11 @@ def create_app():
     from .routes.lost_found import lost_found_bp
     from .routes.clubs import clubs_bp
 
-    app.register_blueprint(dashboard_bp)
+    app.register_blueprint(academics_bp)
+    app.register_blueprint(timetable_bp)
+    app.register_blueprint(tasks_bp)
+    app.register_blueprint(analytics_bp)
+    app.register_blueprint(admin_bp)
     app.register_blueprint(classroom_bp)
     app.register_blueprint(messages_bp)
     app.register_blueprint(fees_bp)
@@ -85,13 +93,13 @@ def create_app():
         if 'user_id' in session:
             role = session.get('role')
             if role in ('student', 'class_rep'):
-                return redirect(url_for('dashboard.student_dashboard'))
+                return redirect(url_for('academics.student_dashboard'))
             elif role in ('professor', 'assistant_professor'):
-                return redirect(url_for('dashboard.teacher_dashboard'))
+                return redirect(url_for('academics.teacher_dashboard'))
             elif role == 'dean':
-                return redirect(url_for('dashboard.school_analytics'))
+                return redirect(url_for('analytics.school_analytics'))
             elif role == 'admin':
-                return redirect(url_for('dashboard.admin_dashboard'))
+                return redirect(url_for('admin.admin_dashboard'))
         return redirect(url_for('auth.login'))
 
     return app

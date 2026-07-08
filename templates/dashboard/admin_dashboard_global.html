@@ -98,7 +98,7 @@
                 {% endfor %}
             </div>
             <div style="margin-top: 1rem; text-align: center;">
-                <a href="{{ url_for('dashboard.announcements') }}" style="font-size: 0.75rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Post New Announcement</a>
+                <a href="{{ url_for('admin.announcements') }}" style="font-size: 0.75rem; color: var(--primary-color); text-decoration: none; font-weight: 500;">Post New Announcement</a>
             </div>
         </div>
 
@@ -108,7 +108,7 @@
                 <span class="material-symbols-rounded" style="color: var(--success-color);">bolt</span> Quick Actions
             </h3>
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-                 <a href="{{ url_for('dashboard.admin_timetable') }}" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; font-size: 0.9rem; justify-content: flex-start;">
+                 <a href="{{ url_for('timetable.admin_timetable') }}" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 0.85rem; font-size: 0.9rem; justify-content: flex-start;">
                     <span class="material-symbols-rounded" style="font-size: 20px;">calendar_view_week</span>
                     Master Timetable
                 </a>

@@ -10,7 +10,7 @@ fees_bp = Blueprint('fees', __name__, url_prefix='/fees')
 def student_dashboard():
     if g.current_user.role != 'student':
         flash("Unauthorized access.", "error")
-        return redirect(url_for('dashboard.teacher_dashboard'))
+        return redirect(url_for('academics.teacher_dashboard'))
         
     user_id = g.current_user.id
     fee = Fee.query.filter_by(student_id=user_id).first()
@@ -30,7 +30,7 @@ def student_dashboard():
 def process_payment():
     if g.current_user.role != 'student':
         flash("Unauthorized access.", "error")
-        return redirect(url_for('dashboard.teacher_dashboard'))
+        return redirect(url_for('academics.teacher_dashboard'))
         
     user_id = g.current_user.id
     fee = Fee.query.filter_by(student_id=user_id).first()

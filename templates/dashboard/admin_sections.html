@@ -35,7 +35,7 @@
                     <td style="padding: 1.25rem 0.5rem; color: var(--text-main);">{{ section.batch_year }}</td>
                     <td style="padding: 1.25rem 0.5rem; color: var(--primary-color);">{{ section.school.name }}</td>
                     <td style="padding: 1.25rem 0.5rem; text-align: right;">
-                        <a href="{{ url_for('dashboard.admin_timetable', section_id=section.id) }}" class="icon-btn" title="View Timetable">
+                        <a href="{{ url_for('timetable.admin_timetable', section_id=section.id) }}" class="icon-btn" title="View Timetable">
                             <span class="material-symbols-rounded">calendar_view_week</span>
                         </a>
                     </td>
@@ -59,7 +59,7 @@
         
         <h2 style="margin-top: 0; margin-bottom: 2rem; color: var(--text-main);">Add New Section</h2>
         
-        <form action="{{ url_for('dashboard.add_section') }}" method="POST">
+        <form action="{{ url_for('admin.add_section') }}" method="POST">
     {{ csrf_token() }}
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School</label>

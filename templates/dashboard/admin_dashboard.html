@@ -54,7 +54,7 @@
             {% endfor %}
         </div>
         <div style="margin-top: 1.5rem; text-align: right;">
-            <a href="{{ url_for('dashboard.announcements') }}" class="glass-button" style="padding: 0.5rem 1rem; font-size: 0.8rem;">View All</a>
+            <a href="{{ url_for('admin.announcements') }}" class="glass-button" style="padding: 0.5rem 1rem; font-size: 0.8rem;">View All</a>
         </div>
     </div>
 
@@ -64,7 +64,7 @@
             <span class="material-symbols-rounded">bolt</span> Quick Actions
         </h3>
         <div style="display: grid; grid-template-columns: 1fr; gap: 1rem;">
-            <a href="{{ url_for('dashboard.admin_timetable') }}" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 1rem;">
+            <a href="{{ url_for('timetable.admin_timetable') }}" class="glass-button" style="text-decoration: none; display: flex; align-items: center; gap: 0.75rem; padding: 1rem;">
                 <span class="material-symbols-rounded">event_note</span>
                 Edit Master Timetable
             </a>

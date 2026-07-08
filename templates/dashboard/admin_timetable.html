@@ -10,7 +10,7 @@
     <div style="display: flex; align-items: center; gap: 1.5rem;">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span class="material-symbols-rounded" style="color: var(--primary-color);">filter_list</span>
-            <form method="GET" action="{{ url_for('dashboard.admin_timetable') }}" id="sectionForm">
+            <form method="GET" action="{{ url_for('timetable.admin_timetable') }}" id="sectionForm">
                 <select name="section_id" onchange="this.form.submit()" style="padding: 0.6rem 2rem 0.6rem 1rem; border-radius: var(--radius-md); background: var(--bg-main); border: 1px solid var(--border-color); color: var(--text-main); font-family: inherit; cursor: pointer; min-width: 250px;">
                     <option value="">-- Select a Section --</option>
                     {% for s in sections %}
@@ -129,7 +129,7 @@
         <h3 style="margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
             <span class="material-symbols-rounded" style="color: var(--primary-color);">add_circle</span> Add New Class
         </h3>
-        <form method="POST" action="{{ url_for('dashboard.admin_timetable_add') }}">
+        <form method="POST" action="{{ url_for('timetable.admin_timetable_add') }}">
     {{ csrf_token() }}
             <input type="hidden" name="section_id" value="{{ selected_section.id }}">
             
@@ -202,7 +202,7 @@
         <h3 style="margin-top: 0; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
             <span class="material-symbols-rounded" style="color: var(--primary-color);">edit_calendar</span> Edit Slot
         </h3>
-        <form method="POST" action="{{ url_for('dashboard.admin_timetable_update') }}">
+        <form method="POST" action="{{ url_for('timetable.admin_timetable_update') }}">
     {{ csrf_token() }}
             <input type="hidden" name="entry_id" id="edit_entry_id">
             
@@ -253,7 +253,7 @@
         <h3 style="margin: 0 0 1rem 0;">Cancel Class Session?</h3>
         <p id="cancelInfo" style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.5;"></p>
         
-        <form method="POST" action="{{ url_for('dashboard.admin_timetable_cancel') }}">
+        <form method="POST" action="{{ url_for('timetable.admin_timetable_cancel') }}">
     {{ csrf_token() }}
             <input type="hidden" name="entry_id" id="cancel_entry_id">
             <div style="display: flex; gap: 1rem;">
@@ -271,7 +271,7 @@
         <h3 style="margin: 0 0 1rem 0;">Restore Class?</h3>
         <p id="restoreInfo" style="color: var(--text-muted); margin-bottom: 2rem; font-size: 0.9rem; line-height: 1.5;"></p>
         
-        <form method="POST" action="{{ url_for('dashboard.admin_timetable_restore') }}">
+        <form method="POST" action="{{ url_for('timetable.admin_timetable_restore') }}">
     {{ csrf_token() }}
             <input type="hidden" name="entry_id" id="restore_entry_id">
             <div style="display: flex; gap: 1rem;">
@@ -290,7 +290,7 @@
         <p id="deleteInfo" style="color: var(--text-main); font-weight: 500; margin-bottom: 0.5rem;"></p>
         <p style="color: var(--text-muted); font-size: 0.85rem; margin-bottom: 2rem;">This action cannot be undone. The class will be wiped from the database.</p>
         
-        <form method="POST" action="{{ url_for('dashboard.admin_timetable_delete') }}">
+        <form method="POST" action="{{ url_for('timetable.admin_timetable_delete') }}">
     {{ csrf_token() }}
             <input type="hidden" name="entry_id" id="delete_entry_id">
             <div style="display: flex; gap: 1rem;">

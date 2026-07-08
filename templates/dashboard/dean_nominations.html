@@ -38,11 +38,11 @@
                     Nominated by: <strong>{{ nom.nominator.name }}</strong>
                 </p>
                 <div style="display: flex; gap: 0.75rem;">
-                    <form action="{{ url_for('dashboard.handle_nomination', nom_id=nom.id, action='reject') }}" method="POST">
+                    <form action="{{ url_for('analytics.handle_nomination', nom_id=nom.id, action='reject') }}" method="POST">
     {{ csrf_token() }}
                         <button type="submit" class="glass-btn" style="color: var(--danger-color); border-color: rgba(239, 68, 68, 0.3);">Reject</button>
                     </form>
-                    <form action="{{ url_for('dashboard.handle_nomination', nom_id=nom.id, action='approve') }}" method="POST">
+                    <form action="{{ url_for('analytics.handle_nomination', nom_id=nom.id, action='approve') }}" method="POST">
     {{ csrf_token() }}
                         <button type="submit" class="primary-btn">Approve Nomination</button>
                     </form>

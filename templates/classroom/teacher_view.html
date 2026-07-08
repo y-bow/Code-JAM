@@ -205,7 +205,7 @@
 <dialog id="meetModal" class="glass-panel"
     style="margin: auto; border: 1px solid var(--primary-color); padding: 2rem; border-radius: var(--radius-lg); color: white;">
     <h3 style="margin-bottom: 1rem;">Set Video Class Link</h3>
-    <form action="{{ url_for('dashboard.update_meet_link') }}" method="POST"
+    <form action="{{ url_for('academics.update_meet_link') }}" method="POST"
         style="display: flex; flex-direction: column; gap: 1.5rem;">
     {{ csrf_token() }}
         <input type="hidden" name="course_id" value="{{ course.id }}">

@@ -46,7 +46,7 @@
                         {% endif %}
                     </td>
                     <td style="padding: 1.25rem 0.5rem; text-align: right;">
-                        <form action="{{ url_for('dashboard.toggle_school', school_id=school.id) }}" method="POST" style="display: inline;">
+                        <form action="{{ url_for('admin.toggle_school', school_id=school.id) }}" method="POST" style="display: inline;">
     {{ csrf_token() }}
                             <button type="submit" class="icon-btn" title="{{ 'Suspend' if school.is_active else 'Activate' }}" style="color: {{ '#ef4444' if school.is_active else '#10b981' }};">
                                 <span class="material-symbols-rounded">{{ 'block' if school.is_active else 'check_circle' }}</span>
@@ -73,7 +73,7 @@
         
         <h2 style="margin-top: 0; margin-bottom: 2rem; color: var(--text-main);">Add New School</h2>
         
-        <form action="{{ url_for('dashboard.add_school') }}" method="POST">
+        <form action="{{ url_for('admin.add_school') }}" method="POST">
     {{ csrf_token() }}
             <div class="form-group" style="margin-bottom: 1.5rem;">
                 <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem; color: var(--text-muted);">School Name</label>

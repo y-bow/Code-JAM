@@ -38,7 +38,7 @@
             <div
                 style="display: flex; justify-content: space-between; align-items: center; padding: 1.5rem; background: var(--bg-main); border: 1px solid var(--border-color); border-radius: var(--radius-md); border-left: 4px solid {% if task.is_completed %}var(--success-color, #22c55e){% else %}var(--primary-color){% endif %}; opacity: {% if task.is_completed %}0.6{% else %}1{% endif %};">
                 <div style="display: flex; gap: 1rem; align-items: center;">
-                    <form action="{{ url_for('dashboard.toggle_task', task_id=task.id) }}" method="POST"
+                    <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST"
                         style="margin: 0; display: flex;">
     {{ csrf_token() }}
                         <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif
@@ -57,7 +57,7 @@
                         {{ task.due_date.strftime('%b %d') }}
                     </div>
                     {% endif %}
-                    <form action="{{ url_for('dashboard.delete_task', task_id=task.id) }}" method="POST"
+                    <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST"
                         style="margin: 0; display: flex;">
     {{ csrf_token() }}
                         <button type="submit"
@@ -83,7 +83,7 @@
                 <button onclick="document.getElementById('newTaskModal').style.display='none'"
                     style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-muted);">&times;</button>
             </div>
-            <form method="POST" action="{{ url_for('dashboard.tasks') }}"
+            <form method="POST" action="{{ url_for('tasks.tasks') }}"
                 style="display: flex; flex-direction: column; gap: 1rem;">
     {{ csrf_token() }}
                 <div>

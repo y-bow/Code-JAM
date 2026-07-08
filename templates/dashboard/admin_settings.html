@@ -12,7 +12,7 @@
     </p>
     
     <div style="display: flex; justify-content: center; gap: 1rem;">
-        <a href="{{ url_for('dashboard.admin_dashboard' if g.current_user.role == 'admin' else 'dashboard.school_analytics') }}" class="glass-button" style="text-decoration: none; padding: 0.75rem 1.5rem;">Back to Dashboard</a>
+        <a href="{{ url_for('admin.admin_dashboard' if g.current_user.role == 'admin' else 'analytics.school_analytics') }}" class="glass-button" style="text-decoration: none; padding: 0.75rem 1.5rem;">Back to Dashboard</a>
     </div>
 </div>
 {% endblock %}

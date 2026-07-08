@@ -42,11 +42,11 @@ def change_user_password(user, current_password, new_password, confirm_password)
 def get_redirect_target(user):
     role = user.role
     if role in ('student', 'class_rep'):
-        return 'dashboard.student_dashboard'
+        return 'academics.student_dashboard'
     elif role in ('professor', 'assistant_professor'):
-        return 'dashboard.teacher_dashboard'
+        return 'academics.teacher_dashboard'
     elif role == 'admin':
-        return 'dashboard.admin_dashboard'
+        return 'admin.admin_dashboard'
     elif role == 'dean':
-        return 'dashboard.school_analytics'
+        return 'analytics.school_analytics'
     return 'index'

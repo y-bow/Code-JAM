@@ -42,7 +42,7 @@ def view_classroom(course_id):
         ).first()
         if not enrollment:
             flash('Access Denied: You are not enrolled in this course.', 'danger')
-            return redirect(url_for('dashboard.student_dashboard'))
+            return redirect(url_for('academics.student_dashboard'))
         
         # Check if they are the Class Rep for this section/course
         is_cr = False
@@ -66,7 +66,7 @@ def view_classroom(course_id):
         ).first()
         if not pa_record:
             flash('Access Denied: You are not an assistant for this course.', 'danger')
-            return redirect(url_for('dashboard.teacher_dashboard'))
+            return redirect(url_for('academics.teacher_dashboard'))
         return render_template('classroom/teacher_view.html', 
                                course=course, is_pa=True,
                                students=students_list,
@@ -77,7 +77,7 @@ def view_classroom(course_id):
     elif user.role == 'professor':
         if course.teacher_id != user.id:
             flash('Access Denied: This is not your course.', 'danger')
-            return redirect(url_for('dashboard.teacher_dashboard'))
+            return redirect(url_for('academics.teacher_dashboard'))
         return render_template('classroom/teacher_view.html', 
                                course=course, is_pa=False,
                                students=students_list,
