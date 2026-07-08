@@ -9,15 +9,15 @@
     <div class="summary-cards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div class="stat-card glass-panel" style="padding: 1.5rem; border-radius: 12px; text-align: center;">
             <div class="stat-title" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Total Fees</div>
-            <div class="stat-value" style="font-size: 1.8rem; font-weight: 600; color: var(--text-primary);">₹{{ "{:,.0f}".format(fee.total_amount) }}</div>
+            <div class="stat-value" style="font-size: 1.8rem; font-weight: 600; color: var(--text-primary);">{{ currency_symbol }}{{ "{:,.0f}".format(fee.total_amount) }}</div>
         </div>
         <div class="stat-card glass-panel" style="padding: 1.5rem; border-radius: 12px; text-align: center;">
             <div class="stat-title" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Amount Paid</div>
-            <div class="stat-value" style="font-size: 1.8rem; font-weight: 600; color: var(--success-color);">₹{{ "{:,.0f}".format(fee.amount_paid) }}</div>
+            <div class="stat-value" style="font-size: 1.8rem; font-weight: 600; color: var(--success-color);">{{ currency_symbol }}{{ "{:,.0f}".format(fee.amount_paid) }}</div>
         </div>
         <div class="stat-card glass-panel" style="padding: 1.5rem; border-radius: 12px; text-align: center;">
             <div class="stat-title" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Remaining Balance</div>
-            <div class="stat-value {{ 'balance-due' if fee.remaining_balance > 0 else 'balance-clear' }}" style="font-size: 1.8rem; font-weight: 600;">₹{{ "{:,.0f}".format(fee.remaining_balance) }}</div>
+            <div class="stat-value {{ 'balance-due' if fee.remaining_balance > 0 else 'balance-clear' }}" style="font-size: 1.8rem; font-weight: 600;">{{ currency_symbol }}{{ "{:,.0f}".format(fee.remaining_balance) }}</div>
         </div>
         <div class="stat-card glass-panel" style="padding: 1.5rem; border-radius: 12px; text-align: center;">
             <div class="stat-title" style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 0.5rem;">Status</div>
@@ -40,23 +40,23 @@
             <ul style="list-style: none; padding: 0; margin: 0;">
                 <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <span>Tuition Fee</span>
-                    <strong>₹{{ "{:,.0f}".format(fee.tuition_fee) }}</strong>
+                    <strong>{{ currency_symbol }}{{ "{:,.0f}".format(fee.tuition_fee) }}</strong>
                 </li>
                 <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <span>Lab Fee</span>
-                    <strong>₹{{ "{:,.0f}".format(fee.lab_fee) }}</strong>
+                    <strong>{{ currency_symbol }}{{ "{:,.0f}".format(fee.lab_fee) }}</strong>
                 </li>
                 <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <span>Library Fee</span>
-                    <strong>₹{{ "{:,.0f}".format(fee.library_fee) }}</strong>
+                    <strong>{{ currency_symbol }}{{ "{:,.0f}".format(fee.library_fee) }}</strong>
                 </li>
                 <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <span>Exam Fee</span>
-                    <strong>₹{{ "{:,.0f}".format(fee.exam_fee) }}</strong>
+                    <strong>{{ currency_symbol }}{{ "{:,.0f}".format(fee.exam_fee) }}</strong>
                 </li>
                 <li style="display: flex; justify-content: space-between; padding: 0.75rem 0; border-bottom: 1px solid var(--border-color);">
                     <span>Other Charges</span>
-                    <strong>₹{{ "{:,.0f}".format(fee.other_charges) }}</strong>
+                    <strong>{{ currency_symbol }}{{ "{:,.0f}".format(fee.other_charges) }}</strong>
                 </li>
                 <li style="display: flex; justify-content: space-between; padding: 1rem 0 0 0; margin-top: 0.5rem;">
                     <span style="font-weight: 600;">Due Date</span>
@@ -71,7 +71,7 @@
             <div class="glass-panel" style="padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem; display: flex; align-items: center; justify-content: space-between; border-left: 4px solid var(--danger-color);">
                 <div>
                     <h3 style="margin-bottom: 0.5rem; font-weight: 600;">Action Required</h3>
-                    <p style="color: var(--text-secondary); margin: 0;">You have a pending balance of ₹{{ "{:,.0f}".format(fee.remaining_balance) }}.</p>
+                    <p style="color: var(--text-secondary); margin: 0;">You have a pending balance of {{ currency_symbol }}{{ "{:,.0f}".format(fee.remaining_balance) }}.</p>
                 </div>
                 <a href="{{ url_for('fees.process_payment') }}" class="btn" style="background-color: var(--primary-color); color: white; padding: 0.75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500;">Pay Now</a>
             </div>
@@ -98,7 +98,7 @@
                                 <td style="padding: 1rem 0.5rem;">{{ p.payment_date.strftime('%d %b %Y') }}</td>
                                 <td style="padding: 1rem 0.5rem; font-family: monospace; color: var(--text-secondary);">{{ p.transaction_id }}</td>
                                 <td style="padding: 1rem 0.5rem;">{{ p.payment_method }}</td>
-                                <td style="padding: 1rem 0.5rem; font-weight: 600;">₹{{ "{:,.0f}".format(p.amount) }}</td>
+                                <td style="padding: 1rem 0.5rem; font-weight: 600;">{{ currency_symbol }}{{ "{:,.0f}".format(p.amount) }}</td>
                                 <td style="padding: 1rem 0.5rem;">
                                     {% if p.status == 'success' %}
                                     <span style="background: rgba(34, 197, 94, 0.1); color: var(--success-color); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Success</span>

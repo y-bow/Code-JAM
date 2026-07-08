@@ -170,9 +170,9 @@
     <div class="receipt-container">
         <div class="header">
             <div class="school-info">
-                <h1>{{ student.school.name | default('Sai University') }}</h1>
-                <p>School of Computing and Data Science</p>
-                <p>Chennai, India</p>
+                <h1>{{ get_setting('school.name', student.school.name if student.school else 'Your Institution') }}</h1>
+                <p>{{ get_setting('school.department', '') }}</p>
+                <p>{{ get_setting('school.address', '') }}</p>
             </div>
             <div class="receipt-meta">
                 <h2>FEE RECEIPT</h2>
@@ -224,13 +224,13 @@
 
             <div class="summary-row summary-total">
                 <span>Total Amount Paid</span>
-                <span>₹{{ "{:,.2f}".format(payment.amount) }}</span>
+                <span>{{ currency_symbol }}{{ "{:,.2f}".format(payment.amount) }}</span>
             </div>
         </div>
 
         <div class="footer">
             <p>This is a computer-generated receipt and does not require a physical signature.</p>
-            <p>For any queries, please contact the finance department at finance@saiuniversity.edu.in</p>
+            <p>For any queries, please contact the finance department at {{ get_setting('school.finance_email', 'finance@institution.edu') }}</p>
         </div>
     </div>
 

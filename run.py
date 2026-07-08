@@ -19,19 +19,27 @@ def auto_seed():
     seed_all()
     print("Auto-seed complete.")
 
+def is_development():
+    return os.environ.get('FLASK_ENV', 'development') == 'development'
+
 with app.app_context():
     upgrade()
 
     force_reseed = '--reseed' in sys.argv
-    if database_needs_seeding() or force_reseed:
-        if force_reseed:
+    if force_reseed:
+        if is_development():
             print("Force reseed requested via --reseed flag...")
+            auto_seed()
+        else:
+            print("--reseed is only allowed in development mode. Set FLASK_ENV=development.")
+            sys.exit(1)
+    elif is_development() and database_needs_seeding():
         auto_seed()
     else:
-        print("Database already seeded. Skipping auto-seed.")
-        print("Run 'python run.py --reseed' to force a fresh seed.")
+        print("Skipping auto-seed. Use the setup wizard at /setup/ to configure your institution.")
+        print("Run with --reseed (development only) for demo data.")
 
 if __name__ == '__main__':
     if '--reseed' in sys.argv:
         sys.argv.remove('--reseed')
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=is_development())

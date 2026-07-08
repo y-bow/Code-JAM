@@ -12,6 +12,7 @@ class Course(db.Model):
     teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     credits = db.Column(db.Integer, nullable=False)
     max_students = db.Column(db.Integer, default=50)
+    meet_link = db.Column(db.String(500), nullable=True)
 
     teacher = db.relationship('User', backref=db.backref('taught_courses', lazy='dynamic'))
     enrollments = db.relationship('Enrollment', backref='course', lazy='dynamic',

@@ -9,7 +9,7 @@ import pandas as pd
 
 from ..models import (
     db, User, Student, Teacher, Course, Section, Enrollment,
-    TimetableEntry, ImportBatch, get_setting
+    TimetableEntry, ImportBatch, get_setting, bcrypt
 )
 
 
@@ -263,10 +263,11 @@ def _import_student(row, school_id, user_id):
         return False
 
     default_password = get_setting('import.default_password', 'password123')
+    pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
         school_id=school_id,
         email=email,
-        password_hash=default_password,
+        password_hash=pw_hash,
         role='student',
         name=row.get('name', '').strip(),
         must_change_password=True,
@@ -297,10 +298,11 @@ def _import_faculty(row, school_id, user_id):
         return True
 
     default_password = get_setting('import.default_password', 'password123')
+    pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
         school_id=school_id,
         email=email,
-        password_hash=default_password,
+        password_hash=pw_hash,
         role=row.get('role', 'professor').strip(),
         name=row.get('name', '').strip(),
         must_change_password=True,

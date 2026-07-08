@@ -73,8 +73,8 @@
         <div class="glass-panel" style="padding: 1.5rem;">
             <h4 style="margin-top: 0; color: var(--primary-color);">Academic Probation Criteria</h4>
             <ul style="padding-left: 1.25rem; font-size: 0.85rem; color: var(--text-muted); line-height: 1.6;">
-                <li>CGPA falls below 1.5 in any semester.</li>
-                <li>Cumulative attendance drops below 75%.</li>
+                <li>CGPA falls below {{ get_setting('early_warning.cgpa_threshold', 1.5) }} in any semester.</li>
+                <li>Cumulative attendance drops below {{ get_setting('early_warning.attendance_threshold', 75) }}%.</li>
                 <li>Failed to submit more than 3 major assessments.</li>
             </ul>
         </div>

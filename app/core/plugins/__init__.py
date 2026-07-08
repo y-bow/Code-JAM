@@ -80,7 +80,6 @@ class PluginManager:
 
                     tpl = instance.get_template_folder()
                     if tpl:
-                        from flask import Flask
                         pass
         except Exception as e:
             self.app.logger.error(f'Failed to load plugin {slug}: {e}')

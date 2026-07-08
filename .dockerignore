@@ -36,6 +36,6 @@ final_audit.py
 README.md
 CONTRIBUTING.md
 INTERNSHIP_PORTAL_README.md
-fixtures/
+# fixtures/ is needed for demo data in Docker
 frontend/
 create_issues.py

@@ -53,7 +53,7 @@ def create_institution(name, code):
 
 def save_theme_settings(primary_color, theme_mode):
     set_setting('theme.primary_color', primary_color, 'string', 'theme', 'Primary accent color')
-    set_setting('theme.default_mode', theme_mode, 'string', 'theme', 'Default theme mode')
+    set_setting('theme.active', theme_mode, 'string', 'theme', 'Default theme mode')
     set_setting('theme.setup_completed', 'true', 'string', 'theme', 'Theme configured during setup')
 
 

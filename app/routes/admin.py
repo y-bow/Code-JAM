@@ -162,17 +162,52 @@ def admin_settings():
     from ..models import set_setting
 
     if request.method == 'POST':
+        import re
+
+        # Theme settings
         theme_mode = request.form.get('theme_mode', 'light')
         primary_color = request.form.get('primary_color', '#2563eb')
-
-        import re
         if not re.match(r'^#[0-9A-Fa-f]{6}$', primary_color):
             flash('Invalid color format. Use a hex color like #2563eb.', 'danger')
             return redirect(url_for('admin.admin_settings'))
-
         set_setting('theme.active', theme_mode)
         set_setting('theme.primary_color', primary_color)
-        flash('Theme settings saved!', 'success')
+
+        # Institution info
+        school_name = request.form.get('school_name', '').strip()
+        if school_name:
+            set_setting('school.name', school_name)
+        set_setting('school.department', request.form.get('school_department', '').strip())
+        set_setting('school.address', request.form.get('school_address', '').strip())
+        set_setting('school.finance_email', request.form.get('school_finance_email', '').strip())
+
+        # Fees
+        currency = request.form.get('fees_currency_symbol', '').strip()
+        if currency:
+            set_setting('fees.currency_symbol', currency)
+
+        # Early warning thresholds
+        cgpa_str = request.form.get('early_warning_cgpa_threshold', '').strip()
+        if cgpa_str:
+            try:
+                set_setting('early_warning.cgpa_threshold', float(cgpa_str), 'float')
+            except ValueError:
+                flash('Invalid CGPA threshold. Must be a number.', 'danger')
+                return redirect(url_for('admin.admin_settings'))
+        att_str = request.form.get('early_warning_attendance_threshold', '').strip()
+        if att_str:
+            try:
+                set_setting('early_warning.attendance_threshold', int(att_str), 'int')
+            except ValueError:
+                flash('Invalid attendance threshold. Must be a whole number.', 'danger')
+                return redirect(url_for('admin.admin_settings'))
+
+        # Import
+        default_pw = request.form.get('import_default_password', '').strip()
+        if default_pw:
+            set_setting('import.default_password', default_pw)
+
+        flash('All settings saved!', 'success')
         return redirect(url_for('admin.admin_settings'))
 
     return render_template('admin_settings.html')

@@ -42,7 +42,10 @@ def create_app():
 
     @app.context_processor
     def inject_settings():
-        return dict(get_setting=_get_setting)
+        return dict(
+            get_setting=_get_setting,
+            currency_symbol=_get_setting('fees.currency_symbol', '₹'),
+        )
 
     @app.template_filter('fix_time')
     def fix_time_filter(s):
@@ -60,6 +63,8 @@ def create_app():
             return f'{r}, {g}, {b}'
         except ValueError:
             return '37, 99, 235'
+
+
 
     # Session Security
     app.config.update(

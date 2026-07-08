@@ -4,14 +4,14 @@ services:
   db:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: hive
-      POSTGRES_PASSWORD: hive_secret
-      POSTGRES_DB: hive
+      POSTGRES_USER: ${POSTGRES_USER:-hive}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hive_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-hive}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U hive"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hive}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -30,8 +30,10 @@ services:
     environment:
       FLASK_ENV: production
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
-      DATABASE_URL: postgresql://hive:hive_secret@db:5432/hive
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hive}:${POSTGRES_PASSWORD:-hive_secret}@db:5432/${POSTGRES_DB:-hive}
       REDIS_URL: redis://redis:6379/0
+      WTF_CSRF_ENABLED: ${WTF_CSRF_ENABLED:-True}
     depends_on:
       db:
         condition: service_healthy
@@ -49,6 +51,7 @@ services:
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - static_volume:/app/static:ro
+      - uploads_volume:/app/static/uploads:ro
     depends_on:
       - web
     restart: unless-stopped
