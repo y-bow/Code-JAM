@@ -425,6 +425,7 @@ a:hover { text-decoration: underline; }
 
 table.h-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--font-size-sm);
 }
@@ -447,11 +448,30 @@ table.h-table td {
   border-bottom: 1px solid var(--border-secondary);
   color: var(--text-primary);
   vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+table.h-table td:last-child {
+  white-space: nowrap;
+  overflow: visible;
 }
 
 table.h-table tr:last-child td { border-bottom: none; }
 table.h-table tr:hover td { background: var(--bg-secondary); }
 table.h-table tr.selected td { background: var(--primary-bg); }
+
+table.h-table .badge {
+  width: 110px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  box-sizing: border-box;
+  text-align: center;
+}
+
+table.h-table th.text-right,
+table.h-table td.text-right { text-align: right; }
 
 /* ─── Forms ──────────────────────────────────────────────────────────── */
 .form-group { display: flex; flex-direction: column; gap: var(--space-1); margin-bottom: var(--space-4); }

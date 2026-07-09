@@ -13,6 +13,13 @@
   <div class="card-body" style="padding:0">
     <div class="table-wrap" style="border:none;border-radius:0">
       <table class="h-table">
+        <colgroup>
+          <col style="width: 250px">
+          <col style="width: 100px">
+          <col style="width: 200px">
+          <col style="width: 120px">
+          <col style="width: 100px">
+        </colgroup>
         <thead>
           <tr>
             <th>School Name</th>
@@ -40,7 +47,7 @@
             </td>
             <td style="text-align:right">
               <form action="{{ url_for('admin.toggle_school', school_id=school.id) }}" method="POST" style="display:inline">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="icon-btn" title="{{ 'Suspend' if school.is_active else 'Activate' }}" style="color:{{ 'var(--danger)' if school.is_active else 'var(--success)' }}">
                   <span class="material-symbols-rounded">{{ 'block' if school.is_active else 'check_circle' }}</span>
                 </button>
@@ -60,7 +67,7 @@
 
 {% call modal('addSchoolModal', 'Add New School') %}
 <form action="{{ url_for('admin.add_school') }}" method="POST">
-  {{ csrf_token() }}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {{ form_group('School Name', 'name', required=True) }}
   {{ form_group('School Code (Unique)', 'code', required=True, placeholder='e.g. SCDS') }}
   {{ form_group('Domain (Optional)', 'domain', placeholder='e.g. school.edu') }}

@@ -19,6 +19,12 @@
     </div>
     <div class="table-wrap" style="border:none;border-radius:0;margin-top:var(--space-3)">
       <table class="h-table">
+        <colgroup>
+          <col style="width: 300px">
+          <col style="width: 200px">
+          <col style="width: 120px">
+          <col style="width: 100px">
+        </colgroup>
         <thead>
           <tr>
             <th>User</th>
@@ -52,7 +58,7 @@
             </td>
             <td style="text-align:right">
               <form action="{{ url_for('admin.toggle_user', user_id=user.id) }}" method="POST" style="display:inline">
-                {{ csrf_token() }}
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <button type="submit" class="icon-btn" title="{{ 'Deactivate' if user.is_active else 'Activate' }}" style="color:{{ 'var(--danger)' if user.is_active else 'var(--success)' }}">
                   <span class="material-symbols-rounded">{{ 'person_off' if user.is_active else 'person' }}</span>
                 </button>

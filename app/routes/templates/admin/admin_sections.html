@@ -13,6 +13,13 @@
   <div class="card-body" style="padding:0">
     <div class="table-wrap" style="border:none;border-radius:0">
       <table class="h-table">
+        <colgroup>
+          <col style="width: 200px">
+          <col style="width: 100px">
+          <col style="width: 100px">
+          <col style="width: 200px">
+          <col style="width: 100px">
+        </colgroup>
         <thead>
           <tr>
             <th>Section Name</th>
@@ -48,7 +55,7 @@
 
 {% call modal('addSectionModal', 'Add New Section') %}
 <form action="{{ url_for('admin.add_section') }}" method="POST">
-  {{ csrf_token() }}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   {% call form_group('School', 'school_id', type='select', required=True) %}
     {% for school in schools %}
     <option value="{{ school.id }}">{{ school.name }}</option>

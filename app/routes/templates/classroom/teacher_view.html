@@ -50,6 +50,13 @@
         <div class="card-header" style="padding:var(--space-4);"><h3><span class="material-symbols-rounded" style="font-size:18px;">groups</span> Student Roster</h3></div>
         <div class="table-wrap" style="border:none;border-radius:0;">
             <table class="h-table">
+                <colgroup>
+                    <col style="width: 250px">
+                    <col style="width: 100px">
+                    <col style="width: 100px">
+                    <col style="width: 120px">
+                    <col style="width: 150px">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Name/ID</th>
@@ -83,7 +90,7 @@
                                 <button class="btn btn-ghost btn-sm" title="View Progress"><span class="material-symbols-rounded" style="font-size:16px;">analytics</span></button>
                                 {% if not is_pa and not is_dean and student.role != 'class_rep' %}
                                 <form action="{{ url_for('classroom.nominate_class_rep', course_id=course.id, student_id=student.id) }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                     <button type="submit" class="btn btn-ghost btn-sm" title="Nominate as Class Rep" style="color:var(--primary);">
                                         <span class="material-symbols-rounded" style="font-size:16px;">workspace_premium</span>
                                     </button>
@@ -119,7 +126,7 @@
             <div class="card-header"><h3>Create New</h3></div>
             <div class="card-body">
                 <form action="{{ url_for('classroom.create_assignment', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-3);">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="text" name="title" class="form-input" placeholder="Title" required>
                     <textarea name="description" class="form-textarea" placeholder="Instructions..." style="height:80px;"></textarea>
                     <input type="datetime-local" name="due_date" class="form-input" required>
@@ -135,7 +142,7 @@
 <div id="Attendance" class="tab-content">
     <div class="card">
         <form action="{{ url_for('classroom.mark_attendance', course_id=course.id) }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="flex justify-between items-center mb-4">
                 <h3 style="margin:0;">Mark Attendance for Today</h3>
                 <div class="flex items-center gap-3">
@@ -182,7 +189,7 @@
             <div class="card-header"><h3>Post Announcement</h3></div>
             <div class="card-body">
                 <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-3);">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <input type="text" name="title" class="form-input" placeholder="Subject" required>
                     <textarea name="body" class="form-textarea" placeholder="Content..." required style="height:120px;"></textarea>
                     <label class="flex items-center gap-1" style="font-size:0.85rem;">
@@ -204,7 +211,7 @@
         </div>
         <div class="modal-body">
             <form action="{{ url_for('academics.update_meet_link') }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-4);">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="hidden" name="course_id" value="{{ course.id }}">
                 <input type="url" name="meet_link" class="form-input" placeholder="Google Meet URL" required>
                 <div class="flex gap-3 justify-end">
@@ -226,7 +233,7 @@
         <div class="modal-body">
             <p class="text-secondary" style="font-size:0.9rem;margin-bottom:var(--space-4);">Type the email of another teacher to assign them as an assistant for this course.</p>
             <form action="{{ url_for('classroom.assign_assistant_professor', course_id=course.id) }}" method="POST" style="display:flex;flex-direction:column;gap:var(--space-4);">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <input type="email" name="email" class="form-input" placeholder="teacher@university.edu" required>
                 <div class="flex gap-3 justify-end">
                     <button type="button" class="btn btn-secondary" onclick="document.getElementById('paModal').classList.remove('active')">Cancel</button>

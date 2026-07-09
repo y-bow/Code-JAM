@@ -25,6 +25,14 @@
         <div class="card-header" style="padding:var(--space-4);"><h3>Student Fee Status</h3></div>
         <div class="table-wrap" style="border:none;border-radius:0;">
             <table class="h-table">
+                <colgroup>
+                    <col style="width: 180px">
+                    <col style="width: 200px">
+                    <col style="width: 110px">
+                    <col style="width: 110px">
+                    <col style="width: 110px">
+                    <col style="width: 120px">
+                </colgroup>
                 <thead>
                     <tr>
                         <th>Student</th>
@@ -65,7 +73,7 @@
             <div class="card-header"><h3><span class="material-symbols-rounded" style="font-size:18px;">point_of_sale</span> Record Offline Payment</h3></div>
             <div class="card-body">
                 <form action="{{ url_for('fees.record_offline_payment') }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label class="form-label" for="student_id">Select Student</label>
                         <select id="student_id" name="student_id" required class="form-select">

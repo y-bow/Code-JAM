@@ -14,6 +14,14 @@
     <div class="card-body" style="padding-top:0;">
       <div class="table-wrap">
         <table class="h-table">
+          <colgroup>
+            <col style="width: 120px">
+            <col style="width: 100px">
+            <col style="width: 150px">
+            <col style="width: 200px">
+            <col style="width: 120px">
+            <col style="width: 80px">
+          </colgroup>
           <thead>
             <tr>
               <th>Section</th>
@@ -39,7 +47,7 @@
               <td>{{ entry.room }}</td>
               <td>
                 <form action="{{ url_for('timetable.manage_timetable') }}" method="POST" onsubmit="return confirm('Delete this entry?')">
-                  {{ csrf_token() }}
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                   <input type="hidden" name="action" value="delete">
                   <input type="hidden" name="entry_id" value="{{ entry.id }}">
                   <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">
@@ -67,7 +75,7 @@
     </div>
     <div class="card-body" style="padding-top:0;">
       <form action="{{ url_for('timetable.manage_timetable') }}" method="POST">
-        {{ csrf_token() }}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input type="hidden" name="action" value="add">
 
         <div class="form-group">
