@@ -1,13 +1,13 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, g
 from app.models import db, Fee, FeePayment, User, get_setting
-from app.middleware import school_scoped, role_minimum
+from app.middleware import institution_scoped, role_minimum
 import uuid
 
 fees_bp = Blueprint('fees', __name__, url_prefix='/fees',
                      template_folder='templates/fees')
 
 @fees_bp.route('/student')
-@school_scoped
+@institution_scoped
 def student_dashboard():
     if g.current_user.role != 'student':
         flash("Unauthorized access.", "error")
@@ -27,7 +27,7 @@ def student_dashboard():
     return render_template('student_dashboard.html', fee=fee, payments=payments)
 
 @fees_bp.route('/pay', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 def process_payment():
     if g.current_user.role != 'student':
         flash("Unauthorized access.", "error")
@@ -72,7 +72,7 @@ def process_payment():
     return render_template('payment_gateway.html', fee=fee)
 
 @fees_bp.route('/receipt/<string:payment_id>')
-@school_scoped
+@institution_scoped
 def print_receipt(payment_id):
     payment = FeePayment.query.get_or_404(payment_id)
     user_id = g.current_user.id
@@ -86,7 +86,7 @@ def print_receipt(payment_id):
     return render_template('receipt.html', payment=payment, student=payment.fee.student)
 
 @fees_bp.route('/admin')
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def admin_dashboard():
         
@@ -113,7 +113,7 @@ def admin_dashboard():
                           recent_payments=recent_payments)
 
 @fees_bp.route('/admin/offline-payment', methods=['POST'])
-@school_scoped
+@institution_scoped
 def record_offline_payment():
     if g.current_user.role not in ['admin', 'superadmin', 'dean']:
         return "Unauthorized", 403

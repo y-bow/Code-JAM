@@ -28,7 +28,7 @@
         <thead>
           <tr>
             <th>User</th>
-            <th>Role / School</th>
+            <th>Role / Institution</th>
             <th style="text-align:center">Status</th>
             <th style="text-align:right">Actions</th>
           </tr>
@@ -47,7 +47,7 @@
             </td>
             <td>
               <div>{{ user.role | title }}</div>
-              <div style="font-size:var(--font-size-xs);color:var(--primary)">{{ user.school.name if user.school else 'Global System' }}</div>
+              <div style="font-size:var(--font-size-xs);color:var(--primary)">{{ user.institution.name if user.institution else 'Global System' }}</div>
             </td>
             <td style="text-align:center">
               {% if user.is_active %}

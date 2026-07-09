@@ -1,7 +1,7 @@
 import json
 import logging
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..services.import_service import (
     parse_upload, detect_import_type, validate_import, execute_import,
     get_recent_batches, IMPORT_TYPES, COLUMN_MAPS,
@@ -14,7 +14,7 @@ import_bp = Blueprint('imports', __name__, url_prefix='/imports',
 
 
 @import_bp.route('/', methods=['GET'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def index():
     batches = get_recent_batches(g.institution_id)
@@ -24,7 +24,7 @@ def index():
 
 
 @import_bp.route('/preview', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def preview():
     import_type = request.form.get('import_type', '')
@@ -82,7 +82,7 @@ def preview():
 
 
 @import_bp.route('/confirm', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def confirm():
     import_type = request.form.get('import_type', '')

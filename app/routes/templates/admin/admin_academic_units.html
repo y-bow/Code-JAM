@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% from "_components.html" import badge, btn, btn_submit, btn_button, form_group, modal %}
+
+{% block title %}Hive | Academic Units{% endblock %}
+{% block page_title %}Academic Units{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Academic Units</h3>
+    {{ btn_button('Add Unit', type='primary', size='sm', icon='add', attrs='onclick="document.getElementById(\'addUnitModal\').classList.add(\'active\')"') }}
+  </div>
+  <div class="card-body" style="padding:0">
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table class="h-table">
+        <colgroup>
+          <col style="width: 250px">
+          <col style="width: 100px">
+          <col style="width: 200px">
+          <col style="width: 100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Unit Name</th>
+            <th>Code</th>
+            <th>Institution</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for unit in academic_units %}
+          <tr>
+            <td style="font-weight:600">{{ unit.name }}</td>
+            <td><code>{{ unit.code }}</code></td>
+            <td>{{ unit.institution.name }}</td>
+            <td style="text-align:right">
+              <span class="icon-btn" style="color:var(--text-tertiary);cursor:default" title="Edit coming soon"><span class="material-symbols-rounded">more_vert</span></span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No academic units configured.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% call modal('addUnitModal', 'Add Academic Unit') %}
+<form action="{{ url_for('admin.add_academic_unit') }}" method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% call form_group('Institution', 'institution_id', type='select', required=True) %}
+    {% for inst in institutions %}
+    <option value="{{ inst.id }}">{{ inst.name }}</option>
+    {% endfor %}
+  {% endcall %}
+  {{ form_group('Unit Name', 'name', required=True, placeholder='e.g. School of Engineering') }}
+  {{ form_group('Unit Code', 'code', required=True, placeholder='e.g. SOE') }}
+  <div style="margin-top:var(--space-4)">
+    {{ btn_submit('Create Unit', type='primary', size='lg', attrs='style="width:100%"') }}
+  </div>
+</form>
+{% endcall %}
+{% endblock %}

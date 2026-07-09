@@ -1,8 +1,8 @@
 {% extends "base.html" %}
 {% from "_components.html" import stat_card, badge, btn, empty_state %}
 
-{% block title %}Hive | Global Admin Dashboard{% endblock %}
-{% block page_title %}Global Hub{% endblock %}
+{% block title %}Hive | Admin Dashboard{% endblock %}
+{% block page_title %}Institution Overview{% endblock %}
 
 {% block content %}
 {% if is_first_login %}
@@ -13,7 +13,7 @@
       <h2 style="margin:0 0 var(--space-1);font-size:var(--font-size-md);color:var(--primary)">Welcome to Hive!</h2>
       <p style="margin:0;color:var(--text-secondary);font-size:var(--font-size-sm)">Your campus platform is ready. Use the Quick Actions to manage your institution, or head to the Import section to bulk-add students and faculty.</p>
     </div>
-    {{ btn('Manage Schools', url_for('admin.admin_schools'), type='primary') }}
+    {{ btn('Manage Institution', url_for('admin.admin_institutions'), type='primary') }}
   </div>
 </div>
 {% endif %}
@@ -22,7 +22,7 @@
   {{ stat_card('Total Students', "{:,}".format(stats.students)) }}
   {{ stat_card('Total Faculty', "{:,}".format(stats.professors)) }}
   {{ stat_card('Active Sections', "{:,}".format(stats.sections)) }}
-  {{ stat_card('Total Schools', stats.schools) }}
+  {{ stat_card('Total Institutions', stats.institutions) }}
 </div>
 
 {% if stats.students == 0 and stats.courses == 0 %}
@@ -38,7 +38,7 @@
 <div class="grid-sidebar" style="margin-top:var(--space-6)">
   <div class="card">
     <div class="card-header">
-      <h3>Registered Schools</h3>
+      <h3>Registered Institutions</h3>
     </div>
     <div class="card-body" style="padding:0">
       <div class="table-wrap" style="border:none;border-radius:0">
@@ -51,34 +51,34 @@
           </colgroup>
           <thead>
             <tr>
-              <th>School Name</th>
+              <th>Institution Name</th>
               <th>Domain</th>
               <th style="text-align:center">Status</th>
               <th style="text-align:right">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {% for sd in school_data %}
+            {% for inst in institution_data %}
             <tr>
               <td>
-                <div style="font-weight:600">{{ sd.name }}</div>
-                <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ sd.students }} students &middot; {{ sd.professors }} faculty &middot; {{ sd.courses }} courses &middot; CGPA {{ sd.avg_cgpa }}</div>
+                <div style="font-weight:600">{{ inst.name }}</div>
+                <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ inst.students }} students &middot; {{ inst.professors }} faculty &middot; {{ inst.courses }} courses &middot; CGPA {{ inst.avg_cgpa }}</div>
               </td>
-              <td><code>{{ schools[loop.index0].domain or 'N/A' }}</code></td>
+              <td><code>{{ institutions[loop.index0].domain or 'N/A' }}</code></td>
               <td style="text-align:center">
-                {% if sd.status == 'active' %}
+                {% if inst.status == 'active' %}
                   {{ badge('Active', 'success') }}
                 {% else %}
                   {{ badge('Suspended', 'danger') }}
                 {% endif %}
               </td>
               <td style="text-align:right">
-                <a href="#" class="icon-btn" title="Manage School" style="color:var(--text-tertiary)"><span class="material-symbols-rounded" style="font-size:18px">settings</span></a>
+                <a href="#" class="icon-btn" title="Manage Institution" style="color:var(--text-tertiary)"><span class="material-symbols-rounded" style="font-size:18px">settings</span></a>
               </td>
             </tr>
             {% else %}
             <tr>
-              <td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No schools registered.</td>
+              <td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No institutions registered.</td>
             </tr>
             {% endfor %}
           </tbody>
@@ -86,7 +86,7 @@
       </div>
     </div>
     <div style="padding:var(--space-4);text-align:right;border-top:1px solid var(--border-secondary)">
-      {{ btn('Add New School', '#', icon='add', type='secondary', size='sm') }}
+      {{ btn('Add Institution', url_for('admin.admin_institutions'), icon='add', type='secondary', size='sm') }}
     </div>
   </div>
 

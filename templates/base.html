@@ -43,7 +43,7 @@
       {% if role == 'admin' %}
         {% set _ = nav_items.append(('admin.admin_dashboard', 'space_dashboard', 'Dashboard')) %}
       {% elif role == 'dean' %}
-        {% set _ = nav_items.append(('analytics.school_analytics', 'space_dashboard', 'Dashboard')) %}
+        {% set _ = nav_items.append(('analytics.institution_analytics', 'space_dashboard', 'Dashboard')) %}
       {% elif role in ('professor', 'assistant_professor') %}
         {% set _ = nav_items.append(('academics.teacher_dashboard', 'space_dashboard', 'Dashboard')) %}
       {% elif role in ('student', 'class_rep') %}
@@ -52,7 +52,8 @@
 
       {# Institution (admin only) #}
       {% if role == 'admin' %}
-        {% set _ = nav_items.append(('admin.admin_schools', 'apartment', 'Institution')) %}
+        {% set _ = nav_items.append(('admin.admin_institutions', 'apartment', 'Institution')) %}
+        {% set _ = nav_items.append(('admin.admin_academic_units', 'account_balance', 'Academic Units')) %}
       {% endif %}
 
       {# People #}
@@ -72,7 +73,7 @@
 
       {# Analytics #}
       {% if role in ('dean', 'admin') %}
-        {% set _ = nav_items.append(('analytics.school_analytics', 'analytics', 'Analytics')) %}
+        {% set _ = nav_items.append(('analytics.institution_analytics', 'analytics', 'Analytics')) %}
         {% if role == 'dean' %}
           {% set _ = nav_items.append(('analytics.dean_ratings', 'star_half', 'Teacher Ratings')) %}
         {% endif %}
@@ -80,6 +81,8 @@
 
       {# Administration #}
       {% if role == 'admin' %}
+        {% set _ = nav_items.append(('admin.admin_departments', 'account_balance', 'Departments')) %}
+        {% set _ = nav_items.append(('admin.admin_programs', 'school', 'Programs')) %}
         {% set _ = nav_items.append(('admin.admin_sections', 'meeting_room', 'Sections')) %}
         {% set _ = nav_items.append(('timetable.admin_timetable', 'calendar_view_week', 'Timetable')) %}
         {% set _ = nav_items.append(('admin.announcements', 'campaign', 'Announcements')) %}

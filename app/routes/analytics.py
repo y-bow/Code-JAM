@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..services import (
     get_institution_stats,
     get_at_risk_students,
@@ -13,7 +13,7 @@ analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics',
 
 
 @analytics_bp.route('/')
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def institution_analytics():
     stats = get_institution_stats(g.institution_id)
@@ -21,7 +21,7 @@ def institution_analytics():
 
 
 @analytics_bp.route('/early-warning')
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def early_warning():
     at_risk_students = get_at_risk_students(g.institution_id)
@@ -29,7 +29,7 @@ def early_warning():
 
 
 @analytics_bp.route('/dean/ratings')
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def dean_ratings():
     teacher_stats = get_teacher_ratings_data(g.institution_id)
@@ -37,7 +37,7 @@ def dean_ratings():
 
 
 @analytics_bp.route('/dean/nominations')
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def dean_nominations():
     nominations = get_pending_nominations(g.institution_id)
@@ -45,7 +45,7 @@ def dean_nominations():
 
 
 @analytics_bp.route('/dean/nominations/<string:nom_id>/<action>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def handle_nomination(nom_id, action):
     success, message = process_nomination(nom_id, action, g.institution_id, g.current_user.id)

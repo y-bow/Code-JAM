@@ -15,9 +15,10 @@
       <table class="h-table">
         <colgroup>
           <col style="width: 200px">
-          <col style="width: 100px">
-          <col style="width: 100px">
-          <col style="width: 200px">
+          <col style="width: 80px">
+          <col style="width: 80px">
+          <col style="width: 160px">
+          <col style="width: 80px">
           <col style="width: 100px">
         </colgroup>
         <thead>
@@ -25,7 +26,8 @@
             <th>Section Name</th>
             <th>Code</th>
             <th>Batch</th>
-            <th>School</th>
+            <th>Program</th>
+            <th>Institution</th>
             <th style="text-align:right">Actions</th>
           </tr>
         </thead>
@@ -35,7 +37,8 @@
             <td style="font-weight:600">{{ section.name }}</td>
             <td><code>{{ section.code }}</code></td>
             <td>{{ section.batch_year }}</td>
-            <td>{{ section.school.name }}</td>
+            <td>{{ section.program.name if section.program else 'N/A' }}</td>
+            <td>{{ section.institution.name if section.institution else 'N/A' }}</td>
             <td style="text-align:right">
               <a href="{{ url_for('timetable.admin_timetable', section_id=section.id) }}" class="icon-btn" title="View Timetable">
                 <span class="material-symbols-rounded">calendar_view_week</span>
@@ -44,7 +47,7 @@
           </tr>
           {% else %}
           <tr>
-            <td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No sections found.</td>
+            <td colspan="6" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No sections found.</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -56,13 +59,13 @@
 {% call modal('addSectionModal', 'Add New Section') %}
 <form action="{{ url_for('admin.add_section') }}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-  {% call form_group('School', 'school_id', type='select', required=True) %}
-    {% for school in schools %}
-    <option value="{{ school.id }}">{{ school.name }}</option>
+  {% call form_group('Institution', 'institution_id', type='select', required=True) %}
+    {% for inst in institutions %}
+    <option value="{{ inst.id }}">{{ inst.name }}</option>
     {% endfor %}
   {% endcall %}
   {{ form_group('Section Name', 'name', required=True, placeholder='e.g. 2024 Computer Science A') }}
-  {{ form_group('Section Code (Unique in School)', 'code', required=True, placeholder='e.g. CS-24-A') }}
+  {{ form_group('Section Code', 'code', required=True, placeholder='e.g. CS-24-A') }}
   {{ form_group('Batch Year', 'batch_year', type='number', value='2024', required=True) }}
   <div style="margin-top:var(--space-4)">
     {{ btn_submit('Create Section', type='primary', size='lg', attrs='style="width:100%"') }}

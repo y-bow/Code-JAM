@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% from "_components.html" import badge, btn, btn_submit, btn_button, form_group, modal %}
+
+{% block title %}Hive | Manage Institutions{% endblock %}
+{% block page_title %}Institution Management{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Registered Institutions</h3>
+    {{ btn_button('Add New Institution', type='primary', size='sm', icon='add', attrs='onclick="document.getElementById(\'addSchoolModal\').classList.add(\'active\')"') }}
+  </div>
+  <div class="card-body" style="padding:0">
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table class="h-table">
+        <colgroup>
+          <col style="width: 250px">
+          <col style="width: 100px">
+          <col style="width: 200px">
+          <col style="width: 120px">
+          <col style="width: 100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Institution Name</th>
+            <th>Code</th>
+            <th>Domain</th>
+            <th style="text-align:center">Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inst in institutions %}
+          <tr>
+            <td>
+                <div style="font-weight:600">{{ inst.name }}</div>
+                  <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">Registered: {{ inst.created_at.strftime('%Y-%m-%d') }}</div>
+                </td>
+                <td><code>{{ inst.code }}</code></td>
+                <td>{{ inst.domain or 'N/A' }}</td>
+                <td style="text-align:center">
+                  {% if inst.is_active %}
+                    {{ badge('Active', 'success') }}
+                  {% else %}
+                    {{ badge('Suspended', 'danger') }}
+                  {% endif %}
+                </td>
+                <td style="text-align:right">
+                  <form action="{{ url_for('admin.toggle_institution', institution_id=inst.id) }}" method="POST" style="display:inline">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="icon-btn" title="{{ 'Suspend' if inst.is_active else 'Activate' }}" style="color:{{ 'var(--danger)' if inst.is_active else 'var(--success)' }}">
+                      <span class="material-symbols-rounded">{{ 'block' if inst.is_active else 'check_circle' }}</span>
+                    </button>
+                  </form>
+                </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No institutions registered in the system.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% call modal('addSchoolModal', 'Add New Institution') %}
+<form action="{{ url_for('admin.add_institution') }}" method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {{ form_group('Institution Name', 'name', required=True) }}
+  {{ form_group('Institution Code (Unique)', 'code', required=True, placeholder='e.g. MIT') }}
+  {{ form_group('Domain (Optional)', 'domain', placeholder='e.g. institution.edu') }}
+  <div style="margin-top:var(--space-4)">
+    {{ btn_submit('Register Institution', type='primary', size='lg', attrs='style="width:100%"') }}
+  </div>
+</form>
+{% endcall %}
+{% endblock %}

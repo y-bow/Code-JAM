@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort, jsonify
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..models import db, Section, TimetableEntry, Institution
 from ..services import (
     format_time_12hr,
@@ -21,7 +21,7 @@ timetable_bp = Blueprint('timetable', __name__, url_prefix='/timetable',
 
 
 @timetable_bp.route('/admin')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable():
     if g.current_user.role == 'admin':
@@ -55,7 +55,7 @@ def admin_timetable():
 
 
 @timetable_bp.route('/admin/debug')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def timetable_debug():
     query = TimetableEntry.query.join(Section)
@@ -66,7 +66,7 @@ def timetable_debug():
 
 
 @timetable_bp.route('/admin/update', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable_update():
     entry_id = request.form.get('entry_id', type=int)
@@ -88,7 +88,7 @@ def admin_timetable_update():
 
 
 @timetable_bp.route('/admin/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable_add():
     section_id, error = create_timetable_entry(
@@ -111,7 +111,7 @@ def admin_timetable_add():
 
 
 @timetable_bp.route('/admin/cancel', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable_cancel():
     section_id, error = cancel_timetable_entry(
@@ -126,7 +126,7 @@ def admin_timetable_cancel():
 
 
 @timetable_bp.route('/admin/restore', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable_restore():
     section_id, error = restore_timetable_entry(
@@ -141,7 +141,7 @@ def admin_timetable_restore():
 
 
 @timetable_bp.route('/admin/delete', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_timetable_delete():
     section_id, error = delete_timetable_entry(
@@ -156,7 +156,7 @@ def admin_timetable_delete():
 
 
 @timetable_bp.route('/', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 def timetable():
     user = g.current_user
 
@@ -215,7 +215,7 @@ def timetable():
 
 
 @timetable_bp.route('/manage', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def manage_timetable():
     if request.method == 'POST':

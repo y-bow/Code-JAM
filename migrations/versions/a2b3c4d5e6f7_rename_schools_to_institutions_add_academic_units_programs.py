@@ -60,7 +60,6 @@ def upgrade():
     with op.batch_alter_table('departments') as batch_op:
         batch_op.add_column(sa.Column('institution_id', sa.String(length=36), nullable=True))
         batch_op.add_column(sa.Column('academic_unit_id', sa.String(length=36), nullable=True))
-        batch_op.add_column(sa.Column('created_at', sa.DateTime(), nullable=True))
 
     conn.execute(sa.text(
         "UPDATE departments SET institution_id = school_id WHERE school_id IS NOT NULL"
@@ -74,6 +73,7 @@ def upgrade():
                                     ['institution_id'], ['id'])
         batch_op.create_foreign_key('fk_departments_academic_unit', 'academic_units',
                                     ['academic_unit_id'], ['id'])
+        batch_op.drop_index('ix_department_school')
         batch_op.drop_column('school_id')
 
     # ── 5. Migrate sections: add institution_id, program_id, drop school_id ──
@@ -131,16 +131,20 @@ def upgrade():
 
     # ── 6. Migrate users: rename school_id → institution_id, update indexes ──
     with op.batch_alter_table('users') as batch_op:
-        batch_op.alter_column('school_id', new_column_name='institution_id')
         batch_op.drop_index('ix_user_role')
         batch_op.drop_index('ix_user_school')
+    with op.batch_alter_table('users') as batch_op:
+        batch_op.alter_column('school_id', new_column_name='institution_id')
+    with op.batch_alter_table('users') as batch_op:
         batch_op.create_index('ix_user_institution', ['institution_id'])
         batch_op.create_index('ix_user_role', ['institution_id', 'role'])
 
     # ── 7. Migrate announcements ──
     with op.batch_alter_table('announcements') as batch_op:
-        batch_op.alter_column('school_id', new_column_name='institution_id')
         batch_op.drop_index('ix_announcement_school')
+    with op.batch_alter_table('announcements') as batch_op:
+        batch_op.alter_column('school_id', new_column_name='institution_id')
+    with op.batch_alter_table('announcements') as batch_op:
         batch_op.create_index('ix_announcement_institution', ['institution_id'])
 
     # ── 8. Migrate lost_found_items ──
@@ -149,14 +153,16 @@ def upgrade():
 
     # ── 9. Migrate clubs ──
     with op.batch_alter_table('clubs') as batch_op:
-        batch_op.alter_column('school_id', new_column_name='institution_id')
         batch_op.drop_index('ix_club_school')
+        batch_op.alter_column('school_id', new_column_name='institution_id')
+    with op.batch_alter_table('clubs') as batch_op:
         batch_op.create_index('ix_club_institution', ['institution_id'])
 
     # ── 10. Migrate external_events ──
     with op.batch_alter_table('external_events') as batch_op:
-        batch_op.alter_column('school_id', new_column_name='institution_id')
         batch_op.drop_index('ix_event_school')
+        batch_op.alter_column('school_id', new_column_name='institution_id')
+    with op.batch_alter_table('external_events') as batch_op:
         batch_op.create_index('ix_event_institution', ['institution_id'])
 
     # ── 11. Migrate import_batches ──

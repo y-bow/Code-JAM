@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g
 from app.models import db, Club, ExternalEvent
-from app.middleware import school_scoped, role_minimum, owns_resource
+from app.middleware import institution_scoped, role_minimum, owns_resource
 from datetime import datetime
 
 clubs_bp = Blueprint('clubs', __name__, url_prefix='/clubs',
@@ -11,7 +11,7 @@ clubs_bp = Blueprint('clubs', __name__, url_prefix='/clubs',
 # =============================================================================
 
 @clubs_bp.route('/')
-@school_scoped
+@institution_scoped
 def index():
     if g.current_user.role == 'admin':
         clubs = Club.query.order_by(Club.name).all()
@@ -27,7 +27,7 @@ def index():
     return render_template('student_clubs.html', clubs=clubs, events=events)
 
 @clubs_bp.route('/<string:club_id>')
-@school_scoped
+@institution_scoped
 def club_details(club_id):
     if g.current_user.role == 'admin':
         club = Club.query.get_or_404(club_id)
@@ -36,7 +36,7 @@ def club_details(club_id):
     return render_template('club_details.html', club=club)
 
 @clubs_bp.route('/events')
-@school_scoped
+@institution_scoped
 def events():
     if g.current_user.role == 'admin':
         events = ExternalEvent.query.filter(
@@ -54,7 +54,7 @@ def events():
 # =============================================================================
 
 @clubs_bp.route('/admin', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def admin_clubs():
     if request.method == 'POST':
@@ -82,7 +82,7 @@ def admin_clubs():
     return render_template('admin_clubs.html', clubs=clubs)
 
 @clubs_bp.route('/admin/edit/<string:club_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def edit_club(club_id):
     if g.current_user.role == 'admin':
@@ -99,7 +99,7 @@ def edit_club(club_id):
     return redirect(url_for('clubs.admin_clubs'))
 
 @clubs_bp.route('/admin/delete/<string:club_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def delete_club(club_id):
     club = Club.query.filter_by(id=club_id, institution_id=g.institution_id).first_or_404()
@@ -109,7 +109,7 @@ def delete_club(club_id):
     return redirect(url_for('clubs.admin_clubs'))
 
 @clubs_bp.route('/admin/events', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def admin_events():
     if request.method == 'POST':
@@ -144,7 +144,7 @@ def admin_events():
     return render_template('admin_events.html', events=events)
 
 @clubs_bp.route('/admin/events/edit/<string:event_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def edit_event(event_id):
     event = ExternalEvent.query.filter_by(id=event_id, institution_id=g.institution_id).first_or_404()
@@ -167,7 +167,7 @@ def edit_event(event_id):
     return redirect(url_for('clubs.admin_events'))
 
 @clubs_bp.route('/admin/events/delete/<string:event_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('dean')
 def delete_event(event_id):
     event = ExternalEvent.query.filter_by(id=event_id, institution_id=g.institution_id).first_or_404()

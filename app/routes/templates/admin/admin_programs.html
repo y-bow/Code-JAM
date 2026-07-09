@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "_components.html" import badge, btn, btn_submit, btn_button, form_group, modal %}
+
+{% block title %}Hive | Programs{% endblock %}
+{% block page_title %}Programs{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Programs</h3>
+    {{ btn_button('Add Program', type='primary', size='sm', icon='add', attrs='onclick="document.getElementById(\'addProgramModal\').classList.add(\'active\')"') }}
+  </div>
+  <div class="card-body" style="padding:0">
+    <div class="table-wrap" style="border:none;border-radius:0">
+      <table class="h-table">
+        <colgroup>
+          <col style="width: 250px">
+          <col style="width: 100px">
+          <col style="width: 200px">
+          <col style="width: 80px">
+          <col style="width: 100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Program Name</th>
+            <th>Code</th>
+            <th>Department</th>
+            <th>Years</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for prog in programs %}
+          <tr>
+            <td style="font-weight:600">{{ prog.name }}</td>
+            <td><code>{{ prog.code }}</code></td>
+            <td>{{ prog.department.name if prog.department else 'N/A' }}</td>
+            <td>{{ prog.duration_years }}</td>
+            <td style="text-align:right">
+              <span class="icon-btn" style="color:var(--text-tertiary);cursor:default" title="Edit coming soon"><span class="material-symbols-rounded">more_vert</span></span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No programs configured.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% call modal('addProgramModal', 'Add Program') %}
+<form action="{{ url_for('admin.add_program') }}" method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% call form_group('Department', 'department_id', type='select', required=True) %}
+    {% for dept in departments %}
+    <option value="{{ dept.id }}">{{ dept.name }}</option>
+    {% endfor %}
+  {% endcall %}
+  {{ form_group('Program Name', 'name', required=True, placeholder='e.g. Bachelor of Technology') }}
+  {{ form_group('Program Code', 'code', required=True, placeholder='e.g. B.Tech') }}
+  {{ form_group('Duration (Years)', 'duration_years', type='number', value='4', required=True) }}
+  <div style="margin-top:var(--space-4)">
+    {{ btn_submit('Create Program', type='primary', size='lg', attrs='style="width:100%"') }}
+  </div>
+</form>
+{% endcall %}
+{% endblock %}

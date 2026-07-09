@@ -45,23 +45,31 @@ def db_session(app):
 
 def _seed_test_data():
     from app import bcrypt
-    from app.models import School, User, Student, Section
+    from app.models import Institution, Department, Program, User, Student, Section
 
-    school = School(name='Test University', code='TU', domain='test.edu')
+    school = Institution(name='Test University', code='TU', domain='test.edu')
     db.session.add(school)
     db.session.commit()
 
-    section = Section(school_id=school.id, name='Section A', code='TU-CS-S1', batch_year=2025)
+    dept = Department(institution_id=school.id, name='Computer Science', code='CS')
+    db.session.add(dept)
+    db.session.commit()
+
+    prog = Program(department_id=dept.id, name='B.Tech Computer Science', code='BTECH-CS', duration_years=4)
+    db.session.add(prog)
+    db.session.commit()
+
+    section = Section(institution_id=school.id, program_id=prog.id, name='Section A', code='TU-CS-S1', batch_year=2025)
     db.session.add(section)
     db.session.commit()
 
     pw = bcrypt.generate_password_hash('test1234').decode('utf-8')
 
-    admin = User(school_id=school.id, email='admin@test.edu',
+    admin = User(institution_id=school.id, email='admin@test.edu',
                  password_hash=pw, role='admin', name='Test Admin')
-    student = User(school_id=school.id, email='student@test.edu',
+    student = User(institution_id=school.id, email='student@test.edu',
                    password_hash=pw, role='student', name='Test Student')
-    professor = User(school_id=school.id, email='prof@test.edu',
+    professor = User(institution_id=school.id, email='prof@test.edu',
                      password_hash=pw, role='professor', name='Test Professor')
 
     db.session.add_all([admin, student, professor])

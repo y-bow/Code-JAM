@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..models import db, CustomTask, TeacherTodo
 
 tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks',
@@ -7,7 +7,7 @@ tasks_bp = Blueprint('tasks', __name__, url_prefix='/tasks',
 
 
 @tasks_bp.route('/', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 def tasks():
     user = g.current_user
     if request.method == 'POST':
@@ -37,7 +37,7 @@ def tasks():
 
 
 @tasks_bp.route('/toggle/<string:task_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 def toggle_task(task_id):
     task = CustomTask.query.get_or_404(task_id)
     if task.user_id == g.current_user.id:
@@ -47,7 +47,7 @@ def toggle_task(task_id):
 
 
 @tasks_bp.route('/delete/<string:task_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 def delete_task(task_id):
     task = CustomTask.query.get_or_404(task_id)
     if task.user_id == g.current_user.id:
@@ -57,7 +57,7 @@ def delete_task(task_id):
 
 
 @tasks_bp.route('/teacher/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def add_teacher_task():
     title = request.form.get('title')
@@ -69,7 +69,7 @@ def add_teacher_task():
 
 
 @tasks_bp.route('/teacher/toggle/<string:task_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def toggle_teacher_task(task_id):
     task = TeacherTodo.query.get_or_404(task_id)
@@ -80,7 +80,7 @@ def toggle_teacher_task(task_id):
 
 
 @tasks_bp.route('/teacher/delete/<string:task_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def delete_teacher_task(task_id):
     task = TeacherTodo.query.get_or_404(task_id)

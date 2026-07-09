@@ -31,13 +31,13 @@
             padding-bottom: 1.5rem;
             border-bottom: 2px solid var(--border-secondary, #e1e4e8);
         }
-        .school-info h1 {
+        .institution-info h1 {
             font-family: 'Outfit', sans-serif;
             margin: 0 0 0.5rem 0;
             font-size: 1.5rem;
             color: var(--text-primary, #111827);
         }
-        .school-info p { margin: 0; color: var(--text-tertiary, #6b7280); }
+        .institution-info p { margin: 0; color: var(--text-tertiary, #6b7280); }
         .receipt-meta { text-align: right; }
         .receipt-meta h2 {
             margin: 0 0 0.5rem 0;
@@ -117,10 +117,10 @@
 <body>
     <div class="receipt-container">
         <div class="header">
-            <div class="school-info">
-                <h1>{{ get_setting('school.name', student.school.name if student.school else 'Your Institution') }}</h1>
-                <p>{{ get_setting('school.department', '') }}</p>
-                <p>{{ get_setting('school.address', '') }}</p>
+            <div class="institution-info">
+                <h1>{{ get_setting('institution.name', student.institution.name if student.institution else 'Your Institution') }}</h1>
+                <p>{{ get_setting('institution.department', '') }}</p>
+                <p>{{ get_setting('institution.address', '') }}</p>
             </div>
             <div class="receipt-meta">
                 <h2>FEE RECEIPT</h2>
@@ -151,7 +151,7 @@
 
         <div class="footer">
             <p>This is a computer-generated receipt and does not require a physical signature.</p>
-            <p>For any queries, please contact the finance department at {{ get_setting('school.finance_email', 'finance@institution.edu') }}</p>
+            <p>For any queries, please contact the finance department at {{ get_setting('institution.finance_email', 'finance@institution.edu') }}</p>
         </div>
     </div>
 

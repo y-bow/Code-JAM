@@ -1,6 +1,6 @@
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..models import db, Grade, Attendance, Enrollment, Assignment, Submission
 from ..services import (
     get_student_today_classes,
@@ -18,7 +18,7 @@ academics_bp = Blueprint('academics', __name__, url_prefix='/academics',
 
 
 @academics_bp.route('/student')
-@school_scoped
+@institution_scoped
 def student_dashboard():
     user = g.current_user
     today_classes = get_student_today_classes(user.student_profile)
@@ -49,7 +49,7 @@ def student_dashboard():
 
 
 @academics_bp.route('/teacher')
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def teacher_dashboard():
     user = g.current_user
@@ -68,14 +68,14 @@ def teacher_dashboard():
 
 
 @academics_bp.route('/my-courses')
-@school_scoped
+@institution_scoped
 def my_courses():
     courses = get_user_courses(g.current_user, g.institution_id)
     return render_template('courses.html', courses=courses)
 
 
 @academics_bp.route('/grades')
-@school_scoped
+@institution_scoped
 def grades():
     user = g.current_user
     if user.role in ('student', 'class_rep'):
@@ -86,7 +86,7 @@ def grades():
 
 
 @academics_bp.route('/update_meet', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('professor')
 def update_meet_link():
     course_id = request.form.get('course_id')

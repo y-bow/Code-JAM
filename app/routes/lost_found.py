@@ -4,7 +4,7 @@ from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, current_app
 
 from app.models import db, LostFoundItem
-from app.middleware import school_scoped
+from app.middleware import institution_scoped
 
 lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found',
                            template_folder='templates/lost_found')
@@ -19,7 +19,7 @@ def allowed_mimetype(mimetype):
     return mimetype in ALLOWED_MIMETYPES
 
 @lost_found_bp.route('/gallery', methods=['GET'])
-@school_scoped
+@institution_scoped
 def gallery():
     query = request.args.get('q', '')
     category = request.args.get('category', '')
@@ -52,7 +52,7 @@ def gallery():
                             categories=categories)
 
 @lost_found_bp.route('/my-items', methods=['GET'])
-@school_scoped
+@institution_scoped
 def my_items():
     items = LostFoundItem.query.filter_by(
         institution_id=g.institution_id, 
@@ -62,7 +62,7 @@ def my_items():
     return render_template('my_items.html', items=items)
 
 @lost_found_bp.route('/report', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 def report():
     categories = ['Electronics', 'ID Cards', 'Books', 'Clothing', 'Accessories', 'Other']
     if request.method == 'POST':
@@ -134,7 +134,7 @@ institution_id=g.institution_id,
     return render_template('report.html', categories=categories)
 
 @lost_found_bp.route('/resolve/<string:item_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 def resolve(item_id):
     item = LostFoundItem.query.get_or_404(item_id)
     if g.current_user.role != 'admin' and (item.institution_id != g.institution_id or item.reporter_id != g.current_user.id):

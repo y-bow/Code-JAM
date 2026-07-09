@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, g, flash, redirect, url_for, abort, request
-from ..middleware import school_scoped, owns_resource, role_minimum
+from ..middleware import institution_scoped, owns_resource, role_minimum
 from ..models import (
     db, User, Student, Course, Enrollment, Section, ProfessorAssistant, 
     ClassRepNomination, Announcement, Assignment, Attendance, TeacherRating
@@ -11,7 +11,7 @@ classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom',
 
 
 @classroom_bp.route('/<string:course_id>')
-@school_scoped
+@institution_scoped
 def view_classroom(course_id):
     user = g.current_user
 
@@ -106,7 +106,7 @@ def view_classroom(course_id):
 
 
 @classroom_bp.route('/<string:course_id>/nominate_cr/<string:student_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('professor')
 def nominate_class_rep(course_id, student_id):
     course = Course.query.get_or_404(course_id)
@@ -142,7 +142,7 @@ def nominate_class_rep(course_id, student_id):
 
 
 @classroom_bp.route('/<string:course_id>/assign_assistant', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('professor')
 def assign_assistant_professor(course_id):
     course = Course.query.get_or_404(course_id)
@@ -173,7 +173,7 @@ def assign_assistant_professor(course_id):
 
 
 @classroom_bp.route('/<string:course_id>/create_assignment', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def create_assignment(course_id):
     course = Course.query.get_or_404(course_id)
@@ -201,7 +201,7 @@ def create_assignment(course_id):
 
 
 @classroom_bp.route('/<string:course_id>/mark_attendance', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('assistant_professor')
 def mark_attendance(course_id):
     course = Course.query.get_or_404(course_id)
@@ -236,7 +236,7 @@ def mark_attendance(course_id):
 
 
 @classroom_bp.route('/<string:course_id>/post_announcement', methods=['POST'])
-@school_scoped
+@institution_scoped
 def post_announcement(course_id):
     course = Course.query.get_or_404(course_id)
     user = g.current_user
@@ -279,7 +279,7 @@ def post_announcement(course_id):
 
 
 @classroom_bp.route('/<string:course_id>/rate', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('student')
 def submit_rating(course_id):
     course = Course.query.get_or_404(course_id)

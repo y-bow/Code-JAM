@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort
-from ..middleware import school_scoped, role_minimum
+from ..middleware import institution_scoped, role_minimum
 from ..models import (
     db, User, Student, Section, Course, Institution,
     AcademicUnit, Department, Program, AcademicYear,
@@ -12,7 +12,7 @@ admin_bp = Blueprint('admin', __name__, url_prefix='/admin',
 
 
 @admin_bp.route('/dashboard')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_dashboard():
     user = g.current_user
@@ -45,30 +45,30 @@ def admin_dashboard():
 
     return render_template('admin_dashboard_global.html',
                            stats={
-                               'schools': Institution.query.count(),
+                               'institutions': Institution.query.count(),
                                'students': User.query.filter_by(role='student').count(),
                                'professors': User.query.filter_by(role='professor').count(),
                                'courses': Course.query.count(),
                                'sections': Section.query.count()
                            },
-                           school_data=institution_data,
-                           schools=institutions,
+                           institution_data=institution_data,
+                           institutions=institutions,
                            announcements=Announcement.query.filter_by(institution_id=None).order_by(Announcement.posted_at.desc()).limit(5).all(),
                            is_first_login=is_first_login)
 
 
 @admin_bp.route('/institutions')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_institutions():
     if g.current_user.role != 'admin':
         abort(403)
     institutions = Institution.query.all()
-    return render_template('admin_schools.html', schools=institutions)
+    return render_template('admin_institutions.html', institutions=institutions)
 
 
 @admin_bp.route('/institutions/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def add_institution():
     if g.current_user.role != 'admin':
@@ -89,7 +89,7 @@ def add_institution():
 
 
 @admin_bp.route('/institutions/toggle/<string:institution_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def toggle_institution(institution_id):
     if g.current_user.role != 'admin':
@@ -103,7 +103,7 @@ def toggle_institution(institution_id):
 
 
 @admin_bp.route('/academic-units')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_academic_units():
     if g.current_user.role == 'admin':
@@ -116,7 +116,7 @@ def admin_academic_units():
 
 
 @admin_bp.route('/academic-units/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def add_academic_unit():
     institution_id = request.form.get('institution_id', g.institution_id, type=str)
@@ -135,7 +135,7 @@ def add_academic_unit():
 
 
 @admin_bp.route('/departments')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_departments():
     if g.current_user.role == 'admin':
@@ -148,7 +148,7 @@ def admin_departments():
 
 
 @admin_bp.route('/departments/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def add_department():
     institution_id = request.form.get('institution_id', g.institution_id, type=str)
@@ -167,7 +167,7 @@ def add_department():
 
 
 @admin_bp.route('/programs')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_programs():
     if g.current_user.role == 'admin':
@@ -181,7 +181,7 @@ def admin_programs():
 
 
 @admin_bp.route('/programs/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def add_program():
     department_id = request.form.get('department_id', type=str)
@@ -201,7 +201,7 @@ def add_program():
 
 
 @admin_bp.route('/sections')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_sections():
     if g.current_user.role == 'admin':
@@ -210,11 +210,11 @@ def admin_sections():
     else:
         sections = Section.query.filter_by(institution_id=g.institution_id).all()
         institutions = [Institution.query.get(g.institution_id)]
-    return render_template('admin_sections.html', sections=sections, schools=institutions)
+    return render_template('admin_sections.html', sections=sections, institutions=institutions)
 
 
 @admin_bp.route('/sections/add', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def add_section():
     institution_id = request.form.get('institution_id', g.institution_id, type=str)
@@ -240,7 +240,7 @@ def add_section():
 
 
 @admin_bp.route('/accounts')
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_accounts():
     if g.current_user.role == 'admin':
@@ -249,11 +249,11 @@ def admin_accounts():
     else:
         users = User.query.filter_by(institution_id=g.institution_id).all()
         institutions = [Institution.query.get(g.institution_id)]
-    return render_template('admin_accounts.html', users=users, schools=institutions)
+    return render_template('admin_accounts.html', users=users, institutions=institutions)
 
 
 @admin_bp.route('/accounts/toggle/<string:user_id>', methods=['POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def toggle_user(user_id):
     user = User.query.get_or_404(user_id)
@@ -267,7 +267,7 @@ def toggle_user(user_id):
 
 
 @admin_bp.route('/settings', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 @role_minimum('admin')
 def admin_settings():
     from ..models import set_setting
@@ -283,12 +283,12 @@ def admin_settings():
         set_setting('theme.active', theme_mode)
         set_setting('theme.primary_color', primary_color)
 
-        institution_name = request.form.get('school_name', '').strip()
+        institution_name = request.form.get('institution_name', '').strip()
         if institution_name:
-            set_setting('school.name', institution_name)
-        set_setting('school.department', request.form.get('school_department', '').strip())
-        set_setting('school.address', request.form.get('school_address', '').strip())
-        set_setting('school.finance_email', request.form.get('school_finance_email', '').strip())
+            set_setting('institution.name', institution_name)
+        set_setting('institution.department', request.form.get('institution_department', '').strip())
+        set_setting('institution.address', request.form.get('institution_address', '').strip())
+        set_setting('institution.finance_email', request.form.get('institution_finance_email', '').strip())
 
         currency = request.form.get('fees_currency_symbol', '').strip()
         if currency:
@@ -320,7 +320,7 @@ def admin_settings():
 
 
 @admin_bp.route('/announcements')
-@school_scoped
+@institution_scoped
 def announcements():
     user = g.current_user
     my_section_id = None

@@ -40,9 +40,10 @@ class TestGetCommonFreeSlots:
     def test_all_day_free_for_empty_sections(self, app, db_session):
         from app.services import get_common_free_slots
         with app.app_context():
-            school = School.query.first()
-            empty_a = Section(school_id=school.id, name='Empty A', code='EA', batch_year=2025)
-            empty_b = Section(school_id=school.id, name='Empty B', code='EB', batch_year=2025)
+            school = Institution.query.first()
+            prog = school.departments[0].programs[0]
+            empty_a = Section(institution_id=school.id, program_id=prog.id, name='Empty A', code='EA', batch_year=2025)
+            empty_b = Section(institution_id=school.id, program_id=prog.id, name='Empty B', code='EB', batch_year=2025)
             db_session.session.add_all([empty_a, empty_b])
             db_session.session.commit()
 
@@ -59,7 +60,7 @@ class TestGetUserCourses:
             if not student:
                 assert True
                 return
-            courses = get_user_courses(student, student.school_id)
+            courses = get_user_courses(student, student.institution_id)
             assert isinstance(courses, list)
 
     def test_returns_courses_for_professor(self, app, db_session):
@@ -69,7 +70,7 @@ class TestGetUserCourses:
             if not prof:
                 assert True
                 return
-            courses = get_user_courses(prof, prof.school_id)
+            courses = get_user_courses(prof, prof.institution_id)
             assert isinstance(courses, list)
 
 
@@ -125,7 +126,7 @@ class TestProcessNomination:
         from app.models import ClassRepNomination
         with app.app_context():
             student = User.query.filter_by(role='student').first()
-            dean = User(school_id=student.school_id, email='dean@test.edu',
+            dean = User(institution_id=student.institution_id, email='dean@test.edu',
                          password_hash='x', role='dean', name='Test Dean')
             db_session.session.add(dean)
             db_session.session.commit()
@@ -140,7 +141,7 @@ class TestProcessNomination:
             db_session.session.add(nom)
             db_session.session.commit()
 
-            success, msg = process_nomination(nom.id, 'approve', student.school_id, dean.id)
+            success, msg = process_nomination(nom.id, 'approve', student.institution_id, dean.id)
             assert success is True
             assert 'approved' in msg
 
@@ -152,7 +153,7 @@ class TestProcessNomination:
             if not student or not student.student_profile:
                 assert True
                 return
-            dean = User(school_id=student.school_id, email='dean2@test.edu',
+            dean = User(institution_id=student.institution_id, email='dean2@test.edu',
                          password_hash='x', role='dean', name='Test Dean 2')
             db_session.session.add(dean)
             db_session.session.commit()
@@ -166,7 +167,7 @@ class TestProcessNomination:
             db_session.session.add(nom)
             db_session.session.commit()
 
-            success, msg = process_nomination(nom.id, 'reject', student.school_id, dean.id)
+            success, msg = process_nomination(nom.id, 'reject', student.institution_id, dean.id)
             assert success is True
 
 
@@ -185,6 +186,6 @@ class TestAtRiskStudents:
     def test_get_at_risk_students_returns_list(self, app, db_session):
         from app.services import get_at_risk_students
         with app.app_context():
-            school = School.query.first()
+            school = Institution.query.first()
             students = get_at_risk_students(school.id)
             assert isinstance(students, list)

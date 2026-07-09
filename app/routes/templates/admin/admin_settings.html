@@ -37,10 +37,10 @@
     <div class="card-body">
       <p style="color:var(--text-secondary);margin-bottom:var(--space-4)">Displayed on official documents like fee receipts.</p>
 
-      {{ form_group('Institution Name', 'school_name', value=get_setting('school.name', ''), placeholder='e.g. University of Example') }}
-      {{ form_group('Department', 'school_department', value=get_setting('school.department', ''), placeholder='e.g. School of Engineering') }}
-      {{ form_group('Address', 'school_address', value=get_setting('school.address', ''), placeholder='e.g. 123 College St, City') }}
-      {{ form_group('Finance Email', 'school_finance_email', type='email', value=get_setting('school.finance_email', ''), placeholder='finance@institution.edu') }}
+      {{ form_group('Institution Name', 'institution_name', value=get_setting('institution.name', ''), placeholder='e.g. University of Example') }}
+      {{ form_group('Department', 'institution_department', value=get_setting('institution.department', ''), placeholder='e.g. School of Engineering') }}
+      {{ form_group('Address', 'institution_address', value=get_setting('institution.address', ''), placeholder='e.g. 123 College St, City') }}
+      {{ form_group('Finance Email', 'institution_finance_email', type='email', value=get_setting('institution.finance_email', ''), placeholder='finance@institution.edu') }}
     </div>
   </div>
 
