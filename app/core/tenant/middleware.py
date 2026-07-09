@@ -1,6 +1,6 @@
 from functools import wraps
 from flask import session, g, abort, flash, redirect, url_for
-from app.models import User, ROLE_HIERARCHY, Message, Announcement
+from app.models import User, ROLE_HIERARCHY, Announcement
 
 
 def tenant_scoped(f):
@@ -26,9 +26,6 @@ def tenant_scoped(f):
         g.current_user = user
         g.institution_id = user.school_id
         g.school_id = user.school_id
-
-        g.unread_messages = Message.query.filter_by(recipient_id=user.id, is_read=False).order_by(Message.sent_at.desc()).limit(5).all()
-        g.unread_count = Message.query.filter_by(recipient_id=user.id, is_read=False).count()
 
         if user.role == 'admin':
             g.recent_announcements = Announcement.query.order_by(Announcement.posted_at.desc()).limit(3).all()

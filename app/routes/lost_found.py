@@ -3,7 +3,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, current_app
 
-from app.models import db, LostFoundItem, Message
+from app.models import db, LostFoundItem
 from app.middleware import school_scoped
 
 lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found',
@@ -118,20 +118,11 @@ def report():
                 
                 # filter common words length < 4 maybe, but for simplicity just intersecting
                 overlap = words_found.intersection(words_lost)
-                if len(overlap) >= 2: # heuristic: at least 2 common words
-                    # Notification!
-                    msg_body = f"A found item '{title}' might match your lost item '{lost_item.title}'. Check the Lost & Found gallery!"
-                    notif = Message(
-                        sender_id=g.current_user.id,
-                        recipient_id=lost_item.reporter_id,
-                        subject="Lost & Found Match",
-                        body=msg_body
-                    )
-                    db.session.add(notif)
+                if len(overlap) >= 2:
                     matched = True
             
             if matched:
-                flash("Item reported successfully! We notified a user whose lost item matches your description.", "success")
+                flash("Item reported successfully! A matching lost item was found in our records.", "success")
             else:
                 flash("Item reported successfully!", "success")
         else:

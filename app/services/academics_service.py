@@ -165,7 +165,7 @@ def get_user_courses(user, school_id):
             )
             .all()
         )
-    elif user.role in ('dean', 'timetable_manager'):
+    elif user.role in ('dean', 'admin'):
         return (
             Course.query
             .join(Section)

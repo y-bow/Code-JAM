@@ -216,7 +216,7 @@ def timetable():
 
 @timetable_bp.route('/manage', methods=['GET', 'POST'])
 @school_scoped
-@role_minimum('timetable_manager')
+@role_minimum('admin')
 def manage_timetable():
     if request.method == 'POST':
         action = request.form.get('action')

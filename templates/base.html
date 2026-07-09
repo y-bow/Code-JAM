@@ -86,11 +86,6 @@
         {% set _ = nav_items.append(('imports.index', 'upload_file', 'Import')) %}
       {% endif %}
 
-      {# Plugins #}
-      {% if role == 'admin' %}
-        {% set _ = nav_items.append(('plugin_admin.index', 'extension', 'Plugins')) %}
-      {% endif %}
-
       {# Settings #}
       {% if role == 'admin' %}
         {% set _ = nav_items.append(('admin.admin_settings', 'settings', 'Settings')) %}
@@ -108,9 +103,6 @@
       {% if role in ('professor', 'assistant_professor') %}
         {% set _ = nav_items.append(('timetable.timetable', 'calendar_today', 'Timetable')) %}
       {% endif %}
-
-      {# Inbox - everyone #}
-      {% set _ = nav_items.append(('messages.index', 'inbox', 'Inbox')) %}
 
       {% for route, icon, label in nav_items %}
       <a href="{{ url_for(route) }}" class="nav-item{% if ep == route %} active{% endif %}">
@@ -143,24 +135,8 @@
         <div class="dropdown-wrapper">
           <button class="icon-btn" id="notificationBtn">
             <span class="material-symbols-rounded">notifications</span>
-            {% if g.unread_count and g.unread_count > 0 %}
-            <span class="badge badge-danger" style="position:absolute;top:0;right:0;min-width:16px;height:16px;padding:0 4px;font-size:10px;border-radius:50%;">{{ g.unread_count }}</span>
-            {% endif %}
           </button>
           <div class="dropdown-menu" id="notificationsDropdown">
-            {% if g.unread_messages or g.recent_announcements %}
-              {% if g.unread_messages %}
-              <div style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600">Messages</div>
-              {% for msg in g.unread_messages %}
-              <a href="{{ url_for('messages.index') }}" class="dropdown-item">
-                <span class="avatar" style="width:24px;height:24px;font-size:10px;flex-shrink:0">{{ msg.sender.name[0] | upper }}</span>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:var(--font-size-sm);font-weight:500;truncate">{{ msg.sender.name }}</div>
-                  <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);truncate">{{ msg.body[:50] }}{% if msg.body|length > 50 %}...{% endif %}</div>
-                </div>
-              </a>
-              {% endfor %}
-              {% endif %}
               {% if g.recent_announcements %}
               <div style="padding:var(--space-2) var(--space-3);font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600;border-top:1px solid var(--border-secondary)">Announcements</div>
               {% for ann in g.recent_announcements %}
