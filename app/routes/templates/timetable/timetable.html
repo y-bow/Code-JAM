@@ -70,7 +70,7 @@
           Common Free Slot Finder
         </h3>
         <form method="POST" action="{{ url_for('timetable.timetable') }}#find-slot-section" style="display:flex;gap:var(--space-2);align-items:center;">
-          {{ csrf_token() }}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <select name="compare_section_id" required class="form-select" style="min-width:200px;">
             <option value="" disabled selected>Compare with Section...</option>
             {% for sec in sections %}

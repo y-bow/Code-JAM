@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort, jsonify
 from ..middleware import school_scoped, role_minimum
-from ..models import db, Section, TimetableEntry, School
+from ..models import db, Section, TimetableEntry, Institution
 from ..services import (
     format_time_12hr,
     get_student_timetable_data,
@@ -27,7 +27,7 @@ def admin_timetable():
     if g.current_user.role == 'admin':
         sections = Section.query.all()
     else:
-        sections = Section.query.filter_by(school_id=g.school_id).all()
+        sections = Section.query.filter_by(institution_id=g.institution_id).all()
     selected_section_id = request.args.get('section_id', type=int)
 
     if not selected_section_id and sections:
@@ -38,7 +38,7 @@ def admin_timetable():
 
     if selected_section_id:
         selected_section = Section.query.get(selected_section_id)
-        if selected_section and (g.current_user.role == 'admin' or selected_section.school_id == g.school_id):
+        if selected_section and (g.current_user.role == 'admin' or selected_section.institution_id == g.institution_id):
             for day_idx in range(5):
                 entries = TimetableEntry.query.filter_by(
                     section_id=selected_section_id,
@@ -60,7 +60,7 @@ def admin_timetable():
 def timetable_debug():
     query = TimetableEntry.query.join(Section)
     if g.current_user.role != 'admin':
-        query = query.filter(Section.school_id == g.school_id)
+        query = query.filter(Section.institution_id == g.institution_id)
     rows = query.all()
     return jsonify([r.to_dict() for r in rows])
 
@@ -78,7 +78,7 @@ def admin_timetable_update():
         new_room=request.form.get('room'),
         new_start=format_time_12hr(request.form.get('start_time')),
         new_end=format_time_12hr(request.form.get('end_time')),
-        school_id=g.school_id if g.current_user.role != 'admin' else None,
+        institution_id=g.institution_id if g.current_user.role != 'admin' else None,
         user_id=g.current_user.id,
     )
     if error:
@@ -101,7 +101,7 @@ def admin_timetable_add():
         room=request.form.get('room'),
         period=request.form.get('period'),
         color=request.form.get('color', 'var(--primary-color)'),
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         user_id=g.current_user.id,
     )
     if error:
@@ -116,7 +116,7 @@ def admin_timetable_add():
 def admin_timetable_cancel():
     section_id, error = cancel_timetable_entry(
         entry_id=request.form.get('entry_id', type=int),
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         user_id=g.current_user.id,
     )
     if error:
@@ -131,7 +131,7 @@ def admin_timetable_cancel():
 def admin_timetable_restore():
     section_id, error = restore_timetable_entry(
         entry_id=request.form.get('entry_id', type=int),
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         user_id=g.current_user.id,
     )
     if error:
@@ -146,7 +146,7 @@ def admin_timetable_restore():
 def admin_timetable_delete():
     section_id, error = delete_timetable_entry(
         entry_id=request.form.get('entry_id', type=int),
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         user_id=g.current_user.id,
     )
     if error:
@@ -192,7 +192,7 @@ def timetable():
 
         if my_section_id:
             my_section = Section.query.get(my_section_id)
-            sections = Section.query.join(School).order_by(School.name, Section.name).all()
+            sections = Section.query.join(Institution).order_by(Institution.name, Section.name).all()
 
             if request.method == 'POST':
                 selected_section_id = request.form.get('compare_section_id', type=int)
@@ -229,23 +229,23 @@ def manage_timetable():
                 title=request.form.get('title'),
                 room=request.form.get('room'),
                 color=request.form.get('color', 'var(--primary-color)'),
-                school_id=g.school_id,
+                institution_id=g.institution_id,
             )
             flash(msg, 'success' if success else 'danger')
         elif action == 'delete':
             success, msg = manage_delete_entry(
                 entry_id=request.form.get('entry_id'),
-                school_id=g.school_id,
+                institution_id=g.institution_id,
             )
             flash(msg, 'info' if success else 'danger')
 
         return redirect(url_for('timetable.manage_timetable'))
 
-    sections = Section.query.filter_by(school_id=g.school_id).all()
+    sections = Section.query.filter_by(institution_id=g.institution_id).all()
     entries = (
         TimetableEntry.query
         .join(Section)
-        .filter(Section.school_id == g.school_id)
+        .filter(Section.institution_id == g.institution_id)
         .order_by(Section.code, TimetableEntry.day, TimetableEntry.start_time)
         .all()
     )

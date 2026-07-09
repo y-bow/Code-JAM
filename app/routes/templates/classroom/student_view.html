@@ -35,7 +35,7 @@
                         <span class="material-symbols-rounded" style="font-size:1.1rem;">edit_note</span> Post Section Announcement (as Rep)
                     </h4>
                     <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="text" name="title" class="form-input" placeholder="Subject" required style="margin-bottom:var(--space-2);">
                         <textarea name="body" class="form-textarea" placeholder="What's happening in your section?" required style="height:70px;margin-bottom:var(--space-2);"></textarea>
                         <div class="flex justify-between items-center">
@@ -143,7 +143,7 @@
             <div style="margin-top:var(--space-4);border-top:1px solid var(--border-secondary);padding-top:var(--space-3);text-align:left;">
                 <h5 style="margin:0 0 var(--space-2) 0;font-size:0.8rem;text-transform:uppercase;color:var(--text-tertiary);">Rate your Instructor</h5>
                 <form action="{{ url_for('classroom.submit_rating', course_id=course.id) }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="rating-stars" style="color:var(--warning);font-size:1.25rem;display:flex;gap:2px;margin-bottom:var(--space-2);cursor:pointer;">
                         <span class="material-symbols-rounded star-input" data-value="1">star_outline</span>
                         <span class="material-symbols-rounded star-input" data-value="2">star_outline</span>

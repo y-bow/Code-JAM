@@ -6,7 +6,7 @@ class Club(db.Model):
     __tablename__ = 'clubs'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=False)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     category = db.Column(db.String(100))
@@ -14,18 +14,18 @@ class Club(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.UniqueConstraint('school_id', 'name', name='uq_club_school_name'),
-        db.Index('ix_club_school', 'school_id'),
+        db.UniqueConstraint('institution_id', 'name', name='uq_club_institution_name'),
+        db.Index('ix_club_institution', 'institution_id'),
     )
 
-    school = db.relationship('School', backref=db.backref('clubs', lazy='dynamic'))
+    institution = db.relationship('Institution', backref=db.backref('clubs', lazy='dynamic'))
 
 
 class ExternalEvent(db.Model):
     __tablename__ = 'external_events'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=False)
     title = db.Column(db.String(200), nullable=False)
     hosting_college = db.Column(db.String(200), nullable=False)
     date = db.Column(db.DateTime, nullable=False)
@@ -35,10 +35,10 @@ class ExternalEvent(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.Index('ix_event_school', 'school_id'),
+        db.Index('ix_event_institution', 'institution_id'),
     )
 
-    school = db.relationship('School', backref=db.backref('external_events', lazy='dynamic'))
+    institution = db.relationship('Institution', backref=db.backref('external_events', lazy='dynamic'))
 
 
 class ProfessorAssistant(db.Model):

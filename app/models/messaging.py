@@ -40,7 +40,7 @@ class Announcement(db.Model):
     __tablename__ = 'announcements'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=False)
     course_id = db.Column(db.String(36), db.ForeignKey('courses.id'), nullable=True)
     section_id = db.Column(db.String(36), db.ForeignKey('sections.id'), nullable=True)
     teacher_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
@@ -55,7 +55,7 @@ class Announcement(db.Model):
     author = db.relationship('User', backref=db.backref('authored_announcements', lazy='dynamic'))
 
     __table_args__ = (
-        db.Index('ix_announcement_school', 'school_id'),
+        db.Index('ix_announcement_institution', 'institution_id'),
         db.Index('ix_announcement_course', 'course_id'),
         db.Index('ix_announcement_section', 'section_id'),
     )

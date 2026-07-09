@@ -96,11 +96,11 @@ def admin_dashboard():
         fees = Fee.query.all()
         recent_payments = FeePayment.query.order_by(FeePayment.payment_date.desc()).limit(20).all()
     else:
-        students = User.query.filter_by(school_id=g.school_id, role='student').all()
+        students = User.query.filter_by(institution_id=g.institution_id, role='student').all()
         # Assuming Fee model has a relationship or we need to join with User
-        # If Fee doesn't have school_id, we join with User
-        fees = Fee.query.join(User).filter(User.school_id == g.school_id).all()
-        recent_payments = FeePayment.query.join(Fee).join(User).filter(User.school_id == g.school_id).order_by(FeePayment.payment_date.desc()).limit(10).all()
+        # If Fee doesn't have institution_id, we join with User
+        fees = Fee.query.join(User).filter(User.institution_id == g.institution_id).all()
+        recent_payments = FeePayment.query.join(Fee).join(User).filter(User.institution_id == g.institution_id).order_by(FeePayment.payment_date.desc()).limit(10).all()
     
     total_expected = sum(f.total_amount for f in fees)
     total_collected = sum(f.amount_paid for f in fees)

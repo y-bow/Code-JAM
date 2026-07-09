@@ -18,25 +18,25 @@ def create_admin(name, email, password, role):
         click.echo(f'Error: A user with email {email} already exists.')
         return
 
-    school_id = None
+    institution_id = None
     if role == 'admin':
-        from .models import School
-        schools = School.query.all()
-        if len(schools) == 1:
-            school_id = schools[0].id
-        elif len(schools) > 1:
-            click.echo('Multiple schools exist. Use --school-id to specify.')
+        from .models import Institution
+        institutions = Institution.query.all()
+        if len(institutions) == 1:
+            institution_id = institutions[0].id
+        elif len(institutions) > 1:
+            click.echo('Multiple institutions exist. Use --institution-id to specify.')
             return
 
     from .models.auth import generate_username
     cleaned_email = email.strip().lower()
     user = User(
         email=cleaned_email,
-        username=generate_username(cleaned_email, school_id),
+        username=generate_username(cleaned_email, institution_id),
         password_hash=bcrypt.generate_password_hash(password).decode('utf-8'),
         role=role,
         name=name.strip(),
-        school_id=school_id,
+        institution_id=institution_id,
     )
     db.session.add(user)
     db.session.commit()
@@ -85,10 +85,10 @@ def backup_db(output):
     'departments', 'sections', 'clubs', 'attendance', 'grades',
 ]))
 @click.option('--file', '-f', required=True, type=click.Path(exists=True), help='CSV/XLSX file path')
-@click.option('--school-id', required=True, help='School ID for scoping the import')
+@click.option('--institution-id', required=True, help='Institution ID for scoping the import')
 @click.option('--dry-run', is_flag=True, help='Validate without inserting')
 @click.option('--user-id', help='User ID for audit tracking')
-def import_data(import_type, file, school_id, dry_run, user_id):
+def import_data(import_type, file, institution_id, dry_run, user_id):
     from .services.import_service import parse_upload, validate_import, execute_import
     from werkzeug.datastructures import FileStorage
 
@@ -100,7 +100,7 @@ def import_data(import_type, file, school_id, dry_run, user_id):
         click.echo(f'Error parsing file: {error}')
         return
 
-    validated, error = validate_import(parsed, import_type, school_id)
+    validated, error = validate_import(parsed, import_type, institution_id)
     if error:
         click.echo(f'Validation error: {error}')
         return
@@ -129,7 +129,7 @@ def import_data(import_type, file, school_id, dry_run, user_id):
     click.confirm(f'\nImport {valid_count} rows?', abort=True)
 
     uid = user_id or 'cli'
-    batch, error = execute_import(validated, import_type, school_id, uid)
+    batch, error = execute_import(validated, import_type, institution_id, uid)
     if error:
         click.echo(f'Import failed: {error}')
         return

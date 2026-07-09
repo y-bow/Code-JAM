@@ -116,7 +116,7 @@
       <span class="material-symbols-rounded" style="color:var(--primary);">add_circle</span> Add New Class
     </h3>
     <form method="POST" action="{{ url_for('timetable.admin_timetable_add') }}">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="section_id" value="{{ selected_section.id }}">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-3);">
         <div class="form-group">
@@ -183,7 +183,7 @@
       <span class="material-symbols-rounded" style="color:var(--primary);">edit_calendar</span> Edit Slot
     </h3>
     <form method="POST" action="{{ url_for('timetable.admin_timetable_update') }}">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="entry_id" id="edit_entry_id">
       <div class="form-group">
         <label class="form-label">Subject / Class Name</label>
@@ -228,7 +228,7 @@
     <h3 style="margin:0 0 var(--space-2) 0;">Cancel Class Session?</h3>
     <p id="cancelInfo" style="color:var(--text-secondary);margin-bottom:var(--space-4);font-size:var(--font-size-sm);"></p>
     <form method="POST" action="{{ url_for('timetable.admin_timetable_cancel') }}">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="entry_id" id="cancel_entry_id">
       <div style="display:flex;gap:var(--space-2);">
         <button type="button" onclick="closeModal('cancelModal')" class="btn btn-secondary" style="flex:1;">Back</button>
@@ -245,7 +245,7 @@
     <h3 style="margin:0 0 var(--space-2) 0;">Restore Class?</h3>
     <p id="restoreInfo" style="color:var(--text-secondary);margin-bottom:var(--space-4);font-size:var(--font-size-sm);"></p>
     <form method="POST" action="{{ url_for('timetable.admin_timetable_restore') }}">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="entry_id" id="restore_entry_id">
       <div style="display:flex;gap:var(--space-2);">
         <button type="button" onclick="closeModal('restoreModal')" class="btn btn-secondary" style="flex:1;">Back</button>
@@ -263,7 +263,7 @@
     <p id="deleteInfo" style="color:var(--text-primary);font-weight:500;margin-bottom:var(--space-1);font-size:var(--font-size-sm);"></p>
     <p style="color:var(--text-tertiary);font-size:var(--font-size-xs);margin-bottom:var(--space-4);">This action cannot be undone. The class will be wiped from the database.</p>
     <form method="POST" action="{{ url_for('timetable.admin_timetable_delete') }}">
-      {{ csrf_token() }}
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <input type="hidden" name="entry_id" id="delete_entry_id">
       <div style="display:flex;gap:var(--space-2);">
         <button type="button" onclick="closeModal('deleteModal')" class="btn btn-secondary" style="flex:1;">Cancel</button>

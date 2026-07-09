@@ -22,7 +22,7 @@
             <div style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-4);border:1px solid var(--border-primary);border-radius:var(--radius-md);border-left:4px solid {% if task.is_completed %}var(--success){% else %}var(--primary){% endif %};opacity:{% if task.is_completed %}0.6{% else %}1{% endif %};">
                 <div class="flex gap-3 items-center">
                     <form action="{{ url_for('tasks.toggle_task', task_id=task.id) }}" method="POST" style="margin:0;display:flex;">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <input type="checkbox" onchange="this.form.submit()" {% if task.is_completed %}checked{% endif %} style="width:18px;height:18px;accent-color:var(--primary);cursor:pointer;">
                     </form>
                     <div>
@@ -35,7 +35,7 @@
                     <div class="text-tertiary" style="font-size:0.85rem;">{{ task.due_date.strftime('%b %d') }}</div>
                     {% endif %}
                     <form action="{{ url_for('tasks.delete_task', task_id=task.id) }}" method="POST" style="margin:0;display:flex;">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                         <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);" title="Delete task">
                             <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
                         </button>
@@ -55,7 +55,7 @@
             </div>
             <div class="modal-body">
                 <form method="POST" action="{{ url_for('tasks.tasks') }}" style="display:flex;flex-direction:column;gap:var(--space-4);">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <div class="form-group">
                         <label class="form-label">Task Title</label>
                         <input type="text" name="title" required placeholder="What needs to be done?" class="form-input">

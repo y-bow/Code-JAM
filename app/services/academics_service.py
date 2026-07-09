@@ -139,20 +139,20 @@ def get_teacher_tasks(user_id):
         .order_by(TeacherTodo.is_completed, TeacherTodo.created_at.desc()).all()
 
 
-def get_user_courses(user, school_id):
+def get_user_courses(user, institution_id):
     if user.role in ('student', 'class_rep'):
         return (
             Course.query
             .join(Enrollment, Enrollment.course_id == Course.id)
             .join(Section, Course.section_id == Section.id)
-            .filter(Enrollment.student_id == user.id, Section.school_id == school_id)
+            .filter(Enrollment.student_id == user.id, Section.institution_id == institution_id)
             .all()
         )
     elif user.role == 'professor':
         return (
             Course.query
             .join(Section)
-            .filter(Course.teacher_id == user.id, Section.school_id == school_id)
+            .filter(Course.teacher_id == user.id, Section.institution_id == institution_id)
             .all()
         )
     elif user.role == 'assistant_professor':
@@ -169,7 +169,7 @@ def get_user_courses(user, school_id):
         return (
             Course.query
             .join(Section)
-            .filter(Section.school_id == school_id)
+            .filter(Section.institution_id == institution_id)
             .all()
         )
     return []

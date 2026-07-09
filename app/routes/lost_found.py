@@ -28,7 +28,7 @@ def gallery():
     if g.current_user.role == 'admin':
         base_query = LostFoundItem.query.filter_by(status='open')
     else:
-        base_query = LostFoundItem.query.filter_by(school_id=g.school_id, status='open')
+        base_query = LostFoundItem.query.filter_by(institution_id=g.institution_id, status='open')
     
     if query:
         query_term = f'%{query}%'
@@ -55,7 +55,7 @@ def gallery():
 @school_scoped
 def my_items():
     items = LostFoundItem.query.filter_by(
-        school_id=g.school_id, 
+        institution_id=g.institution_id, 
         reporter_id=g.current_user.id
     ).order_by(LostFoundItem.timestamp.desc()).all()
     
@@ -88,7 +88,7 @@ def report():
                 image_path = f"uploads/lost_found/{filename}"
 
         new_item = LostFoundItem(
-            school_id=g.school_id,
+institution_id=g.institution_id,
             reporter_id=g.current_user.id,
             report_type=report_type,
             category=category,
@@ -104,7 +104,7 @@ def report():
         if report_type == 'found':
             # look for open 'lost' items of same category
             potential_matches = LostFoundItem.query.filter_by(
-                school_id=g.school_id, 
+                institution_id=g.institution_id, 
                 report_type='lost',
                 status='open',
                 category=category
@@ -137,7 +137,7 @@ def report():
 @school_scoped
 def resolve(item_id):
     item = LostFoundItem.query.get_or_404(item_id)
-    if g.current_user.role != 'admin' and (item.school_id != g.school_id or item.reporter_id != g.current_user.id):
+    if g.current_user.role != 'admin' and (item.institution_id != g.institution_id or item.reporter_id != g.current_user.id):
         flash("Unauthorized action.", "danger")
         return redirect(url_for('lost_found.my_items'))
     

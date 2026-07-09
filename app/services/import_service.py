@@ -159,7 +159,7 @@ def detect_import_type_from_filename(filename):
     return None
 
 
-def validate_import(parsed, import_type, school_id, conflict_strategy='skip'):
+def validate_import(parsed, import_type, institution_id, conflict_strategy='skip'):
     if import_type not in COLUMN_MAPS:
         logger.error('validate_import: invalid import_type=%s', import_type)
         return [], 'Invalid import type'
@@ -200,25 +200,25 @@ def validate_import(parsed, import_type, school_id, conflict_strategy='skip'):
                 errors.append(f'{req} is required')
 
         if import_type == 'students':
-            _validate_student_row(row_data, school_id, errors)
+            _validate_student_row(row_data, institution_id, errors)
         elif import_type == 'faculty':
-            _validate_faculty_row(row_data, school_id, errors)
+            _validate_faculty_row(row_data, institution_id, errors)
         elif import_type == 'courses':
-            _validate_course_row(row_data, school_id, errors)
+            _validate_course_row(row_data, institution_id, errors)
         elif import_type == 'timetable':
-            _validate_timetable_row(row_data, school_id, errors)
+            _validate_timetable_row(row_data, institution_id, errors)
         elif import_type == 'enrollments':
-            _validate_enrollment_row(row_data, school_id, errors)
+            _validate_enrollment_row(row_data, institution_id, errors)
         elif import_type == 'departments':
-            _validate_department_row(row_data, school_id, errors, conflict_strategy)
+            _validate_department_row(row_data, institution_id, errors, conflict_strategy)
         elif import_type == 'sections':
-            _validate_section_row(row_data, school_id, errors)
+            _validate_section_row(row_data, institution_id, errors)
         elif import_type == 'clubs':
-            _validate_club_row(row_data, school_id, errors)
+            _validate_club_row(row_data, institution_id, errors)
         elif import_type == 'attendance':
-            _validate_attendance_row(row_data, school_id, errors)
+            _validate_attendance_row(row_data, institution_id, errors)
         elif import_type == 'grades':
-            _validate_grade_row(row_data, school_id, errors)
+            _validate_grade_row(row_data, institution_id, errors)
 
         validated.append({
             'index': idx,
@@ -230,13 +230,13 @@ def validate_import(parsed, import_type, school_id, conflict_strategy='skip'):
     return validated, None
 
 
-def _validate_student_row(row, school_id, errors):
+def _validate_student_row(row, institution_id, errors):
     email = row.get('email', '')
     if email and not _valid_email(email):
         errors.append(f'Invalid email: {email}')
     section_code = row.get('section_code', '')
     if section_code:
-        section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+        section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
         if not section:
             errors.append(f'Section not found: {section_code}')
     enrollment_year = row.get('enrollment_year', '')
@@ -247,7 +247,7 @@ def _validate_student_row(row, school_id, errors):
             errors.append(f'Invalid enrollment_year: {enrollment_year}')
 
 
-def _validate_faculty_row(row, school_id, errors):
+def _validate_faculty_row(row, institution_id, errors):
     email = row.get('email', '')
     if email and not _valid_email(email):
         errors.append(f'Invalid email: {email}')
@@ -257,15 +257,15 @@ def _validate_faculty_row(row, school_id, errors):
         errors.append(f'Invalid role: {role}. Must be one of: {", ".join(valid_roles)}')
 
 
-def _validate_course_row(row, school_id, errors):
+def _validate_course_row(row, institution_id, errors):
     section_code = row.get('section_code', '')
     if section_code:
-        section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+        section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
         if not section:
             errors.append(f'Section not found: {section_code}')
     teacher_email = row.get('teacher_email', '')
     if teacher_email:
-        teacher = User.query.filter_by(school_id=school_id, email=teacher_email).first()
+        teacher = User.query.filter_by(institution_id=institution_id, email=teacher_email).first()
         if not teacher:
             errors.append(f'Teacher not found: {teacher_email}')
     credits = row.get('credits', '')
@@ -276,10 +276,10 @@ def _validate_course_row(row, school_id, errors):
             errors.append(f'Invalid credits: {credits}')
 
 
-def _validate_timetable_row(row, school_id, errors):
+def _validate_timetable_row(row, institution_id, errors):
     section_code = row.get('section_code', '')
     if section_code:
-        section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+        section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
         if not section:
             errors.append(f'Section not found: {section_code}')
     day = row.get('day', '')
@@ -292,29 +292,29 @@ def _validate_timetable_row(row, school_id, errors):
             errors.append(f'Invalid day: {day}')
 
 
-def _validate_enrollment_row(row, school_id, errors):
+def _validate_enrollment_row(row, institution_id, errors):
     student_email = row.get('student_email', '')
     if student_email:
-        student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+        student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
         if not student:
             errors.append(f'Student not found: {student_email}')
     course_code = row.get('course_code', '')
     if course_code:
         course = Course.query.join(Section).filter(
-            Section.school_id == school_id, Course.code == course_code
+            Section.institution_id == institution_id, Course.code == course_code
         ).first()
         if not course:
             errors.append(f'Course not found with code: {course_code}')
 
 
-def _validate_department_row(row, school_id, errors, conflict_strategy='skip'):
+def _validate_department_row(row, institution_id, errors, conflict_strategy='skip'):
     pass
 
 
-def _validate_section_row(row, school_id, errors):
+def _validate_section_row(row, institution_id, errors):
     department_code = row.get('department_code', '')
     if department_code:
-        dept = Department.query.filter_by(school_id=school_id, code=department_code).first()
+        dept = Department.query.filter_by(institution_id=institution_id, code=department_code).first()
         if not dept:
             errors.append(f'Department not found: {department_code}')
     batch_year = row.get('batch_year', '')
@@ -325,22 +325,22 @@ def _validate_section_row(row, school_id, errors):
             errors.append(f'Invalid batch_year: {batch_year}')
 
 
-def _validate_club_row(row, school_id, errors):
+def _validate_club_row(row, institution_id, errors):
     contact_email = row.get('contact_email', '')
     if contact_email and not _valid_email(contact_email):
         errors.append(f'Invalid contact email: {contact_email}')
 
 
-def _validate_attendance_row(row, school_id, errors):
+def _validate_attendance_row(row, institution_id, errors):
     student_email = row.get('student_email', '')
     if student_email:
-        student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+        student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
         if not student:
             errors.append(f'Student not found: {student_email}')
     course_code = row.get('course_code', '')
     if course_code:
         course = Course.query.join(Section).filter(
-            Section.school_id == school_id, Course.code == course_code
+            Section.institution_id == institution_id, Course.code == course_code
         ).first()
         if not course:
             errors.append(f'Course not found with code: {course_code}')
@@ -357,16 +357,16 @@ def _validate_attendance_row(row, school_id, errors):
             errors.append(f'Invalid date format: {date_val}. Use YYYY-MM-DD')
 
 
-def _validate_grade_row(row, school_id, errors):
+def _validate_grade_row(row, institution_id, errors):
     student_email = row.get('student_email', '')
     if student_email:
-        student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+        student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
         if not student:
             errors.append(f'Student not found: {student_email}')
     course_code = row.get('course_code', '')
     if course_code:
         course = Course.query.join(Section).filter(
-            Section.school_id == school_id, Course.code == course_code
+            Section.institution_id == institution_id, Course.code == course_code
         ).first()
         if not course:
             errors.append(f'Course not found with code: {course_code}')
@@ -382,7 +382,7 @@ def _valid_email(email):
     return '@' in email and '.' in email.split('@')[-1]
 
 
-def execute_import(validated_rows, import_type, school_id, user_id, conflict_strategy='skip'):
+def execute_import(validated_rows, import_type, institution_id, user_id, conflict_strategy='skip'):
     if import_type not in IMPORT_TYPES:
         logger.error('execute_import: invalid import_type=%s', import_type)
         return None, f'Invalid import type: {import_type}'
@@ -415,7 +415,7 @@ def execute_import(validated_rows, import_type, school_id, user_id, conflict_str
         skipped_count = 0
         updated_count = 0
         for row_data in valid_rows:
-            result = importer(row_data['data'], school_id, user_id, conflict_strategy)
+            result = importer(row_data['data'], institution_id, user_id, conflict_strategy)
             if result == 'imported':
                 success_count += 1
             elif result == 'skipped':
@@ -426,7 +426,7 @@ def execute_import(validated_rows, import_type, school_id, user_id, conflict_str
                 raise ValueError(f'Insertion failed for row {row_data["index"] + 1}')
 
         batch = ImportBatch(
-            school_id=school_id,
+            institution_id=institution_id,
             import_type=import_type,
             file_name=f'import_{import_type}_{datetime.utcnow().strftime("%Y%m%d_%H%M%S")}',
             total_rows=len(validated_rows),
@@ -447,9 +447,9 @@ def execute_import(validated_rows, import_type, school_id, user_id, conflict_str
         return None, f'Import failed: {e}'
 
 
-def _import_student(row, school_id, user_id, strategy='skip'):
+def _import_student(row, institution_id, user_id, strategy='skip'):
     email = row.get('email', '').strip().lower()
-    existing = User.query.filter_by(school_id=school_id, email=email, role='student').first()
+    existing = User.query.filter_by(institution_id=institution_id, email=email, role='student').first()
 
     if existing:
         if strategy == 'skip':
@@ -464,16 +464,16 @@ def _import_student(row, school_id, user_id, strategy='skip'):
             return 'updated'
 
     section_code = row.get('section_code', '')
-    section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+    section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
     if not section:
         return False
 
     default_password = get_setting('import.default_password', 'hive@1234')
     pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
-        school_id=school_id,
+        institution_id=institution_id,
         email=email,
-        username=generate_username(email, school_id),
+        username=generate_username(email, institution_id),
         password_hash=pw_hash,
         role='student',
         name=row.get('name', '').strip(),
@@ -498,11 +498,11 @@ def _import_student(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_faculty(row, school_id, user_id, strategy='skip'):
+def _import_faculty(row, institution_id, user_id, strategy='skip'):
     email = row.get('email', '').strip().lower()
-    existing = User.query.filter_by(school_id=school_id, email=email, role='faculty').first()
+    existing = User.query.filter_by(institution_id=institution_id, email=email, role='faculty').first()
     if not existing:
-        existing = User.query.filter_by(school_id=school_id, email=email).first()
+        existing = User.query.filter_by(institution_id=institution_id, email=email).first()
 
     if existing:
         if strategy == 'skip':
@@ -525,9 +525,9 @@ def _import_faculty(row, school_id, user_id, strategy='skip'):
     default_password = get_setting('import.default_password', 'hive@1234')
     pw_hash = bcrypt.generate_password_hash(default_password).decode('utf-8')
     user = User(
-        school_id=school_id,
+        institution_id=institution_id,
         email=email,
-        username=generate_username(email, school_id),
+        username=generate_username(email, institution_id),
         password_hash=pw_hash,
         role=row.get('role', 'professor').strip(),
         name=row.get('name', '').strip(),
@@ -545,10 +545,10 @@ def _import_faculty(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_course(row, school_id, user_id, strategy='skip'):
+def _import_course(row, institution_id, user_id, strategy='skip'):
     code = row.get('code', '').strip()
     section_code = row.get('section_code', '').strip()
-    section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+    section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
     if not section:
         return False
 
@@ -568,14 +568,14 @@ def _import_course(row, school_id, user_id, strategy='skip'):
                 pass
             teacher_email = row.get('teacher_email', '').strip().lower()
             if teacher_email:
-                teacher = User.query.filter_by(school_id=school_id, email=teacher_email).first()
+                teacher = User.query.filter_by(institution_id=institution_id, email=teacher_email).first()
                 if teacher:
                     existing.teacher_id = teacher.id
             db.session.flush()
             return 'updated'
 
     teacher_email = row.get('teacher_email', '').strip().lower()
-    teacher = User.query.filter_by(school_id=school_id, email=teacher_email).first()
+    teacher = User.query.filter_by(institution_id=institution_id, email=teacher_email).first()
     if not teacher:
         return False
 
@@ -602,9 +602,9 @@ def _import_course(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_timetable(row, school_id, user_id, strategy='skip'):
+def _import_timetable(row, institution_id, user_id, strategy='skip'):
     section_code = row.get('section_code', '').strip()
-    section = Section.query.filter_by(school_id=school_id, code=section_code).first()
+    section = Section.query.filter_by(institution_id=institution_id, code=section_code).first()
     if not section:
         return False
 
@@ -648,15 +648,15 @@ def _import_timetable(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_enrollment(row, school_id, user_id, strategy='skip'):
+def _import_enrollment(row, institution_id, user_id, strategy='skip'):
     student_email = row.get('student_email', '').strip().lower()
-    student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+    student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
     if not student:
         return False
 
     course_code = row.get('course_code', '').strip()
     course = Course.query.join(Section).filter(
-        Section.school_id == school_id, Course.code == course_code
+        Section.institution_id == institution_id, Course.code == course_code
     ).first()
     if not course:
         return False
@@ -685,9 +685,9 @@ def _import_enrollment(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_department(row, school_id, user_id, strategy='skip'):
+def _import_department(row, institution_id, user_id, strategy='skip'):
     code = row.get('code', '').strip()
-    existing = Department.query.filter_by(school_id=school_id, code=code).first()
+    existing = Department.query.filter_by(institution_id=institution_id, code=code).first()
 
     if existing:
         if strategy == 'skip':
@@ -701,7 +701,7 @@ def _import_department(row, school_id, user_id, strategy='skip'):
             return 'updated'
 
     dept = Department(
-        school_id=school_id,
+        institution_id=institution_id,
         name=row.get('name', '').strip(),
         code=code,
     )
@@ -709,9 +709,9 @@ def _import_department(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_section(row, school_id, user_id, strategy='skip'):
+def _import_section(row, institution_id, user_id, strategy='skip'):
     code = row.get('code', '').strip()
-    existing = Section.query.filter_by(school_id=school_id, code=code).first()
+    existing = Section.query.filter_by(institution_id=institution_id, code=code).first()
 
     if existing:
         if strategy == 'skip':
@@ -721,7 +721,7 @@ def _import_section(row, school_id, user_id, strategy='skip'):
             db.session.flush()
         elif strategy == 'update':
             department_code = row.get('department_code', '').strip()
-            dept = Department.query.filter_by(school_id=school_id, code=department_code).first()
+            dept = Department.query.filter_by(institution_id=institution_id, code=department_code).first()
             if dept:
                 existing.department_id = dept.id
             existing.name = row.get('name', '').strip()
@@ -729,7 +729,7 @@ def _import_section(row, school_id, user_id, strategy='skip'):
             return 'updated'
 
     department_code = row.get('department_code', '').strip()
-    dept = Department.query.filter_by(school_id=school_id, code=department_code).first()
+    dept = Department.query.filter_by(institution_id=institution_id, code=department_code).first()
     if not dept:
         return False
 
@@ -739,7 +739,7 @@ def _import_section(row, school_id, user_id, strategy='skip'):
         batch_year = datetime.utcnow().year
 
     section = Section(
-        school_id=school_id,
+        institution_id=institution_id,
         department_id=dept.id,
         name=row.get('name', '').strip(),
         code=code,
@@ -749,9 +749,9 @@ def _import_section(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_club(row, school_id, user_id, strategy='skip'):
+def _import_club(row, institution_id, user_id, strategy='skip'):
     name = row.get('name', '').strip()
-    existing = Club.query.filter_by(school_id=school_id, name=name).first()
+    existing = Club.query.filter_by(institution_id=institution_id, name=name).first()
 
     if existing:
         if strategy == 'skip':
@@ -767,7 +767,7 @@ def _import_club(row, school_id, user_id, strategy='skip'):
             return 'updated'
 
     club = Club(
-        school_id=school_id,
+        institution_id=institution_id,
         name=name,
         category=row.get('category', '').strip(),
         contact_email=row.get('contact_email', '').strip(),
@@ -777,15 +777,15 @@ def _import_club(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_attendance(row, school_id, user_id, strategy='skip'):
+def _import_attendance(row, institution_id, user_id, strategy='skip'):
     student_email = row.get('student_email', '').strip().lower()
-    student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+    student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
     if not student:
         return False
 
     course_code = row.get('course_code', '').strip()
     course = Course.query.join(Section).filter(
-        Section.school_id == school_id, Course.code == course_code
+        Section.institution_id == institution_id, Course.code == course_code
     ).first()
     if not course:
         return False
@@ -820,15 +820,15 @@ def _import_attendance(row, school_id, user_id, strategy='skip'):
     return 'imported'
 
 
-def _import_grade(row, school_id, user_id, strategy='skip'):
+def _import_grade(row, institution_id, user_id, strategy='skip'):
     student_email = row.get('student_email', '').strip().lower()
-    student = User.query.filter_by(school_id=school_id, email=student_email, role='student').first()
+    student = User.query.filter_by(institution_id=institution_id, email=student_email, role='student').first()
     if not student:
         return False
 
     course_code = row.get('course_code', '').strip()
     course = Course.query.join(Section).filter(
-        Section.school_id == school_id, Course.code == course_code
+        Section.institution_id == institution_id, Course.code == course_code
     ).first()
     if not course:
         return False
@@ -874,7 +874,7 @@ _IMPORTERS = {
 }
 
 
-def batch_import(files_data, school_id, user_id, conflict_strategy='skip'):
+def batch_import(files_data, institution_id, user_id, conflict_strategy='skip'):
     results = []
     pending = []
 
@@ -904,7 +904,7 @@ def batch_import(files_data, school_id, user_id, conflict_strategy='skip'):
             filename, import_type, parsed['total'],
         )
 
-        validated, err = validate_import(parsed, import_type, school_id)
+        validated, err = validate_import(parsed, import_type, institution_id)
         if err:
             results.append({
                 'file': filename,
@@ -926,7 +926,7 @@ def batch_import(files_data, school_id, user_id, conflict_strategy='skip'):
             })
             continue
 
-        batch, err = execute_import(validated, import_type, school_id, user_id, conflict_strategy)
+        batch, err = execute_import(validated, import_type, institution_id, user_id, conflict_strategy)
         if err:
             results.append({
                 'file': filename,
@@ -960,7 +960,7 @@ def _dependency_sort_key(import_type):
         return len(IMPORT_DEPENDENCY_ORDER)
 
 
-def get_recent_batches(school_id, limit=10):
-    return ImportBatch.query.filter_by(school_id=school_id).order_by(
+def get_recent_batches(institution_id, limit=10):
+    return ImportBatch.query.filter_by(institution_id=institution_id).order_by(
         ImportBatch.created_at.desc()
     ).limit(limit).all()

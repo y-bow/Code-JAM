@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash, abort
 from ..middleware import school_scoped, role_minimum
 from ..services import (
-    get_school_stats,
+    get_institution_stats,
     get_at_risk_students,
     get_teacher_ratings_data,
     get_pending_nominations,
@@ -15,8 +15,8 @@ analytics_bp = Blueprint('analytics', __name__, url_prefix='/analytics',
 @analytics_bp.route('/')
 @school_scoped
 @role_minimum('dean')
-def school_analytics():
-    stats = get_school_stats(g.school_id)
+def institution_analytics():
+    stats = get_institution_stats(g.institution_id)
     return render_template('analytics.html', **stats)
 
 
@@ -24,7 +24,7 @@ def school_analytics():
 @school_scoped
 @role_minimum('dean')
 def early_warning():
-    at_risk_students = get_at_risk_students(g.school_id)
+    at_risk_students = get_at_risk_students(g.institution_id)
     return render_template('early_warning.html', at_risk_students=at_risk_students)
 
 
@@ -32,7 +32,7 @@ def early_warning():
 @school_scoped
 @role_minimum('dean')
 def dean_ratings():
-    teacher_stats = get_teacher_ratings_data(g.school_id)
+    teacher_stats = get_teacher_ratings_data(g.institution_id)
     return render_template('dean_ratings.html', teacher_stats=teacher_stats)
 
 
@@ -40,7 +40,7 @@ def dean_ratings():
 @school_scoped
 @role_minimum('dean')
 def dean_nominations():
-    nominations = get_pending_nominations(g.school_id)
+    nominations = get_pending_nominations(g.institution_id)
     return render_template('dean_nominations.html', nominations=nominations)
 
 
@@ -48,7 +48,7 @@ def dean_nominations():
 @school_scoped
 @role_minimum('dean')
 def handle_nomination(nom_id, action):
-    success, message = process_nomination(nom_id, action, g.school_id, g.current_user.id)
+    success, message = process_nomination(nom_id, action, g.institution_id, g.current_user.id)
     if not success and message == "Unauthorized":
         abort(403)
     flash(message, 'success' if success else 'info')

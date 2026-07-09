@@ -24,7 +24,7 @@ class Login(MethodView):
             identity=user.id,
             additional_claims={
                 'role': user.role,
-                'school_id': user.school_id,
+                'institution_id': user.institution_id,
             }
         )
 

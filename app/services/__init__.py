@@ -23,7 +23,7 @@ from .academics_service import (
     update_meet_link,
 )
 from .setup_service import (
-    is_setup_complete, has_admin_users, has_any_schools,
+    is_setup_complete, has_admin_users, has_any_institutions,
     create_admin_account, create_institution, save_theme_settings, mark_setup_complete,
 )
 from .import_service import (
@@ -32,7 +32,7 @@ from .import_service import (
     get_recent_batches, IMPORT_TYPES, COLUMN_MAPS, IMPORT_DEPENDENCY_ORDER,
 )
 from .analytics_service import (
-    get_school_stats,
+    get_institution_stats,
     get_at_risk_students,
     get_teacher_ratings_data,
     get_pending_nominations,

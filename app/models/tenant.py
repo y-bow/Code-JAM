@@ -1,1 +1,1 @@
-from ..core.tenant.models import School, Institution, Department, Section, AcademicYear
+from ..core.tenant.models import School, Institution, AcademicUnit, Department, Program, Section, AcademicYear

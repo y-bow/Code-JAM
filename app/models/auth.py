@@ -15,22 +15,22 @@ ROLE_HIERARCHY = {
 VALID_ROLES = {'student', 'class_rep', 'assistant_professor', 'professor', 'dean', 'admin', 'superadmin'}
 
 
-def generate_username(email, school_id=None):
+def generate_username(email, institution_id=None):
     prefix = email.split('@')[0].lower()
     prefix = re.sub(r'[^a-z0-9._-]', '', prefix)[:50]
     if not prefix:
         prefix = 'user'
     username = prefix
     query = User.query.filter_by(username=username)
-    if school_id:
-        query = query.filter_by(school_id=school_id)
+    if institution_id:
+        query = query.filter_by(institution_id=institution_id)
     suffix = 1
     while query.first() is not None:
         username = f'{prefix}{suffix}'
         suffix += 1
         query = User.query.filter_by(username=username)
-        if school_id:
-            query = query.filter_by(school_id=school_id)
+        if institution_id:
+            query = query.filter_by(institution_id=institution_id)
     return username
 
 
@@ -38,7 +38,7 @@ class User(db.Model):
     __tablename__ = 'users'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=True)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=True)
     username = db.Column(db.String(50), nullable=True)
     email = db.Column(db.String(120), nullable=False)
     password_hash = db.Column(db.String(128), nullable=False)
@@ -49,9 +49,9 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     __table_args__ = (
-        db.UniqueConstraint('school_id', 'email', name='uq_user_school_email'),
-        db.Index('ix_user_school', 'school_id'),
-        db.Index('ix_user_role', 'school_id', 'role'),
+        db.UniqueConstraint('institution_id', 'email', name='uq_user_institution_email'),
+        db.Index('ix_user_institution', 'institution_id'),
+        db.Index('ix_user_role', 'institution_id', 'role'),
         db.Index('ix_user_username', 'username'),
     )
 
@@ -63,7 +63,7 @@ class User(db.Model):
         return self.role_level >= ROLE_HIERARCHY.get(min_role, 999)
 
     def __repr__(self):
-        return f'<User {self.email} ({self.role}) @ School {self.school_id}>'
+        return f'<User {self.email} ({self.role}) @ Institution {self.institution_id}>'
 
 
 class Student(db.Model):

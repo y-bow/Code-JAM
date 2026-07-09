@@ -22,7 +22,7 @@ class TimetableMe(MethodView):
                 return []
             section_id = profile.section_id
         elif user.role == 'dean':
-            section_ids = [s.id for s in user.school.sections] if user.school else []
+            section_ids = [s.id for s in user.institution.sections] if user.institution else []
             entries = TimetableEntry.query.filter(
                 TimetableEntry.section_id.in_(section_ids)
             ).order_by(TimetableEntry.day, TimetableEntry.start_time).all()

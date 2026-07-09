@@ -1,6 +1,6 @@
 from datetime import datetime
 from ..models import (
-    db, Section, Course, TimetableEntry, Announcement, School
+    db, Section, Course, TimetableEntry, Announcement, Institution
 )
 
 
@@ -227,9 +227,9 @@ def get_common_free_slots(section_a_id, section_b_id):
     return free_slots_by_day
 
 
-def _create_announcement(school_id, section_id, user_id, category, title, body):
+def _create_announcement(institution_id, section_id, user_id, category, title, body):
     announcement = Announcement(
-        school_id=school_id,
+        institution_id=institution_id,
         section_id=section_id,
         teacher_id=user_id,
         category=category,
@@ -246,9 +246,9 @@ def _day_name(day_idx):
 
 
 def create_timetable_entry(section_id, day, start_time, end_time, subject,
-                            teacher, room, period, color, school_id, user_id):
+                            teacher, room, period, color, institution_id, user_id):
     section = Section.query.get_or_404(section_id)
-    if section.school_id != school_id:
+    if section.institution_id != institution_id:
         return None, "Invalid section"
 
     new_entry = TimetableEntry(
@@ -267,7 +267,7 @@ def create_timetable_entry(section_id, day, start_time, end_time, subject,
     db.session.commit()
 
     _create_announcement(
-        school_id, section_id, user_id, 'timetable',
+        institution_id, section_id, user_id, 'timetable',
         "New Class Added",
         f"New Class ({section.name}): {subject} added on {_day_name(day)} from {start_time} to {end_time} in {room} with {teacher}."
     )
@@ -277,9 +277,9 @@ def create_timetable_entry(section_id, day, start_time, end_time, subject,
 
 
 def update_timetable_entry(entry_id, new_subject, new_teacher, new_period,
-                            new_room, new_start, new_end, school_id, user_id):
+                            new_room, new_start, new_end, institution_id, user_id):
     entry = TimetableEntry.query.get_or_404(entry_id)
-    if school_id and entry.section.school_id != school_id:
+    if institution_id and entry.section.institution_id != institution_id:
         return None, "Unauthorized"
 
     old_subject = entry.title
@@ -296,17 +296,17 @@ def update_timetable_entry(entry_id, new_subject, new_teacher, new_period,
     if new_subject and new_subject != old_subject:
         entry.title = new_subject
         body = f"Timetable Update ({entry.section.name}): {day_name} {entry.start_time}-{entry.end_time} — '{old_subject}' has been changed to '{new_subject}'."
-        _create_announcement(school_id, entry.section_id, user_id, 'timetable', "Timetable Update", body)
+        _create_announcement(institution_id, entry.section_id, user_id, 'timetable', "Timetable Update", body)
 
     if new_room and new_room != old_room:
         entry.room = new_room
         body = f"Room Change ({entry.section.name}): {entry.title} on {day_name} {entry.start_time}-{entry.end_time} has moved from {old_room} to {new_room}."
-        _create_announcement(school_id, entry.section_id, user_id, 'timetable', "Room Change", body)
+        _create_announcement(institution_id, entry.section_id, user_id, 'timetable', "Room Change", body)
 
     if new_teacher and new_teacher != old_teacher:
         entry.teacher = new_teacher
         body = f"Teacher Change ({entry.section.name}): {entry.title} on {day_name} will now be taught by {new_teacher} instead of {old_teacher}."
-        _create_announcement(school_id, entry.section_id, user_id, 'timetable', "Teacher Change", body)
+        _create_announcement(institution_id, entry.section_id, user_id, 'timetable', "Teacher Change", body)
 
     entry.period = new_period
     db.session.commit()
@@ -314,39 +314,39 @@ def update_timetable_entry(entry_id, new_subject, new_teacher, new_period,
     return entry.section_id, None
 
 
-def cancel_timetable_entry(entry_id, school_id, user_id):
+def cancel_timetable_entry(entry_id, institution_id, user_id):
     entry = TimetableEntry.query.get_or_404(entry_id)
-    if entry.section.school_id != school_id:
+    if entry.section.institution_id != institution_id:
         return None, "Unauthorized"
 
     entry.status = 'cancelled'
     db.session.commit()
 
     body = f"Class Cancelled (Section {entry.section.name}): {entry.title} on {_day_name(entry.day)} ({entry.start_time}-{entry.end_time}) has been cancelled."
-    _create_announcement(school_id, entry.section_id, user_id, 'timetable', "Class Cancelled", body)
+    _create_announcement(institution_id, entry.section_id, user_id, 'timetable', "Class Cancelled", body)
     db.session.commit()
 
     return entry.section_id, None
 
 
-def restore_timetable_entry(entry_id, school_id, user_id):
+def restore_timetable_entry(entry_id, institution_id, user_id):
     entry = TimetableEntry.query.get_or_404(entry_id)
-    if entry.section.school_id != school_id:
+    if entry.section.institution_id != institution_id:
         return None, "Unauthorized"
 
     entry.status = 'active'
     db.session.commit()
 
     body = f"Class Restored (Section {entry.section.name}): {entry.title} on {_day_name(entry.day)} ({entry.start_time}-{entry.end_time}) is back on schedule."
-    _create_announcement(school_id, entry.section_id, user_id, 'timetable', "Class Restored", body)
+    _create_announcement(institution_id, entry.section_id, user_id, 'timetable', "Class Restored", body)
     db.session.commit()
 
     return entry.section_id, None
 
 
-def delete_timetable_entry(entry_id, school_id, user_id):
+def delete_timetable_entry(entry_id, institution_id, user_id):
     entry = TimetableEntry.query.get_or_404(entry_id)
-    if entry.section.school_id != school_id:
+    if entry.section.institution_id != institution_id:
         return None, "Unauthorized"
 
     section_id = entry.section_id
@@ -357,15 +357,15 @@ def delete_timetable_entry(entry_id, school_id, user_id):
     db.session.commit()
 
     body = f"Class Removed (Section {section_name}): {info} has been permanently removed from the timetable."
-    _create_announcement(school_id, section_id, user_id, 'timetable', "Class Removed", body)
+    _create_announcement(institution_id, section_id, user_id, 'timetable', "Class Removed", body)
     db.session.commit()
 
     return section_id, None
 
 
-def manage_add_entry(section_id, day, start_time, end_time, title, room, color, school_id):
+def manage_add_entry(section_id, day, start_time, end_time, title, room, color, institution_id):
     section = Section.query.get(section_id)
-    if not section or section.school_id != school_id:
+    if not section or section.institution_id != institution_id:
         return False, "Invalid section."
     new_entry = TimetableEntry(
         section_id=section_id,
@@ -381,9 +381,9 @@ def manage_add_entry(section_id, day, start_time, end_time, title, room, color, 
     return True, None
 
 
-def manage_delete_entry(entry_id, school_id):
+def manage_delete_entry(entry_id, institution_id):
     entry = TimetableEntry.query.get(entry_id)
-    if not entry or entry.section.school_id != school_id:
+    if not entry or entry.section.institution_id != institution_id:
         return False, "Invalid entry."
     db.session.delete(entry)
     db.session.commit()

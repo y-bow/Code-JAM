@@ -5,24 +5,24 @@ from ..models import (
 )
 
 
-def get_school_stats(school_id):
-    total_students = User.query.filter_by(school_id=school_id, role='student').count()
-    total_teachers = User.query.filter_by(school_id=school_id, role='teacher').count()
-    total_sections = Section.query.filter_by(school_id=school_id).count()
+def get_institution_stats(institution_id):
+    total_students = User.query.filter_by(institution_id=institution_id, role='student').count()
+    total_teachers = User.query.filter_by(institution_id=institution_id, role='teacher').count()
+    total_sections = Section.query.filter_by(institution_id=institution_id).count()
     total_courses = (
         Course.query
         .join(Section)
-        .filter(Section.school_id == school_id)
+        .filter(Section.institution_id == institution_id)
         .count()
     )
 
     avg_attendance_raw = db.session.query(db.func.avg(Attendance.status == 'present')).filter(
-        User.school_id == school_id, User.role == 'student'
+        User.institution_id == institution_id, User.role == 'student'
     ).join(User, Attendance.student_id == User.id).scalar()
     avg_attendance = round(float(avg_attendance_raw) * 100, 1) if avg_attendance_raw is not None else 0.0
 
     avg_cgpa_raw = db.session.query(db.func.avg(Student.cgpa)).join(User).filter(
-        User.school_id == school_id
+        User.institution_id == institution_id
     ).scalar()
     avg_cgpa = round(float(avg_cgpa_raw), 2) if avg_cgpa_raw is not None else 0.0
 
@@ -36,12 +36,12 @@ def get_school_stats(school_id):
     }
 
 
-def get_at_risk_students(school_id):
+def get_at_risk_students(institution_id):
     cgpa_threshold = get_setting('early_warning.cgpa_threshold', 1.5)
     at_risk_students = []
 
     low_cgpa_students = Student.query.join(User).filter(
-        User.school_id == school_id,
+        User.institution_id == institution_id,
         Student.cgpa < cgpa_threshold
     ).all()
 
@@ -55,8 +55,8 @@ def get_at_risk_students(school_id):
     return at_risk_students
 
 
-def get_teacher_ratings_data(school_id):
-    teachers = User.query.filter_by(school_id=school_id, role='teacher').all()
+def get_teacher_ratings_data(institution_id):
+    teachers = User.query.filter_by(institution_id=institution_id, role='teacher').all()
     teacher_stats = []
     for t in teachers:
         avg_rating = db.session.query(db.func.avg(TeacherRating.rating))\
@@ -73,16 +73,16 @@ def get_teacher_ratings_data(school_id):
     return teacher_stats
 
 
-def get_pending_nominations(school_id):
+def get_pending_nominations(institution_id):
     return ClassRepNomination.query.join(Section).filter(
-        Section.school_id == school_id,
+        Section.institution_id == institution_id,
         ClassRepNomination.status == 'pending'
     ).all()
 
 
-def process_nomination(nom_id, action, school_id, user_id):
+def process_nomination(nom_id, action, institution_id, user_id):
     nom = ClassRepNomination.query.get_or_404(nom_id)
-    if nom.section.school_id != school_id:
+    if nom.section.institution_id != institution_id:
         return False, "Unauthorized"
 
     if action == 'approve':

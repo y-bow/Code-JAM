@@ -51,5 +51,5 @@ def get_redirect_target(user):
     elif role == 'admin':
         return 'admin.admin_dashboard'
     elif role == 'dean':
-        return 'analytics.school_analytics'
+        return 'analytics.institution_analytics'
     return 'index'

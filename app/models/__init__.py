@@ -1,5 +1,5 @@
 from ._ext import db, bcrypt, gen_uuid
-from .tenant import School, Institution, Department, Section, AcademicYear
+from .tenant import School, Institution, AcademicUnit, Department, Program, Section, AcademicYear
 from .auth import ROLE_HIERARCHY, VALID_ROLES, User, Student, Teacher
 from .academics import Course, Enrollment
 from .assessment import Assignment, Submission, Quiz, QuizAttempt, Grade, Streak

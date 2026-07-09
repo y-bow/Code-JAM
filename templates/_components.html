@@ -86,19 +86,19 @@
 </div>
 {% endmacro %}
 
-{% macro form_group(label, name, type='text', value='', placeholder='', hint='', error='', required=False, class='') %}
+{% macro form_group(label, name, type='text', value='', placeholder='', hint='', error='', required=False, class='', rows='', attrs='') %}
 <div class="form-group {{ class }}">
   {% if label %}
   <label class="form-label" for="{{ name }}">{{ label }}{% if required %}<span style="color:var(--danger)"> *</span>{% endif %}</label>
   {% endif %}
   {% if type == 'textarea' %}
-  <textarea class="form-textarea" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %}>{{ value }}</textarea>
+  <textarea class="form-textarea" id="{{ name }}" name="{{ name }}" placeholder="{{ placeholder }}" {% if rows %}rows="{{ rows }}"{% endif %} {% if required %}required{% endif %} {{ attrs|safe }}>{{ value }}</textarea>
   {% elif type == 'select' %}
-  <select class="form-select" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %}>
+  <select class="form-select" id="{{ name }}" name="{{ name }}" {% if required %}required{% endif %} {{ attrs|safe }}>
     {{ caller() }}
   </select>
   {% else %}
-  <input class="form-input" type="{{ type }}" id="{{ name }}" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %}>
+  <input class="form-input" type="{{ type }}" id="{{ name }}" name="{{ name }}" value="{{ value }}" placeholder="{{ placeholder }}" {% if required %}required{% endif %} {{ attrs|safe }}>
   {% endif %}
   {% if hint %}<span class="form-hint">{{ hint }}</span>{% endif %}
   {% if error %}<span class="form-error">{{ error }}</span>{% endif %}

@@ -63,7 +63,7 @@
 
                 {% if item.status == 'open' %}
                 <form action="{{ url_for('lost_found.resolve', item_id=item.id) }}" method="POST" onsubmit="return confirm('Are you sure you want to resolve this item? It will be marked as returned and removed from the public gallery.');">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:var(--space-1);">
                         <span class="material-symbols-rounded" style="font-size:16px;">check_circle</span>
                         {% if item.report_type == 'lost' %}Mark as Found{% else %}Mark as Returned{% endif %}

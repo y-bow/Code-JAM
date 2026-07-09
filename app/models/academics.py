@@ -31,8 +31,8 @@ class Course(db.Model):
     )
 
     @property
-    def school_id(self):
-        return self.section.school_id if self.section else None
+    def institution_id(self):
+        return self.section.institution_id if self.section else None
 
 
 class Enrollment(db.Model):

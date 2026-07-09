@@ -6,7 +6,7 @@ class LostFoundItem(db.Model):
     __tablename__ = 'lost_found_items'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=False)
     reporter_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
 
     report_type = db.Column(db.String(10), nullable=False)

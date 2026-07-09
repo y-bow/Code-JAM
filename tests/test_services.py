@@ -1,4 +1,4 @@
-from app.models import School, User, Student, Section, Course, Enrollment, TimetableEntry
+from app.models import Institution, User, Student, Section, Course, Enrollment, TimetableEntry
 
 
 class TestFormatTime12hr:
@@ -170,12 +170,12 @@ class TestProcessNomination:
             assert success is True
 
 
-class TestSchoolStats:
-    def test_get_school_stats_returns_dict(self, app, db_session):
-        from app.services import get_school_stats
+class TestInstitutionStats:
+    def test_get_institution_stats_returns_dict(self, app, db_session):
+        from app.services import get_institution_stats
         with app.app_context():
-            school = School.query.first()
-            stats = get_school_stats(school.id)
+            school = Institution.query.first()
+            stats = get_institution_stats(school.id)
             assert isinstance(stats, dict)
             assert 'total_students' in stats
             assert 'total_teachers' in stats

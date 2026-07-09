@@ -18,19 +18,18 @@ def tenant_scoped(f):
             return redirect(url_for('auth.login'))
 
         if user.role not in ('admin', 'superadmin'):
-            if not user.school or not user.school.is_active:
+            if not user.institution or not user.institution.is_active:
                 session.clear()
                 flash('Your institution is currently inactive.', 'danger')
                 return redirect(url_for('auth.login'))
 
         g.current_user = user
-        g.institution_id = user.school_id
-        g.school_id = user.school_id
+        g.institution_id = user.institution_id
 
         if user.role == 'admin':
             g.recent_announcements = Announcement.query.order_by(Announcement.posted_at.desc()).limit(3).all()
         else:
-            g.recent_announcements = Announcement.query.filter_by(school_id=user.school_id).order_by(Announcement.posted_at.desc()).limit(3).all()
+            g.recent_announcements = Announcement.query.filter_by(institution_id=user.institution_id).order_by(Announcement.posted_at.desc()).limit(3).all()
 
         return f(*args, **kwargs)
     return decorated_function
@@ -56,16 +55,16 @@ def role_minimum(min_role):
     return decorator
 
 
-def owns_resource(resource_obj, school_id_attr='school_id'):
+def owns_resource(resource_obj, institution_id_attr='institution_id'):
     if resource_obj is None:
         abort(404)
 
-    obj_school_id = getattr(resource_obj, school_id_attr, None)
-    if obj_school_id is None:
+    obj_institution_id = getattr(resource_obj, institution_id_attr, None)
+    if obj_institution_id is None:
         abort(404)
 
     if g.current_user.role == 'admin':
         return
 
-    if obj_school_id != g.school_id:
+    if obj_institution_id != g.institution_id:
         abort(403)

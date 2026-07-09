@@ -49,7 +49,7 @@
                     <span class="material-symbols-rounded" style="font-size:16px;">edit</span> Edit
                 </button>
                 <form action="{{ url_for('clubs.delete_event', event_id=event.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this event? This action cannot be undone.');">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                     <button type="submit" class="btn btn-sm" style="color:var(--danger);border:1px solid var(--border-primary);background:var(--bg-secondary);display:flex;align-items:center;gap:var(--space-1);">
                         <span class="material-symbols-rounded" style="font-size:16px;">delete</span> Delete
                     </button>
@@ -72,7 +72,7 @@
         </div>
         <div class="modal-body">
             <form action="{{ url_for('clubs.admin_events') }}" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 {{ form_group('Event Title *', 'title', required=true) }}
                 {{ form_group('Hosting College / Organization *', 'hosting_college', required=true) }}
                 <div class="grid-2">
@@ -99,7 +99,7 @@
         </div>
         <div class="modal-body">
             <form id="editEventForm" method="POST">
-    {{ csrf_token() }}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 {{ form_group('Event Title *', 'title', required=true, class='edit_title') }}
                 {{ form_group('Hosting College *', 'hosting_college', required=true, class='edit_college') }}
                 <div class="grid-2">

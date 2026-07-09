@@ -3,12 +3,12 @@ import logging
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from ..services.setup_service import (
-    is_setup_complete, has_admin_users, has_any_schools,
+    is_setup_complete, has_admin_users, has_any_institutions,
     create_admin_account, create_institution, create_academic_year,
     save_theme_settings, mark_setup_complete,
 )
 from ..services import import_service
-from ..models import db, School
+from ..models import db, Institution
 
 logger = logging.getLogger(__name__)
 
@@ -92,8 +92,8 @@ def wizard():
             return redirect(url_for('setup.wizard', step='academic'))
 
         elif step == 'academic':
-            school = School.query.first()
-            if not school:
+            institution = Institution.query.first()
+            if not institution:
                 return redirect(url_for('setup.wizard', step='institution'))
 
             errors = []
@@ -113,7 +113,7 @@ def wizard():
                                        step_labels=STEP_LABELS, errors=errors,
                                        form_data=request.form)
 
-            year, err = create_academic_year(year_name, start_date, end_date, school.id)
+            year, err = create_academic_year(year_name, start_date, end_date, institution.id)
             if err:
                 return render_template('setup_wizard.html', step=step, steps=STEPS,
                                        step_labels=STEP_LABELS, errors=[err],
@@ -122,8 +122,8 @@ def wizard():
             return redirect(url_for('setup.wizard', step='import'))
 
         elif step == 'import':
-            school = School.query.first()
-            if not school:
+            institution = Institution.query.first()
+            if not institution:
                 return redirect(url_for('setup.wizard', step='institution'))
 
             conflict_strategy = request.form.get('conflict_strategy', 'skip')
@@ -157,7 +157,7 @@ def wizard():
 
             if files_data:
                 batch_results = import_service.batch_import(
-                    files_data, school.id, session.get('user_id') or 0, conflict_strategy,
+                    files_data, institution.id, session.get('user_id') or 0, conflict_strategy,
                 )
                 results.extend(batch_results)
 
@@ -178,13 +178,13 @@ def wizard():
     initial_data = {}
     if step == 'institution' and not has_admin_users():
         return redirect(url_for('setup.wizard', step='admin'))
-    if step == 'theme' and not has_any_schools():
+    if step == 'theme' and not has_any_institutions():
         return redirect(url_for('setup.wizard', step='institution'))
-    if step == 'academic' and not has_any_schools():
+    if step == 'academic' and not has_any_institutions():
         return redirect(url_for('setup.wizard', step='institution'))
-    if step == 'import' and not has_any_schools():
+    if step == 'import' and not has_any_institutions():
         return redirect(url_for('setup.wizard', step='institution'))
-    if step == 'complete' and not has_any_schools():
+    if step == 'complete' and not has_any_institutions():
         return redirect(url_for('setup.wizard', step='institution'))
 
     return render_template('setup_wizard.html', step=step, steps=STEPS,

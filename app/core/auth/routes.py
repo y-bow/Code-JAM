@@ -52,14 +52,14 @@ def login():
                 flash('Your account has been deactivated.', 'danger')
                 generate_captcha()
                 return render_template('login.html')
-            if user.school and not user.school.is_active:
+            if user.institution and not user.institution.is_active:
                 flash('Your institution is currently inactive.', 'danger')
                 generate_captcha()
                 return render_template('login.html')
             session['user_id'] = user.id
             session['role'] = user.role
             session['name'] = user.name
-            session['school_id'] = user.school_id
+            session['institution_id'] = user.institution_id
             return redirect(url_for(get_redirect_target(user)))
         flash('Invalid email or password', 'danger')
         generate_captcha()

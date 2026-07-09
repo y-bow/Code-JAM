@@ -6,7 +6,7 @@ class ImportBatch(db.Model):
     __tablename__ = 'import_batches'
 
     id = db.Column(db.String(36), primary_key=True, default=gen_uuid)
-    school_id = db.Column(db.String(36), db.ForeignKey('schools.id'), nullable=False)
+    institution_id = db.Column(db.String(36), db.ForeignKey('institutions.id'), nullable=False)
     import_type = db.Column(db.String(50), nullable=False)
     file_name = db.Column(db.String(255))
     total_rows = db.Column(db.Integer, default=0)
@@ -21,5 +21,5 @@ class ImportBatch(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     reverted_at = db.Column(db.DateTime, nullable=True)
 
-    school = db.relationship('School', foreign_keys=[school_id])
+    institution = db.relationship('Institution', foreign_keys=[institution_id])
     creator = db.relationship('User', foreign_keys=[created_by])

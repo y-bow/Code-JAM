@@ -70,7 +70,7 @@ def teacher_dashboard():
 @academics_bp.route('/my-courses')
 @school_scoped
 def my_courses():
-    courses = get_user_courses(g.current_user, g.school_id)
+    courses = get_user_courses(g.current_user, g.institution_id)
     return render_template('courses.html', courses=courses)
 
 

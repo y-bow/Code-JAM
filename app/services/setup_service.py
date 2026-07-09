@@ -1,4 +1,4 @@
-from ..models import db, User, School, Department, Section, AcademicYear, SiteSetting, get_setting, set_setting
+from ..models import db, User, Institution, Department, Section, AcademicYear, SiteSetting, get_setting, set_setting
 from ..models._ext import bcrypt
 from ..models.auth import generate_username
 
@@ -14,8 +14,8 @@ def has_admin_users():
     return User.query.filter_by(role='admin').count() > 0
 
 
-def has_any_schools():
-    return School.query.count() > 0
+def has_any_institutions():
+    return Institution.query.count() > 0
 
 
 def create_admin_account(name, email, password):
@@ -40,14 +40,14 @@ def create_admin_account(name, email, password):
 
 
 def create_institution(name, code):
-    existing = School.query.first()
+    existing = Institution.query.first()
     if existing:
         return existing, None
 
-    school = School(name=name.strip(), code=code.strip().upper())
-    db.session.add(school)
+    institution = Institution(name=name.strip(), code=code.strip().upper())
+    db.session.add(institution)
     db.session.commit()
-    return school, None
+    return institution, None
 
 
 def create_academic_year(name, start_date, end_date, institution_id):
@@ -74,18 +74,18 @@ def create_academic_year(name, start_date, end_date, institution_id):
     return year, None
 
 
-def create_department(name, code, school_id):
-    existing = Department.query.filter_by(school_id=school_id, code=code).first()
+def create_department(name, code, institution_id):
+    existing = Department.query.filter_by(institution_id=institution_id, code=code).first()
     if existing:
         return existing, None
-    dept = Department(school_id=school_id, name=name.strip(), code=code.strip().upper())
+    dept = Department(institution_id=institution_id, name=name.strip(), code=code.strip().upper())
     db.session.add(dept)
     db.session.commit()
     return dept, None
 
 
-def create_section(name, code, department_id, batch_year, school_id):
-    existing = Section.query.filter_by(school_id=school_id, code=code).first()
+def create_section(name, code, department_id, batch_year, institution_id, program_id=None):
+    existing = Section.query.filter_by(institution_id=institution_id, code=code).first()
     if existing:
         return existing, None
     try:
@@ -93,7 +93,8 @@ def create_section(name, code, department_id, batch_year, school_id):
     except (ValueError, TypeError):
         by = datetime.utcnow().year
     section = Section(
-        school_id=school_id,
+        institution_id=institution_id,
+        program_id=program_id or department_id,
         department_id=department_id,
         name=name.strip(),
         code=code.strip().upper(),

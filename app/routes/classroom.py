@@ -15,9 +15,9 @@ classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom',
 def view_classroom(course_id):
     user = g.current_user
 
-    # Load course and verify it belongs to this school
+    # Load course and verify it belongs to this institution
     course = Course.query.get_or_404(course_id)
-    owns_resource(course.section, 'school_id')
+    owns_resource(course.section, 'institution_id')
 
     # Fetch related data
     assignments = course.assignments.order_by(Assignment.due_date.desc()).all()
@@ -150,7 +150,7 @@ def assign_assistant_professor(course_id):
         abort(403)
     
     email = request.form.get('email')
-    assistant = User.query.filter_by(school_id=g.school_id, email=email, role='professor').first()
+    assistant = User.query.filter_by(institution_id=g.institution_id, email=email, role='professor').first()
     
     if not assistant:
         flash('Professor account not found with that email.', 'danger')
@@ -264,7 +264,7 @@ def post_announcement(course_id):
         abort(403)
         
     new_ann = Announcement(
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         course_id=course_id,
         section_id=course.section_id,
         teacher_id=user.id,

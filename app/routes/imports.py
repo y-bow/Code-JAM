@@ -17,7 +17,7 @@ import_bp = Blueprint('imports', __name__, url_prefix='/imports',
 @school_scoped
 @role_minimum('admin')
 def index():
-    batches = get_recent_batches(g.school_id)
+    batches = get_recent_batches(g.institution_id)
     return render_template('import_upload.html',
                            import_types=IMPORT_TYPES,
                            batches=batches)
@@ -54,7 +54,7 @@ def preview():
         )
 
     conflict_strategy = request.form.get('conflict_strategy', 'skip')
-    validated, error = validate_import(parsed, import_type, g.school_id, conflict_strategy)
+    validated, error = validate_import(parsed, import_type, g.institution_id, conflict_strategy)
     if error:
         flash(error, 'danger')
         return redirect(url_for('imports.index'))
@@ -104,7 +104,7 @@ def confirm():
     )
 
     batch, error = execute_import(
-        validated, import_type, g.school_id, g.current_user.id, conflict_strategy,
+        validated, import_type, g.institution_id, g.current_user.id, conflict_strategy,
     )
     if error:
         flash(error, 'danger')

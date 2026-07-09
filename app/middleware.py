@@ -1,5 +1,5 @@
 from app.core.tenant.middleware import (
-    tenant_scoped as school_scoped,
+    tenant_scoped,
     role_minimum,
     owns_resource,
 )
@@ -10,5 +10,7 @@ from app.core.tenant.middleware import (
     owns_resource as owns_resource_original,
 )
 
-# Convenience aliases
-__all__ = ['school_scoped', 'role_minimum', 'owns_resource']
+school_scoped = tenant_scoped
+institution_scoped = tenant_scoped
+
+__all__ = ['school_scoped', 'institution_scoped', 'tenant_scoped', 'role_minimum', 'owns_resource']
