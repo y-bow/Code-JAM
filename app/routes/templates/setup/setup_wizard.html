@@ -23,7 +23,7 @@
             border: 1px solid var(--border-primary);
             border-radius: var(--radius-md);
             padding: var(--space-8);
-            max-width: 560px;
+            max-width: 640px;
             width: 100%;
             box-shadow: var(--shadow-md);
         }
@@ -87,6 +87,7 @@
             width: 100%;
         }
         .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
         .btn-secondary {
             background: transparent; color: var(--text-primary);
             border: 1.5px solid var(--border-primary);
@@ -94,6 +95,12 @@
             border-radius: var(--radius-md); font-size: 0.9rem; font-weight: 600; cursor: pointer;
             text-decoration: none; display: inline-block; text-align: center;
         }
+        .btn-success {
+            background: var(--success); color: white; border: none;
+            padding: var(--space-2) var(--space-5);
+            border-radius: var(--radius-md); font-size: 1rem; font-weight: 600; cursor: pointer;
+        }
+        .btn-success:hover { opacity: 0.9; }
         .error-box {
             background: #ffebe9;
             border: 1px solid var(--danger); border-radius: var(--radius-md);
@@ -125,6 +132,86 @@
         .summary-item:last-child { border-bottom: none; }
         .summary-label { color: var(--text-secondary); }
         .summary-value { font-weight: 600; color: var(--text-primary); }
+
+        .drop-zone {
+            border: 2px dashed var(--border-primary);
+            border-radius: var(--radius-md);
+            padding: var(--space-5);
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .drop-zone.dragover {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+        .drop-zone.has-files {
+            border-style: solid;
+            border-color: var(--success);
+            padding: var(--space-3);
+        }
+        .file-list { margin-top: var(--space-3); }
+        .file-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: var(--space-2) var(--space-3);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-1);
+            font-size: 0.9rem;
+        }
+        .file-item .file-status {
+            font-size: 0.85rem;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+        .file-item .file-status.pending { background: #fff8c5; color: var(--yellow-500); }
+        .file-item .file-status.valid { background: #dafbe1; color: var(--green-600); }
+        .file-item .file-status.error { background: #ffebe9; color: var(--red-600); }
+        .file-item .file-type-badge {
+            font-size: 0.75rem;
+            background: var(--bg-tertiary);
+            padding: 1px 6px;
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+        }
+        .strategy-selector {
+            display: flex; gap: var(--space-2); margin-bottom: var(--space-4);
+        }
+        .strategy-option {
+            flex: 1;
+            padding: var(--space-2) var(--space-2);
+            border: 1.5px solid var(--border-primary);
+            border-radius: var(--radius-md);
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .strategy-option.selected {
+            border-color: var(--primary);
+            background: var(--primary-bg);
+        }
+        .strategy-option .strategy-icon { font-size: 1.5rem; display: block; margin-bottom: 4px; }
+        .strategy-option .strategy-label { font-weight: 600; display: block; }
+        .strategy-option .strategy-desc { font-size: 0.75rem; color: var(--text-tertiary); display: block; }
+        .result-box {
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-sm);
+            margin-bottom: var(--space-1);
+            font-size: 0.9rem;
+        }
+        .result-box.success { background: #dafbe1; border: 1px solid var(--success); color: var(--green-600); }
+        .result-box.warning { background: #fff8c5; border: 1px solid var(--warning); color: var(--yellow-500); }
+        .result-box.error { background: #ffebe9; border: 1px solid var(--danger); color: var(--red-600); }
+        .progress-bar {
+            height: 4px; background: var(--bg-tertiary); border-radius: 2px;
+            margin-top: var(--space-2); overflow: hidden;
+        }
+        .progress-bar .bar {
+            height: 100%; background: var(--primary); border-radius: 2px;
+            transition: width 0.3s;
+        }
+        .hidden { display: none; }
     </style>
 </head>
 <body>
@@ -163,7 +250,7 @@
         </div>
         {% endif %}
 
-        <form method="POST" action="{{ url_for('setup.wizard', step=step) }}" {% if step == 'import' %}enctype="multipart/form-data"{% endif %}>
+        <form method="POST" action="{{ url_for('setup.wizard', step=step) }}" {% if step == 'import' %}enctype="multipart/form-data" id="import-form"{% endif %}>
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             {% if step == 'admin' %}
@@ -232,7 +319,6 @@
 
             {% elif step == 'academic' %}
             <h2 style="margin-bottom:var(--space-4);font-size:1.25rem;">Academic Configuration</h2>
-
             <div class="form-group">
                 <label>Academic Year Name</label>
                 <input type="text" name="year_name" value="{{ form_data.get('year_name', '') }}" placeholder="e.g. 2026-2027" required>
@@ -247,59 +333,67 @@
                     <input type="date" name="end_date" value="{{ form_data.get('end_date', '') }}" required>
                 </div>
             </div>
-
-            <h3 style="margin:var(--space-5) 0 var(--space-3);font-size:1rem;">Departments</h3>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Add at least one department (e.g., Computer Science, Mathematics).</p>
-            <div id="departments-container">
-                <div class="form-row" style="margin-bottom:var(--space-1);">
-                    <div class="form-group" style="flex:1;">
-                        <input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                    <div class="form-group" style="flex:0 0 120px;">
-                        <input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                </div>
-            </div>
-            <button type="button" onclick="addDepartment()" style="background:none;border:1px dashed var(--primary);color:var(--primary);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;margin-bottom:var(--space-4);font-family:inherit;">+ Add Department</button>
-
-            <h3 style="margin:var(--space-5) 0 var(--space-3);font-size:1rem;">Sections</h3>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Add sections (e.g., CS-A, CS-B) for each department.</p>
-            <div id="sections-container">
-                <div class="form-row" style="margin-bottom:var(--space-1);">
-                    <div class="form-group" style="flex:1;">
-                        <input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                    <div class="form-group" style="flex:0 0 100px;">
-                        <input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                    <div class="form-group" style="flex:0 0 120px;">
-                        <input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                    <div class="form-group" style="flex:0 0 100px;">
-                        <input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;">
-                    </div>
-                </div>
-            </div>
-            <button type="button" onclick="addSection()" style="background:none;border:1px dashed var(--primary);color:var(--primary);padding:var(--space-1) var(--space-3);border-radius:var(--radius-sm);cursor:pointer;font-size:0.85rem;margin-bottom:var(--space-4);font-family:inherit;">+ Add Section</button>
-
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin:var(--space-3) 0;">
+                You will import departments, sections, courses, and all other data in the next step.
+            </p>
             <input type="hidden" name="action" value="next">
             <button type="submit" class="btn-primary">Next: Data Import</button>
 
             {% elif step == 'import' %}
-            <h2 style="margin-bottom:var(--space-1);font-size:1.25rem;">Import Data</h2>
-            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-4);">
-                Upload CSV files to populate your campus system. Supported types:
-                students, faculty, courses, timetable, enrollments, departments, sections, clubs, attendance, grades.
+            <h2 style="margin-bottom:var(--space-1);font-size:1.25rem;">Data Import</h2>
+            <p style="font-size:0.85rem;color:var(--text-secondary);margin-bottom:var(--space-3);">
+                Upload your CSV files. Hive will detect the type from the filename or column headers
+                and process them in dependency order automatically.
             </p>
+
+            <div class="form-group">
+                <label>Conflict Strategy</label>
+                <p style="font-size:0.8rem;color:var(--text-tertiary);margin-bottom:var(--space-2);">
+                    What should happen when a record already exists?
+                </p>
+                <div class="strategy-selector">
+                    <label class="strategy-option selected" onclick="selectStrategy(this, 'skip')">
+                        <span class="strategy-icon material-symbols-rounded">skip_next</span>
+                        <span class="strategy-label">Skip</span>
+                        <span class="strategy-desc">Keep existing</span>
+                    </label>
+                    <label class="strategy-option" onclick="selectStrategy(this, 'update')">
+                        <span class="strategy-icon material-symbols-rounded">sync</span>
+                        <span class="strategy-label">Update</span>
+                        <span class="strategy-desc">Overwrite fields</span>
+                    </label>
+                    <label class="strategy-option" onclick="selectStrategy(this, 'replace')">
+                        <span class="strategy-icon material-symbols-rounded">replay</span>
+                        <span class="strategy-label">Replace</span>
+                        <span class="strategy-desc">Delete &amp; recreate</span>
+                    </label>
+                </div>
+                <input type="hidden" name="conflict_strategy" id="conflict_strategy" value="skip">
+            </div>
+
+            <div class="form-group">
+                <label>Upload Files</label>
+                <div class="drop-zone" id="drop-zone" onclick="document.getElementById('file-input').click()">
+                    <span class="material-symbols-rounded" style="font-size:2.5rem;color:var(--text-tertiary);margin-bottom:var(--space-1);">upload_file</span>
+                    <p style="font-size:0.9rem;color:var(--text-secondary);">Drag &amp; drop CSV files here, or click to browse</p>
+                    <p style="font-size:0.8rem;color:var(--text-tertiary);margin-top:var(--space-1);">
+                        Supported: departments.csv, sections.csv, faculty.csv, courses.csv, students.csv, ...
+                    </p>
+                    <input type="file" id="file-input" name="import_files" accept=".csv,.tsv,.xls,.xlsx" multiple style="display:none;">
+                </div>
+                <div id="file-list" class="file-list"></div>
+            </div>
 
             {% if import_results %}
             <div style="margin-bottom:var(--space-4);">
+                <h3 style="font-size:1rem;margin-bottom:var(--space-2);">Import Results</h3>
                 {% for r in import_results %}
-                <div style="padding:var(--space-2);border-radius:var(--radius-sm);margin-bottom:var(--space-1);font-size:0.9rem;
-                    {% if r.status == 'success' %}background:#dafbe1;border:1px solid var(--success);color:var(--green-600);
-                    {% elif r.status == 'warning' %}background:#fff8c5;border:1px solid var(--warning);color:var(--yellow-500);
-                    {% else %}background:#ffebe9;border:1px solid var(--danger);color:var(--red-600);{% endif %}">
-                    <strong>{{ r.file }}</strong>: {{ r.message }}
+                <div class="result-box {{ r.status }}">
+                    <strong>{{ r.file }}</strong>
+                    {% if r.import_type %}
+                    <span class="file-type-badge">{{ r.import_type }}</span>
+                    {% endif %}
+                    : {{ r.message }}
                     {% if r.details %}
                     <ul style="margin:var(--space-1) 0 0 var(--space-4);font-size:0.85rem;">
                         {% for d in r.details %}<li>{{ d }}</li>{% endfor %}
@@ -310,17 +404,30 @@
             </div>
             {% endif %}
 
-            <div class="form-group" style="border:2px dashed var(--border-primary);border-radius:var(--radius-md);padding:var(--space-5);text-align:center;">
-                <span class="material-symbols-rounded" style="font-size:2.5rem;color:var(--text-tertiary);margin-bottom:var(--space-1);">upload_file</span>
-                <p style="font-size:0.9rem;color:var(--text-secondary);margin-bottom:var(--space-2);">Select one or more CSV files</p>
-                <input type="file" name="import_files" accept=".csv,.tsv,.xls,.xlsx" multiple style="margin:0 auto;">
+            <div id="progress-area" class="hidden" style="margin-bottom:var(--space-4);">
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;">
+                    <span id="progress-label">Processing...</span>
+                    <span id="progress-count">0/0</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="bar" id="progress-bar" style="width:0%"></div>
+                </div>
             </div>
 
             <input type="hidden" name="action" value="next">
-            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-4);">
-                <button type="submit" class="btn-primary" style="flex:1;">Upload & Import</button>
+            <div style="display:flex;gap:var(--space-3);margin-top:var(--space-3);">
+                <button type="submit" class="btn-primary" id="import-btn" style="flex:1;" disabled>Upload &amp; Import</button>
                 <a href="{{ url_for('setup.wizard', step='complete') }}" class="btn-secondary" style="padding:var(--space-2) var(--space-4);">Skip</a>
             </div>
+
+            {% if all_imports_successful %}
+            <div style="margin-top:var(--space-4);">
+                <a href="{{ url_for('setup.wizard', step='complete') }}" class="btn-success" style="display:block;text-align:center;text-decoration:none;">
+                    <span class="material-symbols-rounded" style="vertical-align:middle;">check_circle</span>
+                    Continue to Complete Setup
+                </a>
+            </div>
+            {% endif %}
 
             {% elif step == 'complete' %}
             <div class="complete-icon">
@@ -357,22 +464,125 @@
             el.classList.add('selected');
             document.getElementById('theme_mode').value = mode;
         }
-        function addDepartment() {
-            var c = document.getElementById('departments-container');
-            var d = document.createElement('div');
-            d.className = 'form-row';
-            d.style.marginBottom = 'var(--space-1)';
-            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="dept_name[]" placeholder="Department name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="dept_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.2rem;">&times;</button>';
-            c.appendChild(d);
+        function selectStrategy(el, value) {
+            document.querySelectorAll('.strategy-option').forEach(s => s.classList.remove('selected'));
+            el.classList.add('selected');
+            document.getElementById('conflict_strategy').value = value;
         }
-        function addSection() {
-            var c = document.getElementById('sections-container');
-            var d = document.createElement('div');
-            d.className = 'form-row';
-            d.style.marginBottom = 'var(--space-1)';
-            d.innerHTML = '<div class="form-group" style="flex:1;"><input type="text" name="sec_name[]" placeholder="Section name" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_code[]" placeholder="Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 120px;"><input type="text" name="sec_dept_code[]" placeholder="Dept Code" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><div class="form-group" style="flex:0 0 100px;"><input type="text" name="sec_batch_year[]" placeholder="Year" style="width:100%;padding:var(--space-2);border:1.5px solid var(--border-primary);border-radius:var(--radius-md);font-size:0.9rem;background:var(--bg-primary);color:var(--text-primary);font-family:inherit;"></div><button type="button" onclick="this.parentElement.remove()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.2rem;">&times;</button>';
-            c.appendChild(d);
+
+        const KNOWN_TYPES = {
+            'departments': 'departments', 'department': 'departments',
+            'sections': 'sections', 'section': 'sections',
+            'students': 'students', 'student': 'students',
+            'faculty': 'faculty', 'teacher': 'faculty', 'teachers': 'faculty', 'professor': 'faculty', 'professors': 'faculty',
+            'courses': 'courses', 'course': 'courses', 'subjects': 'courses', 'subject': 'courses',
+            'timetable': 'timetable', 'schedule': 'timetable',
+            'enrollments': 'enrollments', 'enrollment': 'enrollments', 'registration': 'enrollments', 'registrations': 'enrollments',
+            'clubs': 'clubs', 'club': 'clubs',
+            'attendance': 'attendance',
+            'grades': 'grades', 'grade': 'grades', 'marks': 'grades', 'mark': 'grades',
+        };
+
+        function detectTypeFromName(filename) {
+            var base = filename.replace(/\.[^.]+$/, '').toLowerCase();
+            for (var key in KNOWN_TYPES) {
+                if (base === key || base.endsWith('_' + key) || base.endsWith('-' + key)) {
+                    return KNOWN_TYPES[key];
+                }
+            }
+            return null;
         }
+
+        var fileList = [];
+
+        function updateFileList() {
+            var container = document.getElementById('file-list');
+            var btn = document.getElementById('import-btn');
+            container.innerHTML = '';
+            if (fileList.length === 0) {
+                btn.disabled = true;
+                document.getElementById('drop-zone').classList.remove('has-files');
+                return;
+            }
+            document.getElementById('drop-zone').classList.add('has-files');
+            btn.disabled = false;
+            fileList.forEach(function(f, i) {
+                var type = detectTypeFromName(f.name) || 'detecting...';
+                var item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML =
+                    '<span><span class="material-symbols-rounded" style="font-size:1.1rem;vertical-align:middle;margin-right:4px;">description</span>' +
+                    f.name +
+                    ' <span class="file-type-badge">' + type + '</span></span>' +
+                    '<span><button type="button" onclick="removeFile(' + i + ')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;">&times;</button></span>';
+                container.appendChild(item);
+            });
+        }
+
+        function removeFile(index) {
+            fileList.splice(index, 1);
+            updateFileList();
+            rebuildFileInput();
+        }
+
+        function rebuildFileInput() {
+            var container = document.getElementById('file-list');
+            var existing = document.querySelectorAll('input[type="file"][name="import_files"]');
+            existing.forEach(function(el) { el.parentNode.removeChild(el); });
+            if (fileList.length === 0) return;
+            var dt = new DataTransfer();
+            fileList.forEach(function(f) { dt.items.add(f); });
+            var input = document.createElement('input');
+            input.type = 'file';
+            input.name = 'import_files';
+            input.multiple = true;
+            input.style.display = 'none';
+            input.files = dt.files;
+            document.getElementById('import-form').appendChild(input);
+
+            var originalInput = document.getElementById('file-input');
+            originalInput.files = dt.files;
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var dropZone = document.getElementById('drop-zone');
+            var fileInput = document.getElementById('file-input');
+
+            dropZone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                dropZone.classList.add('dragover');
+            });
+            dropZone.addEventListener('dragleave', function() {
+                dropZone.classList.remove('dragover');
+            });
+            dropZone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                dropZone.classList.remove('dragover');
+                for (var i = 0; i < e.dataTransfer.files.length; i++) {
+                    fileList.push(e.dataTransfer.files[i]);
+                }
+                updateFileList();
+                rebuildFileInput();
+            });
+            fileInput.addEventListener('change', function() {
+                for (var i = 0; i < fileInput.files.length; i++) {
+                    fileList.push(fileInput.files[i]);
+                }
+                updateFileList();
+                rebuildFileInput();
+            });
+
+            var form = document.getElementById('import-form');
+            form.addEventListener('submit', function() {
+                var btn = document.getElementById('import-btn');
+                btn.disabled = true;
+                btn.textContent = 'Importing...';
+                document.getElementById('progress-area').classList.remove('hidden');
+                document.getElementById('progress-label').textContent = 'Importing records...';
+                var progressBar = document.getElementById('progress-bar');
+                progressBar.style.width = '50%';
+            });
+        });
     </script>
 </body>
 </html>

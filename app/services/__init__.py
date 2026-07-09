@@ -27,8 +27,9 @@ from .setup_service import (
     create_admin_account, create_institution, save_theme_settings, mark_setup_complete,
 )
 from .import_service import (
-    parse_upload, detect_import_type, validate_import, execute_import,
-    get_recent_batches, IMPORT_TYPES, COLUMN_MAPS,
+    parse_upload, detect_import_type, detect_import_type_from_filename,
+    validate_import, execute_import, batch_import,
+    get_recent_batches, IMPORT_TYPES, COLUMN_MAPS, IMPORT_DEPENDENCY_ORDER,
 )
 from .analytics_service import (
     get_school_stats,

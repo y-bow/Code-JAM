@@ -1,12 +1,16 @@
+import json
+import logging
 from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, session, flash
 from ..services.setup_service import (
     is_setup_complete, has_admin_users, has_any_schools,
     create_admin_account, create_institution, create_academic_year,
-    create_department, create_section, save_theme_settings, mark_setup_complete,
+    save_theme_settings, mark_setup_complete,
 )
 from ..services import import_service
-from ..models import db, School, Department
+from ..models import db, School
+
+logger = logging.getLogger(__name__)
 
 setup_bp = Blueprint('setup', __name__, url_prefix='/setup',
                       template_folder='templates/setup')
@@ -115,22 +119,6 @@ def wizard():
                                        step_labels=STEP_LABELS, errors=[err],
                                        form_data=request.form)
 
-            dept_names = request.form.getlist('dept_name[]')
-            dept_codes = request.form.getlist('dept_code[]')
-            for dn, dc in zip(dept_names, dept_codes):
-                if dn.strip() and dc.strip():
-                    create_department(dn.strip(), dc.strip(), school.id)
-
-            sec_names = request.form.getlist('sec_name[]')
-            sec_codes = request.form.getlist('sec_code[]')
-            sec_depts = request.form.getlist('sec_dept_code[]')
-            sec_years = request.form.getlist('sec_batch_year[]')
-            for sn, sc, sd, sy in zip(sec_names, sec_codes, sec_depts, sec_years):
-                if sn.strip() and sc.strip() and sd.strip():
-                    dept = Department.query.filter_by(school_id=school.id, code=sd.strip()).first()
-                    if dept:
-                        create_section(sn.strip(), sc.strip(), dept.id, sy or str(datetime.utcnow().year), school.id)
-
             return redirect(url_for('setup.wizard', step='import'))
 
         elif step == 'import':
@@ -138,9 +126,10 @@ def wizard():
             if not school:
                 return redirect(url_for('setup.wizard', step='institution'))
 
+            conflict_strategy = request.form.get('conflict_strategy', 'skip')
             files = request.files.getlist('import_files')
+            files_data = []
             results = []
-            all_successful = True
 
             for f in files:
                 if not f or not f.filename:
@@ -148,33 +137,36 @@ def wizard():
                 parsed, err = import_service.parse_upload(f)
                 if err:
                     results.append({'file': f.filename, 'status': 'error', 'message': err})
-                    all_successful = False
                     continue
-                import_type = import_service.detect_import_type(parsed['columns'])
+
+                import_type = import_service.detect_import_type_from_filename(f.filename)
                 if not import_type:
-                    results.append({'file': f.filename, 'status': 'warning', 'message': 'Could not detect import type from columns. Skipped.'})
+                    import_type = import_service.detect_import_type(parsed['columns'])
+                if not import_type:
+                    results.append({
+                        'file': f.filename, 'status': 'warning',
+                        'message': 'Could not detect import type from filename or columns. Skipped.',
+                    })
                     continue
-                validated, err = import_service.validate_import(parsed, import_type, school.id)
-                if err:
-                    results.append({'file': f.filename, 'status': 'error', 'message': err})
-                    all_successful = False
-                    continue
-                invalid = [r for r in validated if not r['valid']]
-                if invalid:
-                    errors_list = [f'Row {r["index"]+1}: {"; ".join(r["errors"])}' for r in invalid]
-                    results.append({'file': f.filename, 'status': 'error', 'message': f'{len(invalid)} row(s) invalid', 'details': errors_list})
-                    all_successful = False
-                    continue
-                batch, err = import_service.execute_import(validated, import_type, school.id, session.get('user_id') or 0)
-                if err:
-                    results.append({'file': f.filename, 'status': 'error', 'message': err})
-                    all_successful = False
-                else:
-                    results.append({'file': f.filename, 'status': 'success', 'message': f'Imported {batch.success_count} {import_type}'})
+
+                files_data.append({
+                    'filename': f.filename,
+                    'import_type': import_type,
+                    'parsed': parsed,
+                })
+
+            if files_data:
+                batch_results = import_service.batch_import(
+                    files_data, school.id, session.get('user_id') or 0, conflict_strategy,
+                )
+                results.extend(batch_results)
+
+            all_successful = all(r['status'] == 'success' for r in results)
 
             return render_template('setup_wizard.html', step=step, steps=STEPS,
                                    step_labels=STEP_LABELS, errors=None,
                                    import_results=results,
+                                   all_imports_successful=all_successful,
                                    form_data=request.form)
 
         elif step == 'complete':
@@ -197,4 +189,5 @@ def wizard():
 
     return render_template('setup_wizard.html', step=step, steps=STEPS,
                            step_labels=STEP_LABELS, errors=None,
-                           import_results=None, form_data=initial_data)
+                           import_results=None, all_imports_successful=False,
+                           form_data=initial_data)

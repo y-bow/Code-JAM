@@ -1,10 +1,13 @@
 import json
+import logging
 from flask import Blueprint, render_template, request, redirect, url_for, g, flash
 from ..middleware import school_scoped, role_minimum
 from ..services.import_service import (
     parse_upload, detect_import_type, validate_import, execute_import,
     get_recent_batches, IMPORT_TYPES, COLUMN_MAPS,
 )
+
+logger = logging.getLogger(__name__)
 
 import_bp = Blueprint('imports', __name__, url_prefix='/imports',
                        template_folder='templates/imports')
@@ -44,10 +47,14 @@ def preview():
         return redirect(url_for('imports.index'))
 
     detected_type = detect_import_type(parsed['columns'])
-    if not detected_type or detected_type != import_type:
-        pass
+    if detected_type and detected_type != import_type:
+        logger.warning(
+            'Type mismatch: user selected=%s auto-detected=%s file=%s columns=%s',
+            import_type, detected_type, file.filename, parsed['columns'],
+        )
 
-    validated, error = validate_import(parsed, import_type, g.school_id)
+    conflict_strategy = request.form.get('conflict_strategy', 'skip')
+    validated, error = validate_import(parsed, import_type, g.school_id, conflict_strategy)
     if error:
         flash(error, 'danger')
         return redirect(url_for('imports.index'))
@@ -70,7 +77,8 @@ def preview():
                            error_count=error_count,
                            validated=validated,
                            file_content=file_content,
-                           column_spec=COLUMN_MAPS.get(import_type, {}))
+                           column_spec=COLUMN_MAPS.get(import_type, {}),
+                           conflict_strategy=conflict_strategy)
 
 
 @import_bp.route('/confirm', methods=['POST'])
@@ -79,7 +87,7 @@ def preview():
 def confirm():
     import_type = request.form.get('import_type', '')
     validated_json = request.form.get('validated_data', '')
-    file_content = request.form.get('file_content', '')
+    conflict_strategy = request.form.get('conflict_strategy', 'skip')
 
     if not validated_json:
         flash('No data to import.', 'danger')
@@ -87,16 +95,30 @@ def confirm():
 
     validated = json.loads(validated_json)
 
+    logger.info(
+        'confirm: import_type=%s valid_rows=%d invalid_rows=%d strategy=%s',
+        import_type,
+        sum(1 for v in validated if v['valid']),
+        sum(1 for v in validated if not v['valid']),
+        conflict_strategy,
+    )
+
     batch, error = execute_import(
-        validated, import_type, g.school_id, g.current_user.id
+        validated, import_type, g.school_id, g.current_user.id, conflict_strategy,
     )
     if error:
         flash(error, 'danger')
         return redirect(url_for('imports.index'))
 
+    parts = []
+    if batch.success_count:
+        parts.append(f'{batch.success_count} inserted')
+    if batch.skipped_count:
+        parts.append(f'{batch.skipped_count} skipped')
+    if batch.updated_count:
+        parts.append(f'{batch.updated_count} updated')
     flash(
-        f'Import completed: {batch.success_count} rows inserted, '
-        f'{batch.error_count} errors.',
-        'success' if batch.error_count == 0 else 'warning',
+        f'Import completed: {", ".join(parts)}.',
+        'success',
     )
     return redirect(url_for('imports.index'))
