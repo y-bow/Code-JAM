@@ -88,7 +88,7 @@ def grades():
 @academics_bp.route('/update_meet', methods=['POST'])
 @school_scoped
 @role_minimum('professor')
-def update_meet_link_route():
+def update_meet_link():
     course_id = request.form.get('course_id')
     meet_link = request.form.get('meet_link')
     if update_meet_link(course_id, meet_link, g.current_user.id):

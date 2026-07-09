@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, g, flash, redirect, url_for, abort
 from ..middleware import school_scoped, owns_resource, role_minimum
 from ..models import (
     db, User, Student, Course, Enrollment, Section, ProfessorAssistant, 
-    ClassRepNomination, Announcement, ROLE_HIERARCHY, Assignment, Attendance, Submission, TeacherRating
+    ClassRepNomination, Announcement, Assignment, Attendance, TeacherRating
 )
 from datetime import datetime
 

@@ -128,7 +128,6 @@ def create_app():
     from .routes.clubs import clubs_bp
     from .routes.imports import import_bp
     from .routes.setup import setup_bp
-    from .routes.plugins import plugin_admin_bp
 
     app.register_blueprint(academics_bp)
     app.register_blueprint(timetable_bp)
