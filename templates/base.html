@@ -147,13 +147,12 @@
                 </div>
               </a>
               {% endfor %}
+              {% else %}
+              <div class="empty-state" style="padding:var(--space-6) var(--space-4)">
+                <span class="material-symbols-rounded" style="font-size:28px;color:var(--text-tertiary);margin-bottom:var(--space-2)">notifications_none</span>
+                <p style="font-size:var(--font-size-sm);color:var(--text-tertiary)">All caught up!</p>
+              </div>
               {% endif %}
-            {% else %}
-            <div class="empty-state" style="padding:var(--space-6) var(--space-4)">
-              <span class="material-symbols-rounded" style="font-size:28px;color:var(--text-tertiary);margin-bottom:var(--space-2)">notifications_none</span>
-              <p style="font-size:var(--font-size-sm);color:var(--text-tertiary)">All caught up!</p>
-            </div>
-            {% endif %}
           </div>
         </div>
       </div>
