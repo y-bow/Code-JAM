@@ -22,24 +22,19 @@
             </tr>
           </thead>
           <tbody>
+            {% if grades %}
+            {% for g in grades %}
+            {% set pct = (g.grade * 100)|round %}
             <tr>
-              <td style="font-weight:500;">Introduction to Programming (CS101)</td>
-              <td style="font-weight:600;color:var(--success);">92% (A)</td>
-              <td>{{ badge('Excellent', 'success') }}</td>
-              <td>4</td>
+              <td style="font-weight:500;">{{ g.course.name }} ({{ g.course.code }})</td>
+              <td style="font-weight:600;">{{ "%.0f"|format(pct) }}% ({{ "%.2f"|format(g.grade) }})</td>
+              <td>{{ badge('Passed' if g.grade >= 4.0 else 'Needs Improvement', 'success' if g.grade >= 4.0 else 'danger') }}</td>
+              <td>{{ g.course.credits }}</td>
             </tr>
-            <tr>
-              <td style="font-weight:500;">Calculus I (MATH101)</td>
-              <td style="font-weight:600;color:var(--warning);">78% (C+)</td>
-              <td>{{ badge('Average', 'warning') }}</td>
-              <td>4</td>
-            </tr>
-            <tr>
-              <td style="font-weight:500;">Physics Mechanics (PHY101)</td>
-              <td style="font-weight:600;">85% (B)</td>
-              <td>{{ badge('Good', 'default') }}</td>
-              <td>3</td>
-            </tr>
+            {% endfor %}
+            {% else %}
+            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6);">No grades recorded yet.</td></tr>
+            {% endif %}
           </tbody>
         </table>
       </div>

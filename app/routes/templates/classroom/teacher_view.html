@@ -173,7 +173,7 @@
                 <div style="padding:var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);margin-bottom:var(--space-3);border-left:3px solid {% if ann.urgent %}var(--danger){% else %}var(--border-primary){% endif %};background:{% if ann.urgent %}rgba(239,68,68,0.03){% else %}transparent{% endif %};">
                     <h4 style="margin:0 0 var(--space-1) 0;">{{ ann.title }}</h4>
                     <p class="text-secondary" style="font-size:0.9rem;margin:0 0 var(--space-1) 0;">{{ ann.body }}</p>
-                    <small class="text-tertiary">{{ ann.created_at.strftime('%Y-%m-%d %H:%M') }}</small>
+                    <small class="text-tertiary">{{ ann.posted_at.strftime('%Y-%m-%d %H:%M') }}</small>
                 </div>
                 {% endfor %}
             </div>

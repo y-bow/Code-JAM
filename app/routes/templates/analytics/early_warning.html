@@ -47,7 +47,7 @@
             <td>{{ badge(item.reason, 'danger') }}</td>
             <td style="font-weight: 700; color: #ef4444;">{{ item.value }}</td>
             <td style="text-align: right;">
-              {{ btn('Reach Out', url_for('messages.index', recipient_id=item.user.id), size='sm') }}
+              <span class="badge badge-warning" style="font-size:0.85rem;">At Risk</span>
             </td>
           </tr>
           {% else %}

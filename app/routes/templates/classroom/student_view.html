@@ -138,9 +138,6 @@
                     <span class="text-tertiary">Office Hours</span>
                     <span>{{ course.teacher.teacher_profile.office_hours if course.teacher.teacher_profile and course.teacher.teacher_profile.office_hours else 'N/A' }}</span>
                 </div>
-                <a href="{{ url_for('messages.index') }}" class="btn btn-secondary w-full" style="justify-content:center;margin-top:var(--space-3);">
-                    <span class="material-symbols-rounded" style="font-size:16px;">mail</span> Message Teacher
-                </a>
             </div>
 
             <div style="margin-top:var(--space-4);border-top:1px solid var(--border-secondary);padding-top:var(--space-3);text-align:left;">

@@ -22,16 +22,16 @@
 
 <div class="stats-grid">
   {{ stat_card('CGPA', user_cgpa) }}
-  {{ stat_card('Attendance', '89%') }}
+  {{ stat_card('Attendance', attendance_pct ~ '%' if attendance_pct is not none else '–') }}
   {{ stat_card('Courses', courses_count|default('–')) }}
-  {{ stat_card('Pending', '3', detail='Upcoming deadlines') }}
+  {{ stat_card('Pending', pending_count|default(0), detail='Upcoming deadlines') }}
 </div>
 
 <!-- Today's Classes -->
 <div class="card" style="margin-bottom:var(--space-6);">
   <div class="card-header">
     <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">calendar_today</span> Today's Classes</h3>
-    <a href="/dashboard/timetable" class="btn btn-ghost btn-sm">View Full Timetable</a>
+    <a href="{{ url_for('timetable.timetable') }}" class="btn btn-ghost btn-sm">View Full Timetable</a>
   </div>
   <div class="card-body" style="padding-top:0;display:flex;flex-direction:column;gap:var(--space-2);">
     {% if today_classes %}
@@ -64,13 +64,19 @@
     </div>
     <div class="card-body" style="padding-top:0;">
       <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:var(--space-2);">
+        {% if upcoming_deadlines %}
+        {% for item in upcoming_deadlines %}
         <li style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);">
           <div style="display:flex;align-items:center;gap:var(--space-2);">
             <input type="checkbox" style="width:16px;height:16px;accent-color:var(--primary);">
-            <span>CS101 Assignment 1</span>
+            <span>{{ item.course.code }} — {{ item.title }}</span>
           </div>
-          {{ badge('Due Tomorrow, 11:59PM', 'danger') }}
+          {{ badge('Due ' + item.due_date.strftime('%b %d, %I:%M%p'), 'danger') }}
         </li>
+        {% endfor %}
+        {% else %}
+        <li style="text-align:center;padding:var(--space-6);color:var(--text-tertiary);">No upcoming deadlines.</li>
+        {% endif %}
       </ul>
     </div>
   </div>
