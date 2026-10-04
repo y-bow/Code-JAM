@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Dean - Teacher Ratings{% endblock %}
+{% block page_title %}Faculty Performance Overview{% endblock %}
+
+{% from "_components.html" import stat_card, badge, btn, btn_submit, btn_button, table, card, modal, form_group, alert, empty_state, search_input, toolbar, tabs, breadcrumb, progress_bar %}
+
+{% block content %}
+{% call card() %}
+  <div class="card-header">
+    <h3>Faculty Performance</h3>
+    <p style="color: var(--text-secondary); font-size: var(--font-size-sm);">Aggregated student feedback and ratings across all departments.</p>
+  </div>
+  <div class="table-wrap">
+    <table class="h-table">
+      <colgroup>
+        <col style="width: 200px">
+        <col style="width: 150px">
+        <col style="width: 130px">
+        <col style="width: 250px">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>Instructor</th>
+          <th>Average Rating</th>
+          <th>Total Ratings</th>
+          <th>Recent Reviews</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for stat in teacher_stats %}
+        <tr>
+          <td>
+            <div style="font-weight: 600;">{{ stat.name }}</div>
+            <div style="font-size: var(--font-size-xs); color: var(--text-tertiary);">{{ stat.id }}</div>
+          </td>
+          <td>
+            <div style="display: flex; align-items: center; gap: var(--space-2);">
+              <span style="font-weight: 700; color: #f59e0b;">{{ stat.avg_rating }}</span>
+              <div style="display: flex; color: #f59e0b;">
+                {% for i in range((stat.avg_rating)|int) %}
+                <span class="material-symbols-rounded" style="font-size: 1rem;">star</span>
+                {% endfor %}
+              </div>
+            </div>
+          </td>
+          <td>{{ stat.total_ratings }}</td>
+          <td>
+            <div style="display: flex; flex-direction: column; gap: var(--space-2);">
+              {% for review in stat.recent_reviews %}
+              <div style="display: flex; align-items: center; gap: var(--space-2); padding: var(--space-1) var(--space-2);" title="{{ review.review or 'No comment' }}">
+                <span style="font-weight: 600; color: #f59e0b; font-size: var(--font-size-xs);">{{ review.rating }}★</span>
+                <p style="margin: 0; font-size: var(--font-size-xs); color: var(--text-tertiary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 250px;">
+                  &ldquo;{{ (review.review or 'No comment')[:50] }}...&rdquo;
+                </p>
+              </div>
+              {% endfor %}
+              {% if not stat.recent_reviews %}
+              <span style="color: var(--text-tertiary); font-size: var(--font-size-sm);">No reviews yet.</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endcall %}
+{% endblock %}

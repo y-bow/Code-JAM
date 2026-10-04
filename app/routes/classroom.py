@@ -1,22 +1,23 @@
 from flask import Blueprint, render_template, g, flash, redirect, url_for, abort, request
-from ..middleware import school_scoped, owns_resource, role_minimum
+from ..middleware import institution_scoped, owns_resource, role_minimum
 from ..models import (
     db, User, Student, Course, Enrollment, Section, ProfessorAssistant, 
-    ClassRepNomination, Announcement, ROLE_HIERARCHY, Assignment, Attendance, Submission, TeacherRating
+    ClassRepNomination, Announcement, Assignment, Attendance, TeacherRating
 )
 from datetime import datetime
 
-classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom')
+classroom_bp = Blueprint('classroom', __name__, url_prefix='/classroom',
+                          template_folder='templates/classroom')
 
 
-@classroom_bp.route('/<int:course_id>')
-@school_scoped
+@classroom_bp.route('/<string:course_id>')
+@institution_scoped
 def view_classroom(course_id):
     user = g.current_user
 
-    # Load course and verify it belongs to this school
+    # Load course and verify it belongs to this institution
     course = Course.query.get_or_404(course_id)
-    owns_resource(course.section, 'school_id')
+    owns_resource(course.section, 'institution_id')
 
     # Fetch related data
     assignments = course.assignments.order_by(Assignment.due_date.desc()).all()
@@ -42,7 +43,7 @@ def view_classroom(course_id):
         ).first()
         if not enrollment:
             flash('Access Denied: You are not enrolled in this course.', 'danger')
-            return redirect(url_for('dashboard.student_dashboard'))
+            return redirect(url_for('academics.student_dashboard'))
         
         # Check if they are the Class Rep for this section/course
         is_cr = False
@@ -52,7 +53,7 @@ def view_classroom(course_id):
             ).first()
             is_cr = (nom is not None)
 
-        return render_template('classroom/student_view.html', 
+        return render_template('student_view.html', 
                                course=course, is_cr=is_cr, 
                                assignments=assignments, 
                                announcements=announcements,
@@ -66,8 +67,8 @@ def view_classroom(course_id):
         ).first()
         if not pa_record:
             flash('Access Denied: You are not an assistant for this course.', 'danger')
-            return redirect(url_for('dashboard.teacher_dashboard'))
-        return render_template('classroom/teacher_view.html', 
+            return redirect(url_for('academics.teacher_dashboard'))
+        return render_template('teacher_view.html', 
                                course=course, is_pa=True,
                                students=students_list,
                                assignments=assignments,
@@ -77,8 +78,8 @@ def view_classroom(course_id):
     elif user.role == 'professor':
         if course.teacher_id != user.id:
             flash('Access Denied: This is not your course.', 'danger')
-            return redirect(url_for('dashboard.teacher_dashboard'))
-        return render_template('classroom/teacher_view.html', 
+            return redirect(url_for('academics.teacher_dashboard'))
+        return render_template('teacher_view.html', 
                                course=course, is_pa=False,
                                students=students_list,
                                assignments=assignments,
@@ -86,7 +87,7 @@ def view_classroom(course_id):
                                today_date=today_date)
 
     elif user.role == 'dean':
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_dean=True,
                                students=students_list,
                                assignments=assignments,
@@ -94,7 +95,7 @@ def view_classroom(course_id):
                                today_date=today_date)
     
     elif user.role == 'admin':
-        return render_template('classroom/teacher_view.html', 
+        return render_template('teacher_view.html', 
                                course=course, is_admin=True,
                                students=students_list,
                                assignments=assignments,
@@ -104,8 +105,8 @@ def view_classroom(course_id):
     return redirect(url_for('index'))
 
 
-@classroom_bp.route('/<int:course_id>/nominate_cr/<int:student_id>', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/nominate_cr/<string:student_id>', methods=['POST'])
+@institution_scoped
 @role_minimum('professor')
 def nominate_class_rep(course_id, student_id):
     course = Course.query.get_or_404(course_id)
@@ -140,8 +141,8 @@ def nominate_class_rep(course_id, student_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/assign_assistant', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/assign_assistant', methods=['POST'])
+@institution_scoped
 @role_minimum('professor')
 def assign_assistant_professor(course_id):
     course = Course.query.get_or_404(course_id)
@@ -149,7 +150,7 @@ def assign_assistant_professor(course_id):
         abort(403)
     
     email = request.form.get('email')
-    assistant = User.query.filter_by(school_id=g.school_id, email=email, role='professor').first()
+    assistant = User.query.filter_by(institution_id=g.institution_id, email=email, role='professor').first()
     
     if not assistant:
         flash('Professor account not found with that email.', 'danger')
@@ -171,8 +172,8 @@ def assign_assistant_professor(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/create_assignment', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/create_assignment', methods=['POST'])
+@institution_scoped
 @role_minimum('assistant_professor')
 def create_assignment(course_id):
     course = Course.query.get_or_404(course_id)
@@ -199,8 +200,8 @@ def create_assignment(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/mark_attendance', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/mark_attendance', methods=['POST'])
+@institution_scoped
 @role_minimum('assistant_professor')
 def mark_attendance(course_id):
     course = Course.query.get_or_404(course_id)
@@ -234,8 +235,8 @@ def mark_attendance(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/post_announcement', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/post_announcement', methods=['POST'])
+@institution_scoped
 def post_announcement(course_id):
     course = Course.query.get_or_404(course_id)
     user = g.current_user
@@ -263,7 +264,7 @@ def post_announcement(course_id):
         abort(403)
         
     new_ann = Announcement(
-        school_id=g.school_id,
+        institution_id=g.institution_id,
         course_id=course_id,
         section_id=course.section_id,
         teacher_id=user.id,
@@ -277,8 +278,8 @@ def post_announcement(course_id):
     return redirect(url_for('classroom.view_classroom', course_id=course_id))
 
 
-@classroom_bp.route('/<int:course_id>/rate', methods=['POST'])
-@school_scoped
+@classroom_bp.route('/<string:course_id>/rate', methods=['POST'])
+@institution_scoped
 @role_minimum('student')
 def submit_rating(course_id):
     course = Course.query.get_or_404(course_id)

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% from "_components.html" import form_group, alert %}
+
+{% block title %}Payment Gateway - Hive{% endblock %}
+{% block page_title %}Secure Payment Gateway{% endblock %}
+
+{% block content %}
+<div style="max-width:600px;margin:0 auto;">
+    <div class="card" style="padding:var(--space-6);">
+        <div style="text-align:center;margin-bottom:var(--space-5);">
+            <span class="material-symbols-rounded" style="font-size:48px;color:var(--primary);">secure_pay</span>
+            <h2 style="margin-top:var(--space-3);">Complete Your Payment</h2>
+            <p class="text-secondary">Hive Secure Payment Portal</p>
+        </div>
+
+        <div style="background:var(--primary-bg);border:1px solid var(--border-primary);padding:var(--space-4);border-radius:var(--radius-md);margin-bottom:var(--space-5);">
+            <div class="flex justify-between mb-1">
+                <span class="text-secondary">Student</span>
+                <strong>{{ fee.student.name }}</strong>
+            </div>
+            <div class="flex justify-between">
+                <span class="text-secondary">Total Remaining</span>
+                <strong style="color:var(--danger);font-size:1.1rem;">{{ currency_symbol }}{{ "{:,.0f}".format(fee.remaining_balance) }}</strong>
+            </div>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        {{ alert(message, 'danger' if category == 'error' else 'success') }}
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form action="{{ url_for('fees.process_payment') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ form_group('Payment Amount (' ~ currency_symbol ~ ')', 'amount', 'number', value=fee.remaining_balance, required=true, attrs='max="' ~ fee.remaining_balance ~ '" min="1" step="0.01"') }}
+
+            <div class="form-group" style="margin-bottom:var(--space-5);">
+                <label class="form-label">Select Payment Method</label>
+                <div class="grid-2" style="margin-top:var(--space-2);">
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="UPI" required style="display:none;" onchange="updateSelectedMethod(this)">
+                        <div class="payment-method-card" style="border:2px solid var(--border-primary);border-radius:var(--radius-md);padding:var(--space-3);text-align:center;">
+                            <span class="material-symbols-rounded" style="font-size:28px;margin-bottom:var(--space-1);">qr_code_scanner</span>
+                            <div style="font-weight:500;">UPI</div>
+                        </div>
+                    </label>
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="Credit Card" style="display:none;" onchange="updateSelectedMethod(this)">
+                        <div class="payment-method-card" style="border:2px solid var(--border-primary);border-radius:var(--radius-md);padding:var(--space-3);text-align:center;">
+                            <span class="material-symbols-rounded" style="font-size:28px;margin-bottom:var(--space-1);">credit_card</span>
+                            <div style="font-weight:500;">Credit Card</div>
+                        </div>
+                    </label>
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="Debit Card" style="display:none;" onchange="updateSelectedMethod(this)">
+                        <div class="payment-method-card" style="border:2px solid var(--border-primary);border-radius:var(--radius-md);padding:var(--space-3);text-align:center;">
+                            <span class="material-symbols-rounded" style="font-size:28px;margin-bottom:var(--space-1);">payments</span>
+                            <div style="font-weight:500;">Debit Card</div>
+                        </div>
+                    </label>
+                    <label style="cursor:pointer;">
+                        <input type="radio" name="payment_method" value="Net Banking" style="display:none;" onchange="updateSelectedMethod(this)">
+                        <div class="payment-method-card" style="border:2px solid var(--border-primary);border-radius:var(--radius-md);padding:var(--space-3);text-align:center;">
+                            <span class="material-symbols-rounded" style="font-size:28px;margin-bottom:var(--space-1);">account_balance</span>
+                            <div style="font-weight:500;">Net Banking</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="flex gap-3">
+                <a href="{{ url_for('fees.student_dashboard') }}" class="btn btn-secondary" style="flex:1;justify-content:center;">Cancel</a>
+                <button type="submit" class="btn btn-primary" style="flex:2;justify-content:center;gap:var(--space-1);">
+                    <span class="material-symbols-rounded" style="font-size:18px;">lock</span> Pay Securely
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function updateSelectedMethod(radio) {
+        document.querySelectorAll('.payment-method-card').forEach(card => {
+            card.style.borderColor = 'var(--border-primary)';
+            card.style.background = 'transparent';
+            card.style.color = 'var(--text-primary)';
+        });
+        if (radio.checked) {
+            const card = radio.nextElementSibling;
+            card.style.borderColor = 'var(--primary)';
+            card.style.background = 'var(--primary-bg)';
+            card.style.color = 'var(--primary)';
+        }
+    }
+</script>
+{% endblock %}

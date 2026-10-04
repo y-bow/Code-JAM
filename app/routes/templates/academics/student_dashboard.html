@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, card, table, alert, empty_state %}
+
+{% block title %}Hive | Student Dashboard{% endblock %}
+{% block page_title %}Hello, {{ session.name }}{% endblock %}
+
+{% block content %}
+
+{% if g.current_user and g.current_user.must_change_password %}
+<div id="pw-suggest-banner" class="alert alert-warning" role="alert" style="cursor:pointer;display:flex;align-items:center;gap:var(--space-2);" onclick="this.style.display='none'">
+  <span class="material-symbols-rounded" style="font-size:18px">lock</span>
+  <span><strong>You're using a default password.</strong> Update it to keep your account secure.</span>
+  <a href="{{ url_for('auth.change_password') }}" style="font-weight:600;margin-left:auto">Change Password</a>
+  <button class="btn btn-ghost btn-sm" id="pwDismissBtn" title="Dismiss for this session" aria-label="Dismiss" onclick="event.stopPropagation();document.getElementById('pw-suggest-banner').style.display='none'" style="margin-left:var(--space-1)">
+    <span class="material-symbols-rounded" style="font-size:16px">close</span>
+  </button>
+</div>
+{% endif %}
+
+{% set user_cgpa = g.current_user.student_profile.cgpa if g.current_user and g.current_user.student_profile else 0.0 %}
+{% set cgpa_percentage = (user_cgpa / 10.0) * 100 %}
+
+<div class="stats-grid">
+  {{ stat_card('CGPA', user_cgpa) }}
+  {{ stat_card('Attendance', attendance_pct ~ '%' if attendance_pct is not none else '–') }}
+  {{ stat_card('Courses', courses_count|default('–')) }}
+  {{ stat_card('Pending', pending_count|default(0), detail='Upcoming deadlines') }}
+</div>
+
+<!-- Today's Classes -->
+<div class="card" style="margin-bottom:var(--space-6);">
+  <div class="card-header">
+    <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">calendar_today</span> Today's Classes</h3>
+    <a href="{{ url_for('timetable.timetable') }}" class="btn btn-ghost btn-sm">View Full Timetable</a>
+  </div>
+  <div class="card-body" style="padding-top:0;display:flex;flex-direction:column;gap:var(--space-2);">
+    {% if today_classes %}
+    {% for entry in today_classes %}
+    <div style="display:flex;gap:var(--space-3);align-items:center;padding:var(--space-2) var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-md);border-left:4px solid {{ entry.color }};">
+      <div style="display:flex;flex-direction:column;text-align:right;min-width:80px;flex-shrink:0;">
+        <span style="font-weight:600;font-size:var(--font-size-sm);">{{ entry.startTime }}</span>
+        <span style="font-size:var(--font-size-xs);color:var(--text-tertiary);">{{ entry.endTime }}</span>
+      </div>
+      <div style="flex:1;">
+        <div style="font-weight:600;">{{ entry.title }}</div>
+        <span style="font-size:var(--font-size-xs);color:var(--text-tertiary);">Room {{ entry.room }}</span>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="empty-state" style="padding:var(--space-6) var(--space-2);">
+      <span class="material-symbols-rounded empty-icon">event_busy</span>
+      <p>No classes scheduled for today.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid-2">
+  <!-- Upcoming Deadlines -->
+  <div class="card">
+    <div class="card-header">
+      <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">format_list_bulleted</span> Upcoming Deadlines</h3>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <ul style="list-style:none;padding:0;display:flex;flex-direction:column;gap:var(--space-2);">
+        {% if upcoming_deadlines %}
+        {% for item in upcoming_deadlines %}
+        <li style="display:flex;justify-content:space-between;align-items:center;padding:var(--space-2) var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);">
+          <div style="display:flex;align-items:center;gap:var(--space-2);">
+            <input type="checkbox" style="width:16px;height:16px;accent-color:var(--primary);">
+            <span>{{ item.course.code }} — {{ item.title }}</span>
+          </div>
+          {{ badge('Due ' + item.due_date.strftime('%b %d, %I:%M%p'), 'danger') }}
+        </li>
+        {% endfor %}
+        {% else %}
+        <li style="text-align:center;padding:var(--space-6);color:var(--text-tertiary);">No upcoming deadlines.</li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Overall Progress -->
+  <div class="card" style="text-align:center;">
+    <div class="card-header">
+      <h3>Overall Progress</h3>
+    </div>
+    <div class="card-body">
+      <div style="position:relative;width:120px;height:120px;margin:0 auto var(--space-3);">
+        <svg viewBox="0 0 36 36" style="width:100%;height:100%;">
+          <path style="fill:none;stroke:var(--bg-tertiary);stroke-width:3;" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+          <path style="fill:none;stroke:var(--primary);stroke-width:3;stroke-dasharray:{{ cgpa_percentage }},100;" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+        </svg>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;">
+          <span style="font-size:var(--font-size-xl);font-weight:700;">{{ user_cgpa }}</span>
+          <span style="font-size:var(--font-size-xs);color:var(--text-tertiary);text-transform:uppercase;letter-spacing:1px;">CGPA</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Attendance -->
+<div class="card" style="margin-top:var(--space-4);">
+  <div class="card-header">
+    <h3>Attendance Overview</h3>
+  </div>
+  <div class="card-body">
+    <div id="attendance-chart" style="height:200px;background:var(--bg-secondary);border:1px solid var(--border-primary);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;color:var(--text-tertiary);">
+      [Plotly Pie Chart Here]
+    </div>
+  </div>
+</div>
+{% endblock %}

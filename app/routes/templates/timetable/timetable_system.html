@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, card, table, alert, empty_state, search_input %}
+
+{% block title %}Hive | Timetable (System){% endblock %}
+{% block page_title %}System Timetable{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">admin_panel_settings</span> System Wide Schedule</h3>
+  </div>
+  <div class="card-body" style="padding-top:0;">
+    <p style="font-size:var(--font-size-sm);color:var(--text-secondary);margin-bottom:var(--space-4);">Full overview of all scheduled classes across all sections.</p>
+    <div class="table-wrap">
+      <table class="h-table">
+        <colgroup>
+          <col style="width: 120px">
+          <col style="width: 120px">
+          <col style="width: 150px">
+          <col style="width: 180px">
+          <col style="width: 180px">
+          <col style="width: 120px">
+          <col style="width: 100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>Section</th>
+            <th>Day</th>
+            <th>Time</th>
+            <th>Course</th>
+            <th>Teacher</th>
+            <th>Room</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'] %}
+          {% for entry, section in all_entries %}
+          <tr>
+            <td>{{ badge(section.code, 'primary') }}</td>
+            <td>{{ days[entry.day] if 0 <= entry.day <= 6 else 'Unknown' }}</td>
+            <td style="color:var(--text-secondary);font-weight:500;">{{ entry.start_time | fix_time }} - {{ entry.end_time | fix_time }}</td>
+            <td style="font-weight:500;">{{ entry.title }}</td>
+            <td style="color:var(--text-secondary);">{{ entry.teacher }}</td>
+            <td style="color:var(--text-secondary);">{{ entry.room }}</td>
+            <td>
+              {% if entry.status == 'cancelled' %}
+              {{ badge('CANCELLED', 'danger') }}
+              {% else %}
+              {{ badge('ACTIVE', 'success') }}
+              {% endif %}
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="7" class="empty-state" style="padding:var(--space-8) var(--space-4);">
+              <span class="material-symbols-rounded empty-icon">event_busy</span>
+              <h3>No entries found</h3>
+              <p>No timetable entries found in the system.</p>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

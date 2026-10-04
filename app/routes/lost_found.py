@@ -3,18 +3,23 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from flask import Blueprint, render_template, request, redirect, url_for, flash, g, current_app
 
-from app.models import db, LostFoundItem, Message
-from app.middleware import school_scoped
+from app.models import db, LostFoundItem
+from app.middleware import institution_scoped
 
-lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found')
+lost_found_bp = Blueprint('lost_found', __name__, url_prefix='/lost-found',
+                           template_folder='templates/lost_found')
 
-ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
+ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+ALLOWED_MIMETYPES = {'image/png', 'image/jpeg', 'image/gif', 'image/webp'}
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def allowed_mimetype(mimetype):
+    return mimetype in ALLOWED_MIMETYPES
+
 @lost_found_bp.route('/gallery', methods=['GET'])
-@school_scoped
+@institution_scoped
 def gallery():
     query = request.args.get('q', '')
     category = request.args.get('category', '')
@@ -23,12 +28,13 @@ def gallery():
     if g.current_user.role == 'admin':
         base_query = LostFoundItem.query.filter_by(status='open')
     else:
-        base_query = LostFoundItem.query.filter_by(school_id=g.school_id, status='open')
+        base_query = LostFoundItem.query.filter_by(institution_id=g.institution_id, status='open')
     
     if query:
+        query_term = f'%{query}%'
         base_query = base_query.filter(
-            (LostFoundItem.title.ilike(f'%{query}%')) | 
-            (LostFoundItem.location.ilike(f'%{query}%'))
+            (LostFoundItem.title.ilike(query_term)) | 
+            (LostFoundItem.location.ilike(query_term))
         )
     if category:
         base_query = base_query.filter_by(category=category)
@@ -38,7 +44,7 @@ def gallery():
     items = base_query.order_by(LostFoundItem.timestamp.desc()).all()
     categories = ['Electronics', 'ID Cards', 'Books', 'Clothing', 'Accessories', 'Other']
 
-    return render_template('lost_found/gallery.html', 
+    return render_template('gallery.html', 
                             items=items, 
                             query=query, 
                             selected_category=category,
@@ -46,17 +52,17 @@ def gallery():
                             categories=categories)
 
 @lost_found_bp.route('/my-items', methods=['GET'])
-@school_scoped
+@institution_scoped
 def my_items():
     items = LostFoundItem.query.filter_by(
-        school_id=g.school_id, 
+        institution_id=g.institution_id, 
         reporter_id=g.current_user.id
     ).order_by(LostFoundItem.timestamp.desc()).all()
     
-    return render_template('lost_found/my_items.html', items=items)
+    return render_template('my_items.html', items=items)
 
 @lost_found_bp.route('/report', methods=['GET', 'POST'])
-@school_scoped
+@institution_scoped
 def report():
     categories = ['Electronics', 'ID Cards', 'Books', 'Clothing', 'Accessories', 'Other']
     if request.method == 'POST':
@@ -73,7 +79,7 @@ def report():
         image_path = None
         if 'image' in request.files:
             file = request.files['image']
-            if file and file.filename != '' and allowed_file(file.filename):
+            if file and file.filename != '' and allowed_file(file.filename) and allowed_mimetype(file.content_type):
                 filename = secure_filename(f"user_{g.current_user.id}_{datetime.utcnow().timestamp()}_{file.filename}")
                 upload_folder = os.path.join(current_app.static_folder, 'uploads', 'lost_found')
                 os.makedirs(upload_folder, exist_ok=True)
@@ -82,7 +88,7 @@ def report():
                 image_path = f"uploads/lost_found/{filename}"
 
         new_item = LostFoundItem(
-            school_id=g.school_id,
+institution_id=g.institution_id,
             reporter_id=g.current_user.id,
             report_type=report_type,
             category=category,
@@ -98,7 +104,7 @@ def report():
         if report_type == 'found':
             # look for open 'lost' items of same category
             potential_matches = LostFoundItem.query.filter_by(
-                school_id=g.school_id, 
+                institution_id=g.institution_id, 
                 report_type='lost',
                 status='open',
                 category=category
@@ -112,20 +118,11 @@ def report():
                 
                 # filter common words length < 4 maybe, but for simplicity just intersecting
                 overlap = words_found.intersection(words_lost)
-                if len(overlap) >= 2: # heuristic: at least 2 common words
-                    # Notification!
-                    msg_body = f"A found item '{title}' might match your lost item '{lost_item.title}'. Check the Lost & Found gallery!"
-                    notif = Message(
-                        sender_id=g.current_user.id,
-                        recipient_id=lost_item.reporter_id,
-                        subject="Lost & Found Match",
-                        body=msg_body
-                    )
-                    db.session.add(notif)
+                if len(overlap) >= 2:
                     matched = True
             
             if matched:
-                flash("Item reported successfully! We notified a user whose lost item matches your description.", "success")
+                flash("Item reported successfully! A matching lost item was found in our records.", "success")
             else:
                 flash("Item reported successfully!", "success")
         else:
@@ -134,13 +131,13 @@ def report():
         db.session.commit()
         return redirect(url_for('lost_found.gallery'))
 
-    return render_template('lost_found/report.html', categories=categories)
+    return render_template('report.html', categories=categories)
 
-@lost_found_bp.route('/resolve/<int:item_id>', methods=['POST'])
-@school_scoped
+@lost_found_bp.route('/resolve/<string:item_id>', methods=['POST'])
+@institution_scoped
 def resolve(item_id):
     item = LostFoundItem.query.get_or_404(item_id)
-    if g.current_user.role != 'admin' and (item.school_id != g.school_id or item.reporter_id != g.current_user.id):
+    if g.current_user.role != 'admin' and (item.institution_id != g.institution_id or item.reporter_id != g.current_user.id):
         flash("Unauthorized action.", "danger")
         return redirect(url_for('lost_found.my_items'))
     

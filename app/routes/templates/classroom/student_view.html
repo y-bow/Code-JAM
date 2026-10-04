@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+{% from "_components.html" import btn, progress_bar %}
+
+{% block title %}Hive | Classroom - {{ course.code }}{% endblock %}
+{% block page_title %}{{ course.code }}: {{ course.name }}{% endblock %}
+
+{% block content %}
+<div class="grid-sidebar">
+    <!-- Main Content Area -->
+    <div class="main-column" id="Home">
+        {% if course.meet_link %}
+        <div class="card" style="margin-bottom:var(--space-5);display:flex;align-items:center;justify-content:space-between;border-left:4px solid var(--danger);">
+            <div class="flex items-center gap-3">
+                <div style="background:var(--danger);width:10px;height:10px;border-radius:50%;"></div>
+                <div>
+                    <h3 style="margin:0;">Live Class in Session</h3>
+                    <span class="text-tertiary" style="font-size:0.9rem;">Professor has started a meeting.</span>
+                </div>
+            </div>
+            <a href="{{ course.meet_link }}" target="_blank" class="btn btn-primary">
+                <span class="material-symbols-rounded">videocam</span> Join Live Now
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Class Announcements -->
+        <div class="card" style="margin-bottom:var(--space-5);">
+            <div class="card-header">
+                <h3><span class="material-symbols-rounded" style="font-size:18px;">campaign</span> Class Announcements</h3>
+            </div>
+            <div class="card-body">
+                {% if is_cr %}
+                <div class="card" style="margin-bottom:var(--space-4);background:var(--primary-bg);border-color:var(--primary);">
+                    <h4 style="margin:0 0 var(--space-3) 0;font-size:0.9rem;" class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:1.1rem;">edit_note</span> Post Section Announcement (as Rep)
+                    </h4>
+                    <form action="{{ url_for('classroom.post_announcement', course_id=course.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="text" name="title" class="form-input" placeholder="Subject" required style="margin-bottom:var(--space-2);">
+                        <textarea name="body" class="form-textarea" placeholder="What's happening in your section?" required style="height:70px;margin-bottom:var(--space-2);"></textarea>
+                        <div class="flex justify-between items-center">
+                            <label class="flex items-center gap-1" style="font-size:0.85rem;color:var(--text-tertiary);cursor:pointer;">
+                                <input type="checkbox" name="urgent"> Urgent
+                            </label>
+                            <button type="submit" class="btn btn-primary btn-sm">Post Announcement</button>
+                        </div>
+                    </form>
+                </div>
+                {% endif %}
+
+                {% if announcements %}
+                <div class="flex flex-col" style="gap:var(--space-3);">
+                    {% for ann in announcements %}
+                    <div style="padding:var(--space-3);border:1px solid var(--border-primary);border-radius:var(--radius-sm);border-left:3px solid {% if ann.urgent %}var(--danger){% else %}var(--primary){% endif %};background:{% if ann.urgent %}rgba(239,68,68,0.03){% else %}transparent{% endif %};">
+                        <div class="flex justify-between mb-1">
+                            <span style="font-weight:600;">{{ ann.title }}</span>
+                            <span class="text-tertiary" style="font-size:0.85rem;">{{ ann.created_at.strftime('%b %d') }}</span>
+                        </div>
+                        <p class="text-secondary" style="font-size:0.9rem;margin:0;">{{ ann.body }}</p>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-tertiary" style="text-align:center;">No announcements yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Assignments TAB -->
+    <div class="main-column" id="Assignments" style="display:none;">
+        <div class="card" style="margin-bottom:var(--space-5);">
+            <div class="card-header"><h3><span class="material-symbols-rounded" style="font-size:18px;">assignment</span> Assignments</h3></div>
+            <div class="card-body">
+                {% if assignments %}
+                <div class="flex flex-col" style="gap:var(--space-4);">
+                    {% for ass in assignments %}
+                    <div style="padding:var(--space-4);border:1px solid var(--border-primary);border-radius:var(--radius-md);">
+                        <div class="flex justify-between items-start mb-3">
+                            <div>
+                                <h4 style="margin:0 0 2px 0;">{{ ass.title }}</h4>
+                                <span class="text-tertiary" style="font-size:0.85rem;">Max Points: {{ ass.max_points }}</span>
+                            </div>
+                            <span class="badge" style="background:rgba(239,68,68,0.1);color:var(--danger);">Due: {{ ass.due_date.strftime('%b %d, %H:%M') }}</span>
+                        </div>
+                        <p class="text-secondary" style="font-size:0.9rem;margin-bottom:var(--space-4);">{{ ass.description }}</p>
+                        <div style="border:2px dashed var(--border-primary);padding:var(--space-4);text-align:center;border-radius:var(--radius-sm);">
+                            <span class="material-symbols-rounded" style="font-size:2rem;color:var(--primary);">cloud_upload</span>
+                            <p class="text-tertiary" style="font-size:0.9rem;">Upload your solution</p>
+                        </div>
+                        <div class="flex justify-end" style="margin-top:var(--space-3);">
+                            <button class="btn btn-primary btn-sm">Submit Work</button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-tertiary" style="text-align:center;">No assignments posted yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance TAB -->
+    <div class="main-column" id="Performance" style="display:none;">
+        <div class="card">
+            <div class="card-header"><h3><span class="material-symbols-rounded" style="font-size:18px;">analytics</span> My Progress</h3></div>
+            <div class="card-body">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Current Grade</div>
+                        <div class="stat-value" style="color:var(--success);">{{ avg_grade }}%</div>
+                        {{ progress_bar(avg_grade) }}
+                    </div>
+                    {% set att_pct = (attendance|selectattr('status', 'equalto', 'present')|list|length / (attendance|length or 1) * 100)|round(1) %}
+                    <div class="stat-card">
+                        <div class="stat-label">Attendance</div>
+                        <div class="stat-value" style="color:var(--warning);">{{ att_pct }}%</div>
+                        {{ progress_bar(att_pct) }}
+                        <span style="font-size:0.85rem;color:var(--text-tertiary);margin-top:var(--space-1);display:block;">{{ attendance|length }} Classes Recorded</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Sidebar -->
+    <div class="side-column">
+        <div class="card" style="text-align:center;margin-bottom:var(--space-5);">
+            <div class="avatar" style="width:56px;height:56px;margin:0 auto var(--space-3);font-size:1.3rem;">
+                {{ course.teacher.name[:2].upper() }}
+            </div>
+            <h4 style="margin:0;">{{ course.teacher.name }}</h4>
+            <span class="text-tertiary" style="font-size:0.85rem;">Course Instructor</span>
+
+            <div style="margin-top:var(--space-4);border-top:1px solid var(--border-secondary);padding-top:var(--space-3);text-align:left;font-size:0.9rem;">
+                <div class="flex justify-between mb-2">
+                    <span class="text-tertiary">Office Hours</span>
+                    <span>{{ course.teacher.teacher_profile.office_hours if course.teacher.teacher_profile and course.teacher.teacher_profile.office_hours else 'N/A' }}</span>
+                </div>
+            </div>
+
+            <div style="margin-top:var(--space-4);border-top:1px solid var(--border-secondary);padding-top:var(--space-3);text-align:left;">
+                <h5 style="margin:0 0 var(--space-2) 0;font-size:0.8rem;text-transform:uppercase;color:var(--text-tertiary);">Rate your Instructor</h5>
+                <form action="{{ url_for('classroom.submit_rating', course_id=course.id) }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="rating-stars" style="color:var(--warning);font-size:1.25rem;display:flex;gap:2px;margin-bottom:var(--space-2);cursor:pointer;">
+                        <span class="material-symbols-rounded star-input" data-value="1">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="2">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="3">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="4">star_outline</span>
+                        <span class="material-symbols-rounded star-input" data-value="5">star_outline</span>
+                    </div>
+                    <input type="hidden" name="rating" id="rating-value" required>
+                    <textarea name="review" class="form-textarea" placeholder="Optional review..." style="font-size:0.85rem;margin-bottom:var(--space-2);min-height:50px;"></textarea>
+                    <div class="flex items-center gap-1 mb-3">
+                        <input type="checkbox" name="anonymous" id="anon" checked>
+                        <label for="anon" style="font-size:0.85rem;color:var(--text-tertiary);">Submit Anonymously</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-full btn-sm">Submit Rating</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function openTab(evt, tabName) {
+        var i, tabContent, tabLinks;
+        tabContent = document.getElementsByClassName("main-column");
+        for (i = 0; i < tabContent.length; i++) {
+            tabContent[i].style.display = "none";
+        }
+        tabLinks = document.getElementsByClassName("tab-link");
+        for (i = 0; i < tabLinks.length; i++) {
+            tabLinks[i].className = tabLinks[i].className.replace(" active", "");
+        }
+        document.getElementById(tabName).style.display = "flex";
+        evt.currentTarget.className += " active";
+    }
+
+    document.querySelectorAll('.star-input').forEach(star => {
+        star.addEventListener('mouseover', function () {
+            const val = this.dataset.value;
+            highlightStars(val);
+        });
+        star.addEventListener('mouseout', function () {
+            const currentVal = document.getElementById('rating-value').value;
+            highlightStars(currentVal || 0);
+        });
+        star.addEventListener('click', function () {
+            const val = this.dataset.value;
+            document.getElementById('rating-value').value = val;
+            highlightStars(val);
+        });
+    });
+
+    function highlightStars(count) {
+        document.querySelectorAll('.star-input').forEach(s => {
+            if (s.dataset.value <= count) {
+                s.innerText = 'star';
+                s.style.color = 'var(--warning)';
+            } else {
+                s.innerText = 'star_outline';
+                s.style.color = 'var(--warning)';
+            }
+        });
+    }
+</script>
+
+<style>
+    .main-column { display:flex; flex-direction:column; }
+</style>
+{% endblock %}

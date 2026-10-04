@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | CR Nominations{% endblock %}
+{% block page_title %}Class Representative Nominations{% endblock %}
+
+{% from "_components.html" import stat_card, badge, btn, btn_submit, btn_button, table, card, modal, form_group, alert, empty_state, search_input, toolbar, tabs, breadcrumb, progress_bar %}
+
+{% block content %}
+{% call card() %}
+  <div class="card-header">
+    <h3 style="display: flex; align-items: center; gap: var(--space-2);">
+      <span class="material-symbols-rounded" style="color: var(--primary);">how_to_reg</span>
+      Pending Nominations
+    </h3>
+    <p style="color: var(--text-secondary); margin: 0;">Review student nominations for the Class Representative role in their respective sections.</p>
+  </div>
+  {% if nominations %}
+  <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+    {% for nom in nominations %}
+    <div class="card" style="padding: var(--space-4); border-left: 4px solid var(--primary); display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; gap: var(--space-5); align-items: center;">
+        <div class="avatar" style="width: 50px; height: 50px; font-size: 1.2rem;">{{ nom.student.name[0] }}</div>
+        <div>
+          <h4 style="margin: 0;">{{ nom.student.name }}</h4>
+          <p style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin: var(--space-1) 0;">{{ nom.student.email }}</p>
+          <div style="display: flex; gap: var(--space-3); margin-top: var(--space-2);">
+            <span class="badge" style="background: var(--primary-bg); color: var(--primary);">
+              Section: {{ nom.section.code }}
+            </span>
+            <span class="badge" style="background: var(--bg-secondary); color: var(--text-tertiary);">
+              Course: {{ nom.course.code }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <p style="font-size: var(--font-size-sm); color: var(--text-tertiary); margin: 0 0 var(--space-3) 0;">
+          Nominated by: <strong>{{ nom.nominator.name }}</strong>
+        </p>
+        <div style="display: flex; gap: var(--space-2);">
+          <form action="{{ url_for('analytics.handle_nomination', nom_id=nom.id, action='reject') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ btn_button('Reject', type='ghost', attrs='style="color:var(--danger)"') }}
+          </form>
+          <form action="{{ url_for('analytics.handle_nomination', nom_id=nom.id, action='approve') }}" method="POST">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            {{ btn_submit('Approve Nomination') }}
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  {{ empty_state('No pending nominations', "You're all caught up! New nominations from professors will appear here.", icon='drafts') }}
+  {% endif %}
+{% endcall %}
+{% endblock %}

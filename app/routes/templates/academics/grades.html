@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, card, table, alert, empty_state %}
+
+{% block title %}Hive | Grades Overview{% endblock %}
+{% block page_title %}Grades Overview{% endblock %}
+
+{% block content %}
+<div class="grid-sidebar">
+  <div class="card">
+    <div class="card-header">
+      <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">bar_chart</span> Course Grades</h3>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <div class="table-wrap">
+        <table class="h-table">
+          <colgroup>
+            <col style="width: 300px">
+            <col style="width: 120px">
+            <col style="width: 120px">
+            <col style="width: 80px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Course</th>
+              <th>Grade</th>
+              <th>Status</th>
+              <th>Credits</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% if grades %}
+            {% for g in grades %}
+            {% set pct = (g.grade * 100)|round %}
+            <tr>
+              <td style="font-weight:500;">{{ g.course.name }} ({{ g.course.code }})</td>
+              <td style="font-weight:600;">{{ "%.0f"|format(pct) }}% ({{ "%.2f"|format(g.grade) }})</td>
+              <td>{{ badge('Passed' if g.grade >= 4.0 else 'Needs Improvement', 'success' if g.grade >= 4.0 else 'danger') }}</td>
+              <td>{{ g.course.credits }}</td>
+            </tr>
+            {% endfor %}
+            {% else %}
+            <tr><td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6);">No grades recorded yet.</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  {% set user_sgpa = g.current_user.student_profile.sgpa if g.current_user and g.current_user.student_profile else 0.0 %}
+  <div class="card" style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;">
+    <div class="card-header" style="width:100%;">
+      <h3>Current SGPA</h3>
+    </div>
+    <div class="card-body">
+      <div style="width:120px;height:120px;border-radius:50%;border:8px solid var(--primary);display:flex;align-items:center;justify-content:center;font-size:var(--font-size-2xl);font-weight:700;margin:0 auto var(--space-3);">
+        {{ user_sgpa }}
+      </div>
+      <p style="font-size:var(--font-size-sm);color:var(--text-tertiary);">Semester Grade Point Average</p>
+    </div>
+  </div>
+</div>
+{% endblock %}

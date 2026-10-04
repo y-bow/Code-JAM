@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% from "_components.html" import btn, empty_state %}
+
+{% block title %}External Events - Hive{% endblock %}
+{% block page_title %}External Events{% endblock %}
+
+{% block content %}
+<div class="events-dashboard">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h2>Upcoming External Events</h2>
+            <p class="text-secondary">Inter-college fests, workshops, and competitions</p>
+        </div>
+        <div class="flex gap-2 items-center">
+            {{ btn('Campus Clubs', url_for('clubs.index'), 'secondary', 'groups') }}
+            {% if g.current_user.role in ['admin', 'dean', 'superadmin'] %}
+            {{ btn('Manage', url_for('clubs.admin_events'), 'primary', 'settings') }}
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="flex flex-col" style="gap:var(--space-3);">
+        {% for event in events %}
+        <div class="card" style="display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-4);align-items:center;">
+
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;background:var(--primary-bg);border-radius:var(--radius-md);border:1px solid var(--border-primary);">
+                <span style="font-size:0.8rem;font-weight:600;color:var(--primary);text-transform:uppercase;">{{ event.date.strftime('%b') }}</span>
+                <span style="font-size:1.5rem;font-weight:700;color:var(--text-primary);line-height:1;">{{ event.date.strftime('%d') }}</span>
+            </div>
+
+            <div>
+                <h3 style="margin:0 0 2px 0;font-size:1.1rem;">{{ event.title }}</h3>
+                <p style="margin:0 0 var(--space-2) 0;font-weight:600;font-size:0.9rem;">{{ event.hosting_college }}</p>
+                <div class="flex" style="gap:var(--space-3);font-size:0.85rem;color:var(--text-tertiary);">
+                    {% if event.location %}
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:16px;">location_on</span> {{ event.location }}
+                    </span>
+                    {% endif %}
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:16px;">schedule</span> {{ event.date.strftime('%I:%M %p') }}
+                    </span>
+                </div>
+                {% if event.description %}
+                <p style="margin:var(--space-2) 0 0 0;font-size:0.9rem;color:var(--text-secondary);line-height:1.5;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                    {{ event.description }}
+                </p>
+                {% endif %}
+            </div>
+
+            <div class="flex flex-col" style="gap:var(--space-1);justify-content:center;">
+                {% if event.registration_link %}
+                {{ btn('Register Now', event.registration_link, 'primary', 'open_in_new') }}
+                {% else %}
+                <span class="btn btn-secondary" style="pointer-events:none;opacity:0.5;">No Link Provided</span>
+                {% endif %}
+            </div>
+
+        </div>
+        {% else %}
+        {{ empty_state('No Upcoming Events', 'There are no external events scheduled at the moment.', 'event_busy') }}
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

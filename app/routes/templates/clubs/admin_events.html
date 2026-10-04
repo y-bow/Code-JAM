@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% from "_components.html" import btn, btn_button, form_group, empty_state %}
+
+{% block title %}Manage Events - Hive Admin{% endblock %}
+{% block page_title %}Manage Events{% endblock %}
+
+{% block content %}
+<div class="admin-events">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h2>Manage External Events</h2>
+            <p class="text-secondary">Create, edit, or remove inter-college events</p>
+        </div>
+        <div class="flex gap-2 items-center">
+            {{ btn('Manage Clubs', url_for('clubs.admin_clubs'), 'secondary', 'groups') }}
+            {{ btn_button('Create Event', 'primary', 'add', attrs='onclick="openModal(\'createEventModal\')"') }}
+        </div>
+    </div>
+
+    <div class="flex flex-col" style="gap:var(--space-3);">
+        {% for event in events %}
+        <div class="card" style="display:grid;grid-template-columns:auto 1fr auto;gap:var(--space-4);align-items:center;">
+
+            <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:72px;background:var(--primary-bg);border-radius:var(--radius-md);border:1px solid var(--border-primary);">
+                <span style="font-size:0.8rem;font-weight:600;color:var(--primary);text-transform:uppercase;">{{ event.date.strftime('%b') }}</span>
+                <span style="font-size:1.5rem;font-weight:700;color:var(--text-primary);line-height:1;">{{ event.date.strftime('%d') }}</span>
+            </div>
+
+            <div>
+                <h3 style="margin:0 0 2px 0;font-size:1.1rem;">{{ event.title }}</h3>
+                <p style="margin:0 0 var(--space-2) 0;font-weight:600;font-size:0.9rem;">{{ event.hosting_college }}</p>
+                <div class="flex" style="gap:var(--space-3);font-size:0.85rem;color:var(--text-tertiary);">
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:16px;">calendar_today</span> {{ event.date.strftime('%Y-%m-%d') }}
+                    </span>
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:16px;">schedule</span> {{ event.date.strftime('%I:%M %p') }}
+                    </span>
+                    {% if event.location %}
+                    <span class="flex items-center gap-1">
+                        <span class="material-symbols-rounded" style="font-size:16px;">location_on</span> {{ event.location }}
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="flex gap-2 items-center">
+                <button onclick="openEditModal({{ event.id }}, '{{ event.title|escape }}', '{{ event.hosting_college|escape }}', '{{ event.date.strftime('%Y-%m-%dT%H:%M') }}', '{{ (event.location or '')|escape }}', '{{ (event.registration_link or '')|escape }}', '{{ (event.description or '')|replace('\n', '\\n')|escape }}')" class="btn btn-secondary btn-sm" style="display:flex;align-items:center;gap:var(--space-1);">
+                    <span class="material-symbols-rounded" style="font-size:16px;">edit</span> Edit
+                </button>
+                <form action="{{ url_for('clubs.delete_event', event_id=event.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this event? This action cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-sm" style="color:var(--danger);border:1px solid var(--border-primary);background:var(--bg-secondary);display:flex;align-items:center;gap:var(--space-1);">
+                        <span class="material-symbols-rounded" style="font-size:16px;">delete</span> Delete
+                    </button>
+                </form>
+            </div>
+
+        </div>
+        {% else %}
+        {{ empty_state('No Events Found', 'There are no external events created yet. Click "Create Event" to add one.', 'event') }}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Create Event Modal -->
+<div class="modal-overlay" id="createEventModal">
+    <div class="modal" style="max-height:90vh;overflow-y:auto;">
+        <div class="modal-header">
+            <h3>Create New Event</h3>
+            <button type="button" class="modal-close" onclick="closeModal('createEventModal')"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('clubs.admin_events') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form_group('Event Title *', 'title', required=true) }}
+                {{ form_group('Hosting College / Organization *', 'hosting_college', required=true) }}
+                <div class="grid-2">
+                    {{ form_group('Date & Time *', 'date', 'datetime-local', required=true) }}
+                    {{ form_group('Location / Venue', 'location') }}
+                </div>
+                {{ form_group('Registration Link (Optional)', 'registration_link', 'url', placeholder='https://...') }}
+                {{ form_group('Description', 'description', 'textarea', rows='4') }}
+                <div class="flex gap-3 justify-end" style="margin-top:var(--space-4);">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createEventModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Event Modal -->
+<div class="modal-overlay" id="editEventModal">
+    <div class="modal" style="max-height:90vh;overflow-y:auto;">
+        <div class="modal-header">
+            <h3>Edit Event</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editEventModal')"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <form id="editEventForm" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form_group('Event Title *', 'title', required=true, class='edit_title') }}
+                {{ form_group('Hosting College *', 'hosting_college', required=true, class='edit_college') }}
+                <div class="grid-2">
+                    {{ form_group('Date & Time *', 'date', 'datetime-local', required=true, class='edit_date') }}
+                    {{ form_group('Location / Venue', 'location', class='edit_location') }}
+                </div>
+                {{ form_group('Registration Link', 'registration_link', 'url', class='edit_link') }}
+                {{ form_group('Description', 'description', 'textarea', rows='4', class='edit_description') }}
+                <div class="flex gap-3 justify-end" style="margin-top:var(--space-4);">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editEventModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function openEditModal(id, title, college, date, location, link, description) {
+        const form = document.getElementById('editEventForm');
+        form.action = "{{ url_for('clubs.edit_event', event_id=0) }}".replace('0', id);
+
+        document.querySelector('.edit_title input').value = title;
+        document.querySelector('.edit_college input').value = college;
+        document.querySelector('.edit_date input').value = date;
+        document.querySelector('.edit_location input').value = location;
+        document.querySelector('.edit_link input').value = link;
+        document.querySelector('.edit_description textarea').value = description;
+
+        openModal('editEventModal');
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
+    }
+</script>
+{% endblock %}

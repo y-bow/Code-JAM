@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, btn_submit, card, table, alert, empty_state, form_group %}
+
+{% block title %}Hive | Manage Timetable{% endblock %}
+{% block page_title %}Timetable Administration{% endblock %}
+
+{% block content %}
+<div class="grid-sidebar">
+  <!-- Main: Entry List -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Existing Schedule</h3>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <div class="table-wrap">
+        <table class="h-table">
+          <colgroup>
+            <col style="width: 120px">
+            <col style="width: 100px">
+            <col style="width: 150px">
+            <col style="width: 200px">
+            <col style="width: 120px">
+            <col style="width: 80px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Section</th>
+              <th>Day</th>
+              <th>Time</th>
+              <th>Subject</th>
+              <th>Room</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for entry in entries %}
+            <tr>
+              <td>{{ entry.section.code }}</td>
+              <td>{{ ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'][entry.day] }}</td>
+              <td>{{ entry.start_time }} - {{ entry.end_time }}</td>
+              <td>
+                <div style="display:flex;align-items:center;gap:var(--space-1);">
+                  <div style="width:10px;height:10px;border-radius:50%;background:{{ entry.color }};flex-shrink:0;"></div>
+                  {{ entry.title }}
+                </div>
+              </td>
+              <td>{{ entry.room }}</td>
+              <td>
+                <form action="{{ url_for('timetable.manage_timetable') }}" method="POST" onsubmit="return confirm('Delete this entry?')">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                  <input type="hidden" name="action" value="delete">
+                  <input type="hidden" name="entry_id" value="{{ entry.id }}">
+                  <button type="submit" class="btn btn-ghost btn-sm" style="color:var(--danger);">
+                    <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not entries %}
+            <tr>
+              <td colspan="6" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6);">No entries found.</td>
+            </tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Side: Add Entry Form -->
+  <div class="card">
+    <div class="card-header">
+      <h3>Add Entry</h3>
+    </div>
+    <div class="card-body" style="padding-top:0;">
+      <form action="{{ url_for('timetable.manage_timetable') }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="action" value="add">
+
+        <div class="form-group">
+          <label class="form-label">Section</label>
+          <select name="section_id" class="form-select" required>
+            {% for s in sections %}
+            <option value="{{ s.id }}">{{ s.code }} - {{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Day</label>
+          <select name="day" class="form-select" required>
+            <option value="0">Monday</option>
+            <option value="1">Tuesday</option>
+            <option value="2">Wednesday</option>
+            <option value="3">Thursday</option>
+            <option value="4">Friday</option>
+          </select>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-2);">
+          <div class="form-group">
+            <label class="form-label">Start Time</label>
+            <input type="text" name="start_time" class="form-input" placeholder="09:00 AM" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">End Time</label>
+            <input type="text" name="end_time" class="form-input" placeholder="10:30 AM" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Course Title</label>
+          <input type="text" name="title" class="form-input" placeholder="e.g. Data Structures" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Room</label>
+          <input type="text" name="room" class="form-input" placeholder="e.g. LAB 101" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Accent Color</label>
+          <input type="color" name="color" class="form-input" value="#6366f1" style="height:36px;padding:2px;">
+        </div>
+
+        {{ btn_submit('Create Entry', 'primary', attrs='style="width:100%;margin-top:var(--space-2);"') }}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

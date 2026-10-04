@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, card, table, alert, empty_state %}
+
+{% block title %}Hive | My Courses{% endblock %}
+{% block page_title %}Academic Overview: My Courses{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>Enrolled & Assigned Courses</h3>
+    {{ badge(courses|length ~ ' Active', 'success') }}
+  </div>
+  <div class="card-body" style="padding-top:0;">
+    {% if courses %}
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:var(--space-3);">
+      {% for course in courses %}
+      <a href="{{ url_for('classroom.view_classroom', course_id=course.id) }}" style="text-decoration:none;color:inherit;">
+        <div class="card" style="cursor:pointer;">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-2);">
+            <span style="font-size:var(--font-size-xs);font-weight:600;color:var(--primary);text-transform:uppercase;">{{ course.code }}</span>
+            <span class="material-symbols-rounded" style="color:var(--text-tertiary);font-size:18px;">arrow_forward</span>
+          </div>
+          <h4 style="margin:0 0 var(--space-2) 0;font-size:var(--font-size-md);">{{ course.name }}</h4>
+          <div style="display:flex;align-items:center;gap:var(--space-1);font-size:var(--font-size-xs);color:var(--text-tertiary);">
+            <span class="material-symbols-rounded" style="font-size:14px;">groups</span>
+            {{ course.section.code }}
+          </div>
+          <div style="margin-top:var(--space-4);display:flex;justify-content:space-between;align-items:center;">
+            <div style="display:flex;">
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--border-primary);border:2px solid var(--bg-primary);"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--text-tertiary);border:2px solid var(--bg-primary);margin-left:-8px;"></div>
+              <div style="width:24px;height:24px;border-radius:50%;background:var(--primary);border:2px solid var(--bg-primary);margin-left:-8px;"></div>
+            </div>
+            <span style="font-size:var(--font-size-xs);color:var(--primary);font-weight:600;">View Classroom</span>
+          </div>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state" style="padding:var(--space-8) var(--space-4);">
+      <span class="material-symbols-rounded empty-icon">school</span>
+      <h3>No courses available</h3>
+      <p>You don't have any courses assigned or enrolled at the moment.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

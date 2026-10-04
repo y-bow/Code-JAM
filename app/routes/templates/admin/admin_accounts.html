@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% from "_components.html" import badge, btn_button %}
+
+{% block title %}Hive | Manage Accounts{% endblock %}
+{% block page_title %}Account Management{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-header">
+    <h3>User Accounts</h3>
+    {{ btn_button('Onboard User (CSV)', type='secondary', size='sm', icon='person_add', attrs='disabled') }}
+  </div>
+  <div class="card-body" style="padding:0">
+    <div style="padding:var(--space-4) var(--space-4) 0">
+      <div class="search-wrap" style="max-width:400px">
+        <span class="material-symbols-rounded search-icon">search</span>
+        <input class="form-input" type="search" id="userSearch" placeholder="Search by name or email..." style="padding-left:36px">
+      </div>
+    </div>
+    <div class="table-wrap" style="border:none;border-radius:0;margin-top:var(--space-3)">
+      <table class="h-table">
+        <colgroup>
+          <col style="width: 300px">
+          <col style="width: 200px">
+          <col style="width: 120px">
+          <col style="width: 100px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role / Institution</th>
+            <th style="text-align:center">Status</th>
+            <th style="text-align:right">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="userTableBody">
+          {% for user in users %}
+          <tr>
+            <td>
+              <div style="display:flex;align-items:center;gap:var(--space-3)">
+                <span class="avatar" style="width:32px;height:32px;font-size:var(--font-size-xs);flex-shrink:0">{{ user.name[0] | upper }}</span>
+                <div>
+                  <div style="font-weight:600">{{ user.name }}</div>
+                  <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ user.email }}</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>{{ user.role | title }}</div>
+              <div style="font-size:var(--font-size-xs);color:var(--primary)">{{ user.institution.name if user.institution else 'Global System' }}</div>
+            </td>
+            <td style="text-align:center">
+              {% if user.is_active %}
+                {{ badge('Active', 'success') }}
+              {% else %}
+                {{ badge('Deactivated', 'danger') }}
+              {% endif %}
+            </td>
+            <td style="text-align:right">
+              <form action="{{ url_for('admin.toggle_user', user_id=user.id) }}" method="POST" style="display:inline">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="icon-btn" title="{{ 'Deactivate' if user.is_active else 'Activate' }}" style="color:{{ 'var(--danger)' if user.is_active else 'var(--success)' }}">
+                  <span class="material-symbols-rounded">{{ 'person_off' if user.is_active else 'person' }}</span>
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No users found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.getElementById('userSearch').addEventListener('input', function(e) {
+    var term = e.target.value.toLowerCase();
+    var rows = document.querySelectorAll('#userTableBody tr');
+    rows.forEach(function(row) {
+      var text = row.textContent.toLowerCase();
+      row.style.display = text.includes(term) ? '' : 'none';
+    });
+  });
+</script>
+{% endblock %}

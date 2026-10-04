@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, card, table, alert, empty_state %}
+
+{% block title %}Hive | Timetable{% endblock %}
+{% block page_title %}My Teaching Schedule{% endblock %}
+
+{% block content %}
+<div class="card">
+  <div class="card-body" style="padding-bottom:0;">
+    <div class="stats-grid" style="margin-bottom:0;">
+      {{ stat_card('Classes This Week', total_classes, color='var(--primary)') }}
+      {{ stat_card('Teaching Hours', teaching_hours, color='var(--warning)') }}
+      <div class="stat-card">
+        <div class="stat-label">Sections Taught</div>
+        <div style="display:flex;gap:var(--space-1);flex-wrap:wrap;margin-top:var(--space-1);">
+          {% if sections_taught %}
+            {% for sec in sections_taught %}
+            <span class="badge badge-primary">{{ sec }}</span>
+            {% endfor %}
+          {% else %}
+            <span style="color:var(--text-tertiary);font-size:var(--font-size-sm);">None</span>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:var(--space-4);">
+  <div class="card-header">
+    <h3><span class="material-symbols-rounded" style="font-size:18px;vertical-align:middle;margin-right:var(--space-1)">calendar_today</span> Weekly View</h3>
+    <label style="display:flex;align-items:center;gap:var(--space-1);cursor:pointer;font-size:var(--font-size-sm);color:var(--text-secondary);">
+      <input type="checkbox" id="hideCancelled" onchange="toggleCancelled()" style="cursor:pointer;">
+      Hide cancelled classes
+    </label>
+  </div>
+  <div class="card-body" style="padding-top:0;">
+    <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:var(--space-2);">
+      {% set days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'] %}
+      {% for i in range(5) %}
+      <div style="font-weight:600;padding:var(--space-2);border-bottom:2px solid {% if i == current_day %}var(--primary){% else %}var(--border-primary){% endif %};{% if i == current_day %}color:var(--primary);background:var(--primary-bg);border-radius:var(--radius-md) var(--radius-md) 0 0;{% endif %}text-align:center;font-size:var(--font-size-sm);">
+        {{ days[i] }}
+      </div>
+      {% endfor %}
+
+      {% for day_idx in range(5) %}
+      <div style="display:flex;flex-direction:column;gap:var(--space-2);{% if day_idx == current_day %}background:var(--primary-bg);border-radius:0 0 var(--radius-md) var(--radius-md);padding-bottom:var(--space-2);{% endif %}">
+        {% if timetable_data and timetable_data.get(day_idx) %}
+        {% for entry in timetable_data[day_idx] %}
+        <div class="{% if entry.status == 'cancelled' %}cancelled-row{% endif %}" style="border:1px solid {% if entry.status == 'cancelled' %}var(--danger){% else %}var(--border-primary){% endif %};padding:var(--space-2);border-radius:var(--radius-md);border-left:4px solid {{ entry.color if entry.status == 'active' else 'var(--danger)' }};{% if entry.status == 'cancelled' %}opacity:0.5;{% endif %}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--space-1);">
+            <span style="font-size:var(--font-size-xs);color:var(--text-tertiary);font-weight:600;">{{ entry.start_time | fix_time }} - {{ entry.end_time | fix_time }}</span>
+            {% if entry.status == 'cancelled' %}
+            {{ badge('CANCELLED', 'danger') }}
+            {% endif %}
+          </div>
+          <div style="font-weight:600;font-size:var(--font-size-sm);color:{{ entry.color if entry.status == 'active' else 'var(--text-tertiary)' }};margin-bottom:var(--space-1);{% if entry.status == 'cancelled' %}text-decoration:line-through;{% endif %}">
+            {{ entry.course_name }}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:var(--space-1);">
+            {{ badge(entry.section, 'primary') }}
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div style="font-size:var(--font-size-xs);color:var(--text-tertiary);display:flex;align-items:center;gap:var(--space-1);">
+              <span class="material-symbols-rounded" style="font-size:14px;">location_on</span>
+              {{ entry.room }}
+            </div>
+            <span style="font-size:var(--font-size-xs);font-weight:600;color:var(--text-tertiary);">{{ entry.duration }}m</span>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="text-align:center;color:var(--text-tertiary);font-size:var(--font-size-xs);padding:var(--space-4) 0;border:1px dashed var(--border-primary);border-radius:var(--radius-md);">
+          No classes
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleCancelled() {
+  const hide = document.getElementById('hideCancelled').checked;
+  document.querySelectorAll('.cancelled-row').forEach(row => {
+    row.style.display = hide ? 'none' : 'block';
+  });
+}
+</script>
+
+<style>
+.cancelled-row { opacity:0.5; }
+</style>
+{% endblock %}

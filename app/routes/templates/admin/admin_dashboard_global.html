@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, btn, empty_state %}
+
+{% block title %}Hive | Admin Dashboard{% endblock %}
+{% block page_title %}Institution Overview{% endblock %}
+
+{% block content %}
+{% if is_first_login %}
+<div class="card" style="margin-bottom:var(--space-6);background:var(--primary-bg);border-color:var(--primary)">
+  <div style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+    <span class="material-symbols-rounded" style="font-size:32px;color:var(--primary)">celebration</span>
+    <div style="flex:1;min-width:200px">
+      <h2 style="margin:0 0 var(--space-1);font-size:var(--font-size-md);color:var(--primary)">Welcome to Hive!</h2>
+      <p style="margin:0;color:var(--text-secondary);font-size:var(--font-size-sm)">Your campus platform is ready. Use the Quick Actions to manage your institution, or head to the Import section to bulk-add students and faculty.</p>
+    </div>
+    {{ btn('Manage Institution', url_for('admin.admin_institutions'), type='primary') }}
+  </div>
+</div>
+{% endif %}
+
+<div class="stats-grid">
+  {{ stat_card('Total Students', "{:,}".format(stats.students)) }}
+  {{ stat_card('Total Faculty', "{:,}".format(stats.professors)) }}
+  {{ stat_card('Active Sections', "{:,}".format(stats.sections)) }}
+  {{ stat_card('Total Institutions', stats.institutions) }}
+</div>
+
+{% if stats.students == 0 and stats.courses == 0 %}
+{{ empty_state('Get Started with Data', 'Your institution is created but empty. Import students, faculty, courses, and more from the Import section to bring your campus platform to life.', 'database') }}
+<div class="toolbar" style="justify-content:center">
+  <div class="toolbar-left">
+    {{ btn('Manage Sections', url_for('admin.admin_sections'), icon='group') }}
+    {{ btn('Import Data', '#', icon='upload', type='secondary') }}
+  </div>
+</div>
+{% endif %}
+
+<div class="grid-sidebar" style="margin-top:var(--space-6)">
+  <div class="card">
+    <div class="card-header">
+      <h3>Registered Institutions</h3>
+    </div>
+    <div class="card-body" style="padding:0">
+      <div class="table-wrap" style="border:none;border-radius:0">
+        <table class="h-table">
+          <colgroup>
+            <col style="width: 300px">
+            <col style="width: 200px">
+            <col style="width: 120px">
+            <col style="width: 100px">
+          </colgroup>
+          <thead>
+            <tr>
+              <th>Institution Name</th>
+              <th>Domain</th>
+              <th style="text-align:center">Status</th>
+              <th style="text-align:right">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for inst in institution_data %}
+            <tr>
+              <td>
+                <div style="font-weight:600">{{ inst.name }}</div>
+                <div style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ inst.students }} students &middot; {{ inst.professors }} faculty &middot; {{ inst.courses }} courses &middot; CGPA {{ inst.avg_cgpa }}</div>
+              </td>
+              <td><code>{{ institutions[loop.index0].domain or 'N/A' }}</code></td>
+              <td style="text-align:center">
+                {% if inst.status == 'active' %}
+                  {{ badge('Active', 'success') }}
+                {% else %}
+                  {{ badge('Suspended', 'danger') }}
+                {% endif %}
+              </td>
+              <td style="text-align:right">
+                <a href="#" class="icon-btn" title="Manage Institution" style="color:var(--text-tertiary)"><span class="material-symbols-rounded" style="font-size:18px">settings</span></a>
+              </td>
+            </tr>
+            {% else %}
+            <tr>
+              <td colspan="4" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6)">No institutions registered.</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div style="padding:var(--space-4);text-align:right;border-top:1px solid var(--border-secondary)">
+      {{ btn('Add Institution', url_for('admin.admin_institutions'), icon='add', type='secondary', size='sm') }}
+    </div>
+  </div>
+
+  <div style="display:flex;flex-direction:column;gap:var(--space-4)">
+    <div class="card">
+      <div class="card-header">
+        <h3>Global Alerts</h3>
+      </div>
+      <div class="card-body">
+        {% if announcements %}
+          <div style="display:flex;flex-direction:column;gap:var(--space-3)">
+            {% for a in announcements %}
+            <div style="padding:var(--space-2) var(--space-3);border:1px solid var(--border-secondary);border-radius:var(--radius-sm);border-left:3px solid var(--primary)">
+              <div style="display:flex;justify-content:space-between;margin-bottom:var(--space-1)">
+                <strong style="font-size:var(--font-size-sm)">{{ a.title }}</strong>
+                <span style="font-size:var(--font-size-xs);color:var(--text-tertiary)">{{ a.posted_at.strftime('%m/%d') }}</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <p style="color:var(--text-tertiary);font-size:var(--font-size-sm);text-align:center;padding:var(--space-4) 0">No global announcements.</p>
+        {% endif %}
+        <div style="margin-top:var(--space-3);text-align:center">
+          <a href="{{ url_for('admin.announcements') }}" style="font-size:var(--font-size-xs);color:var(--primary);font-weight:500">Post New Announcement</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h3>Quick Actions</h3>
+      </div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:var(--space-2)">
+        {{ btn('Master Timetable', url_for('timetable.admin_timetable'), icon='calendar_view_week', type='secondary') }}
+        {{ btn('Invite Admins', '#', icon='group_add', type='secondary') }}
+        {{ btn('System Logs', '#', icon='settings_suggest', type='secondary') }}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

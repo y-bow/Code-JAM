@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Dean - Institution Analytics{% endblock %}
+{% block page_title %}Institution Analytics Overview{% endblock %}
+
+{% from "_components.html" import stat_card, badge, btn, btn_submit, btn_button, table, card, modal, form_group, alert, empty_state, search_input, toolbar, tabs, breadcrumb, progress_bar %}
+
+{% block content %}
+<div class="grid-3" style="margin-bottom: var(--space-6);">
+  {{ stat_card('Total Students', total_students, color='var(--primary)') }}
+  {{ stat_card('Total Teachers', total_teachers, color='var(--primary)') }}
+  {{ stat_card('Total Courses', total_courses, color='var(--primary)') }}
+  {{ stat_card('Total Sections', total_sections, color='var(--primary)') }}
+  {{ stat_card('Avg Attendance', avg_attendance ~ '%', color='var(--primary)') }}
+  {{ stat_card('Avg CGPA', avg_cgpa, color='var(--primary)') }}
+</div>
+
+{% call card() %}
+  <h3>Quick Insights</h3>
+  <p style="color: var(--text-secondary);">This administrative dashboard provides a high-level overview of Hive LMS performance and population across your school.</p>
+  <div style="margin-top: var(--space-4);">
+    {{ btn('View Faculty Performance', url_for('analytics.dean_ratings'), icon='star_half') }}
+  </div>
+{% endcall %}
+{% endblock %}

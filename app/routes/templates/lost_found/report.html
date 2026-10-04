@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+{% from "_components.html" import btn, alert, form_group %}
+
+{% block title %}Report Lost/Found Item - Hive{% endblock %}
+{% block page_title %}Report Item{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    {{ btn('Back to Gallery', url_for('lost_found.gallery'), 'secondary', 'arrow_back') }}
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+    {{ alert(message, 'danger' if category == 'error' else 'success') }}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="card" style="max-width:800px;margin:0 auto;">
+    <div class="card-header"><h3>Report a Lost or Found Item</h3></div>
+    <div class="card-body">
+        <form method="POST" enctype="multipart/form-data" action="{{ url_for('lost_found.report') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+            <div class="grid-2">
+                <div class="form-group">
+                    <label class="form-label" for="report_type">Report Type *</label>
+                    <select name="report_type" id="report_type" class="form-select" required>
+                        <option value="" disabled selected>Select Type</option>
+                        <option value="lost">I Lost Something</option>
+                        <option value="found">I Found Something</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="category">Category *</label>
+                    <select name="category" id="category" class="form-select" required>
+                        <option value="" disabled selected>Select Category</option>
+                        {% for cat in categories %}
+                        <option value="{{ cat }}">{{ cat }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+
+            {{ form_group('Item Title *', 'title', required=true, placeholder='e.g. Blue Hydroflask Water Bottle, iPhone 13 Pro') }}
+
+            <div class="form-group">
+                <label class="form-label" for="location">Location Lost/Found *</label>
+                <div style="position:relative;">
+                    <span class="material-symbols-rounded" style="position:absolute;left:var(--space-2);top:50%;transform:translateY(-50%);color:var(--text-tertiary);font-size:18px;pointer-events:none;">location_on</span>
+                    <input type="text" name="location" id="location" class="form-input" required placeholder="e.g. Library 2nd Floor, Cafeteria near entrance" style="padding-left:36px;">
+                </div>
+            </div>
+
+            {{ form_group('Detailed Description *', 'description', 'textarea', rows='5', required=true, placeholder='Provide distinctive features, brand, color, or condition of the item...') }}
+            <span class="form-hint" style="margin-top:-var(--space-3);">More detail increases the chance of a successful match.</span>
+
+            <div class="form-group" style="margin-bottom:var(--space-6);">
+                <label class="form-label">Upload Image</label>
+                <div class="file-upload-wrapper" style="border:2px dashed var(--border-primary);padding:var(--space-6);border-radius:var(--radius-md);text-align:center;cursor:pointer;" onclick="document.getElementById('image').click()">
+                    <div id="image-preview" style="display:none;margin-bottom:var(--space-3);">
+                        <img id="preview-img" src="" alt="Preview" style="max-height:200px;max-width:100%;border-radius:var(--radius-sm);object-fit:contain;">
+                    </div>
+                    <div id="upload-prompt">
+                        <span class="material-symbols-rounded" style="font-size:2.5rem;color:var(--text-secondary);margin-bottom:var(--space-2);display:block;">cloud_upload</span>
+                        <span style="font-weight:500;display:block;margin-bottom:var(--space-1);color:var(--primary);">Click or drag file here to upload</span>
+                        <span class="text-tertiary" style="font-size:0.85rem;">PNG, JPG, GIF up to 5MB</span>
+                    </div>
+                    <input type="file" name="image" id="image" accept=".png, .jpg, .jpeg, .gif" style="display:none;" onchange="previewImage(event)">
+                </div>
+            </div>
+
+            <div class="flex gap-3 justify-end">
+                {{ btn('Cancel', url_for('lost_found.gallery'), 'secondary') }}
+                <button type="submit" class="btn btn-primary" style="padding-left:var(--space-6);padding-right:var(--space-6);">Submit Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function previewImage(event) {
+    const input = event.target;
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('preview-img').src = e.target.result;
+            document.getElementById('image-preview').style.display = 'block';
+            document.getElementById('upload-prompt').style.display = 'none';
+        }
+        reader.readAsDataURL(input.files[0]);
+    } else {
+        document.getElementById('image-preview').style.display = 'none';
+        document.getElementById('upload-prompt').style.display = 'block';
+    }
+}
+
+const uploadWrapper = document.querySelector('.file-upload-wrapper');
+uploadWrapper.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--primary)';
+    uploadWrapper.style.background = 'var(--primary-bg)';
+});
+uploadWrapper.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--border-primary)';
+    uploadWrapper.style.background = 'transparent';
+});
+uploadWrapper.addEventListener('drop', (e) => {
+    e.preventDefault();
+    uploadWrapper.style.borderColor = 'var(--border-primary)';
+    uploadWrapper.style.background = 'transparent';
+    const fileInput = document.getElementById('image');
+    if (e.dataTransfer.files.length > 0) {
+        fileInput.files = e.dataTransfer.files;
+        const event = new Event('change');
+        fileInput.dispatchEvent(event);
+    }
+});
+</script>
+{% endblock %}

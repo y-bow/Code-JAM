@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+{% from "_components.html" import btn, btn_button, badge, form_group %}
+
+{% block title %}Manage Clubs - Hive Admin{% endblock %}
+{% block page_title %}Manage Clubs{% endblock %}
+
+{% block content %}
+<div class="admin-clubs">
+    <div class="flex justify-between items-center mb-4">
+        <div>
+            <h2>Manage Campus Clubs</h2>
+            <p class="text-secondary">Create, edit, or remove student organizations</p>
+        </div>
+        <div class="flex gap-2 items-center">
+            {{ btn('Manage Events', url_for('clubs.admin_events'), 'secondary', 'event') }}
+            {{ btn_button('Create Club', 'primary', 'add', attrs='onclick="openModal(\'createClubModal\')"') }}
+        </div>
+    </div>
+
+    <!-- Active Clubs List -->
+    <div class="table-wrap">
+        <table class="h-table">
+            <colgroup>
+                <col style="width: 200px">
+                <col style="width: 120px">
+                <col style="width: 200px">
+                <col style="width: 130px">
+                <col style="width: 100px">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>Club Name</th>
+                    <th>Category</th>
+                    <th>Contact Email</th>
+                    <th>Created On</th>
+                    <th class="text-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for club in clubs %}
+                <tr>
+                    <td style="font-weight:500;">{{ club.name }}</td>
+                    <td>{{ badge(club.category or 'General', 'primary') }}</td>
+                    <td class="text-tertiary">{{ club.contact_email or 'N/A' }}</td>
+                    <td class="text-tertiary">{{ club.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td class="text-right">
+                        <div class="flex gap-1" style="justify-content:flex-end;">
+                            <button onclick="openEditModal({{ club.id }}, '{{ club.name|escape }}', '{{ (club.category or '')|escape }}', '{{ (club.contact_email or '')|escape }}', '{{ (club.description or '')|replace('\n', '\\n')|escape }}')" class="btn btn-ghost btn-sm" title="Edit">
+                                <span class="material-symbols-rounded" style="font-size:16px;">edit</span>
+                            </button>
+                            <form action="{{ url_for('clubs.delete_club', club_id=club.id) }}" method="POST" style="margin:0;" onsubmit="return confirm('Are you sure you want to delete this club? This action cannot be undone.');">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <button type="submit" class="btn btn-ghost btn-sm" title="Delete" style="color:var(--danger);">
+                                    <span class="material-symbols-rounded" style="font-size:16px;">delete</span>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" style="text-align:center;color:var(--text-tertiary);padding:var(--space-6);">No clubs created yet. Click "Create Club" to add one.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Create Club Modal -->
+<div class="modal-overlay" id="createClubModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Create New Club</h3>
+            <button type="button" class="modal-close" onclick="closeModal('createClubModal')"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <form action="{{ url_for('clubs.admin_clubs') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form_group('Club Name *', 'name', required=true) }}
+                <div class="grid-2">
+                    {{ form_group('Category', 'category', placeholder='e.g. Technology, Arts') }}
+                    {{ form_group('Contact Email', 'contact_email', 'email') }}
+                </div>
+                {{ form_group('Description', 'description', 'textarea', rows='5') }}
+                <div class="flex gap-3 justify-end" style="margin-top:var(--space-4);">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('createClubModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Create Club</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Club Modal -->
+<div class="modal-overlay" id="editClubModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3>Edit Club</h3>
+            <button type="button" class="modal-close" onclick="closeModal('editClubModal')"><span class="material-symbols-rounded">close</span></button>
+        </div>
+        <div class="modal-body">
+            <form id="editClubForm" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                {{ form_group('Club Name *', 'name', value='', required=true, class='edit_name') }}
+                <div class="grid-2">
+                    {{ form_group('Category', 'category', value='', class='edit_category') }}
+                    {{ form_group('Contact Email', 'contact_email', 'email', value='', class='edit_email') }}
+                </div>
+                {{ form_group('Description', 'description', 'textarea', rows='5', class='edit_description') }}
+                <div class="flex gap-3 justify-end" style="margin-top:var(--space-4);">
+                    <button type="button" class="btn btn-secondary" onclick="closeModal('editClubModal')">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function openModal(id) {
+        document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+        document.getElementById(id).classList.remove('active');
+    }
+
+    function openEditModal(id, name, category, email, description) {
+        const form = document.getElementById('editClubForm');
+        form.action = "{{ url_for('clubs.edit_club', club_id=0) }}".replace('0', id);
+
+        document.querySelector('.edit_name input').value = name;
+        document.querySelector('.edit_category input').value = category;
+        document.querySelector('.edit_email input').value = email;
+        document.querySelector('.edit_description textarea').value = description;
+
+        openModal('editClubModal');
+    }
+
+    window.onclick = function(event) {
+        if (event.target.classList.contains('modal-overlay')) {
+            event.target.classList.remove('active');
+        }
+    }
+</script>
+{% endblock %}

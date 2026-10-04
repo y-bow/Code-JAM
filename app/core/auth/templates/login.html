@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+{% block title %}Hive | Login{% endblock %}
+
+{% block content %}
+<div class="login-container">
+    <div class="card login-card">
+        <div class="login-header">
+            <div style="display:flex;justify-content:center;">
+                <img src="{{ url_for('static', filename='images/light_theme.png') }}" alt="Hive Logo" class="logo-light" style="width:180px;height:auto;margin-bottom:var(--space-3);">
+                <img src="{{ url_for('static', filename='images/dark_theme.png') }}" alt="Hive Logo" class="logo-dark" style="width:180px;height:auto;margin-bottom:var(--space-3);">
+            </div>
+            <h2>Welcome to Hive</h2>
+            <p class="text-secondary">The smartest hive for collaborative learning</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">
+            <span class="material-symbols-rounded" style="font-size:18px;">error</span>
+            {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <form method="POST" action="{{ url_for('auth.login') }}" class="login-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <div class="input-group">
+                <input type="email" id="email" name="email" required placeholder=" ">
+                <label for="email">College Email</label>
+                <span class="material-symbols-rounded">mail</span>
+            </div>
+
+            <div class="input-group">
+                <input type="password" id="password" name="password" required placeholder=" ">
+                <label for="password">Password</label>
+                <span class="material-symbols-rounded" style="cursor:pointer;" onclick="togglePassword('password', this)">visibility_off</span>
+            </div>
+
+            <div class="captcha-container">
+                <div class="captcha-question-wrapper">
+                    <img id="captcha-image" src="{{ session.get('captcha_image') }}" alt="CAPTCHA Image" style="border-radius:var(--radius-sm);border:1px solid var(--border-primary);">
+                    <button type="button" class="refresh-btn" onclick="refreshCaptcha()" title="Refresh CAPTCHA">
+                        <span class="material-symbols-rounded">refresh</span>
+                    </button>
+                </div>
+                <div class="input-group captcha-input">
+                    <input type="text" id="captcha_answer" name="captcha_answer" required placeholder=" ">
+                    <label for="captcha_answer">Enter CAPTCHA Code</label>
+                    <span class="material-symbols-rounded">spellcheck</span>
+                </div>
+            </div>
+
+            <button type="submit" class="login-btn">
+                <span>Sign In</span>
+                <span class="material-symbols-rounded">arrow_forward</span>
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    function togglePassword(inputId, icon) {
+        const input = document.getElementById(inputId);
+        if (input.type === "password") {
+            input.type = "text";
+            icon.textContent = "visibility";
+        } else {
+            input.type = "password";
+            icon.textContent = "visibility_off";
+        }
+    }
+
+    async function refreshCaptcha() {
+        const captchaImg = document.getElementById('captcha-image');
+        const refreshIcon = document.querySelector('.refresh-btn .material-symbols-rounded');
+        try {
+            const response = await fetch('/refresh-captcha');
+            const data = await response.json();
+            captchaImg.src = data.image_src;
+            document.getElementById('captcha_answer').value = '';
+        } catch (error) {
+            console.error('Error refreshing captcha:', error);
+        }
+    }
+</script>
+
+<style>
+    .sidebar, .topbar { display: none !important; }
+    .main-area { height: 100vh; }
+    .content { height: 100vh; display: flex; align-items: center; justify-content: center; }
+
+    .login-container { width: 100%; max-width: 440px; padding: var(--space-4); }
+    .login-card { padding: var(--space-8) var(--space-6); }
+    .login-header { text-align: center; margin-bottom: var(--space-6); }
+    .login-header h2 { font-size: 1.75rem; font-weight: 700; margin-bottom: var(--space-1); }
+
+    .captcha-container {
+        display: flex; flex-direction: column; gap: var(--space-2);
+        background: var(--bg-secondary); padding: var(--space-3); border-radius: var(--radius-md);
+        border: 1px solid var(--border-primary);
+    }
+    .captcha-question-wrapper { display: flex; align-items: center; justify-content: space-between; }
+    .refresh-btn { background: none; border: none; color: var(--primary); cursor: pointer; padding: var(--space-1); display: flex; align-items: center; justify-content: center; }
+    .refresh-btn .material-symbols-rounded { font-size: 20px; }
+
+    .login-form { display: flex; flex-direction: column; gap: var(--space-4); }
+    .input-group { position: relative; display: flex; flex-direction: column; }
+    .input-group input {
+        padding: 1.25rem 1rem 0.5rem; border-radius: var(--radius-md);
+        border: 1.5px solid var(--border-primary); background: var(--bg-primary);
+        color: var(--text-primary); font-family: inherit; font-size: 1rem;
+        transition: border-color 0.1s; outline: none;
+    }
+    .input-group label {
+        position: absolute; left: 1rem; top: 0.9rem; color: var(--text-tertiary);
+        font-size: 1rem; pointer-events: none; transition: all 0.1s;
+    }
+    .input-group .material-symbols-rounded {
+        position: absolute; right: 1rem; top: 0.9rem; color: var(--text-tertiary); font-size: 20px; user-select: none;
+    }
+    .input-group input:focus~label, .input-group input:not(:placeholder-shown)~label {
+        top: 0.4rem; font-size: 0.75rem; font-weight: 600; color: var(--primary);
+    }
+    .input-group input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-bg); }
+    .input-group input:focus~.material-symbols-rounded { color: var(--primary); }
+
+    .login-btn {
+        padding: var(--space-3); background: var(--primary); color: white; border: none;
+        border-radius: var(--radius-md); font-weight: 600; font-size: 1.1rem; cursor: pointer;
+        display: flex; align-items: center; justify-content: center; gap: var(--space-2);
+    }
+    .login-btn:hover { background: var(--primary-hover); }
+    .login-btn .material-symbols-rounded { font-size: 20px; }
+</style>
+{% endblock %}

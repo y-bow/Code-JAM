@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+{% from "_components.html" import stat_card, badge, alert, form_group, btn_submit %}
+
+{% block title %}Admin Fees Dashboard - Hive{% endblock %}
+{% block page_title %}Fee Management Dashboard{% endblock %}
+
+{% block content %}
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{{ alert(message, 'danger' if category == 'error' else 'success') }}
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<div class="stats-grid" style="margin-bottom:var(--space-6);">
+    {{ stat_card('Total Expected Fees', currency_symbol ~ "{:,.0f}".format(total_expected)) }}
+    {{ stat_card('Total Recovered', currency_symbol ~ "{:,.0f}".format(total_collected), color='var(--success)') }}
+    {{ stat_card('Total Outstanding', currency_symbol ~ "{:,.0f}".format(total_expected - total_collected), color='var(--danger)') }}
+</div>
+
+<div class="grid-sidebar">
+    <!-- Student Fee Table -->
+    <div class="card" style="padding:0;">
+        <div class="card-header" style="padding:var(--space-4);"><h3>Student Fee Status</h3></div>
+        <div class="table-wrap" style="border:none;border-radius:0;">
+            <table class="h-table">
+                <colgroup>
+                    <col style="width: 180px">
+                    <col style="width: 200px">
+                    <col style="width: 110px">
+                    <col style="width: 110px">
+                    <col style="width: 110px">
+                    <col style="width: 120px">
+                </colgroup>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Email</th>
+                        <th>Total Fee</th>
+                        <th>Paid</th>
+                        <th>Remaining</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for fee in fees %}
+                    <tr>
+                        <td style="font-weight:500;">{{ fee.student.name }}</td>
+                        <td class="text-tertiary" style="font-size:0.9rem;">{{ fee.student.email }}</td>
+                        <td>{{ currency_symbol }}{{ "{:,.0f}".format(fee.total_amount) }}</td>
+                        <td style="color:var(--success);">{{ currency_symbol }}{{ "{:,.0f}".format(fee.amount_paid) }}</td>
+                        <td style="color:var(--danger);">{{ currency_symbol }}{{ "{:,.0f}".format(fee.remaining_balance) }}</td>
+                        <td>
+                            {% if fee.payment_status == 'Paid' %}
+                            {{ badge('Paid', 'success') }}
+                            {% elif fee.payment_status == 'Partially Paid' %}
+                            {{ badge('Partial', 'warning') }}
+                            {% else %}
+                            {{ badge('Pending', 'danger') }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Offline Payment & Recent Transactions -->
+    <div>
+        <div class="card" style="margin-bottom:var(--space-4);">
+            <div class="card-header"><h3><span class="material-symbols-rounded" style="font-size:18px;">point_of_sale</span> Record Offline Payment</h3></div>
+            <div class="card-body">
+                <form action="{{ url_for('fees.record_offline_payment') }}" method="POST">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <div class="form-group">
+                        <label class="form-label" for="student_id">Select Student</label>
+                        <select id="student_id" name="student_id" required class="form-select">
+                            <option value="">-- Choose Student --</option>
+                            {% for student in students %}
+                            <option value="{{ student.id }}">{{ student.name }} ({{ student.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    {{ form_group('Amount (' ~ currency_symbol ~ ')', 'amount', 'number', required=true, attrs='min="1" step="0.01"') }}
+                    {{ form_group('Notes (Optional)', 'notes', placeholder='e.g. Cash received by accounts desk') }}
+                    {{ btn_submit('Record Payment', 'primary') }}
+                </form>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header"><h3>Recent Transactions</h3></div>
+            <div class="card-body" style="padding:0;">
+                {% if recent_payments %}
+                <div style="display:flex;flex-direction:column;">
+                    {% for p in recent_payments %}
+                    <div class="flex justify-between items-start" style="padding:var(--space-3);border-bottom:1px solid var(--border-secondary);">
+                        <div>
+                            <div style="font-weight:500;margin-bottom:2px;">{{ p.fee.student.name }}</div>
+                            <div class="text-tertiary flex items-center gap-1" style="font-size:0.8rem;">
+                                <span class="material-symbols-rounded" style="font-size:14px;">{{ 'account_balance' if 'Net' in p.payment_method else 'qr_code_scanner' if 'UPI' in p.payment_method else 'payments' }}</span>
+                                {{ p.payment_method }}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-weight:600;color:var(--success);">+{{ currency_symbol }}{{ "{:,.0f}".format(p.amount) }}</div>
+                            <div class="text-tertiary" style="font-size:0.8rem;">{{ p.payment_date.strftime('%b %d') }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-tertiary" style="text-align:center;padding:var(--space-4);">No recent transactions.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
